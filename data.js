@@ -75,17 +75,32 @@ class Timetable {
     this.loadedAt = 0;
   }
 
-  async load() {
+  // Everything upstream that the timetable is built from, as plain JSON: { fetchedAt, trains, routes }.
+  static async fetchRaw() {
     const trains = await getTrains();
-    const routes = new Map();
+    const routes = {};
     for (let i = 0; i < trains.length; i += 4) {
       await Promise.all(
         trains.slice(i, i + 4).map(async t => {
-          const raw = await getRoute(t.TrainId).catch(() => []);
-          routes.set(t.TrainNumber, analyseRoute(raw));
+          routes[t.TrainNumber] = await getRoute(t.TrainId).catch(() => []);
         })
       );
     }
+    return { fetchedAt: Date.now(), trains, routes };
+  }
+
+  static fromRaw(raw) {
+    const timetable = new Timetable();
+    timetable.loadRaw(raw);
+    return timetable;
+  }
+
+  async load() {
+    this.loadRaw(await Timetable.fetchRaw());
+  }
+
+  loadRaw({ fetchedAt, trains, routes: rawRoutes }) {
+    const routes = new Map(trains.map(t => [t.TrainNumber, analyseRoute(rawRoutes[t.TrainNumber] || [])]));
     const stations = new Map();
     for (const [number, stops] of routes) {
       stops.forEach((s, index) => {
@@ -99,7 +114,7 @@ class Timetable {
     this.byNumber = new Map(trains.map(t => [t.TrainNumber, t]));
     this.routes = routes;
     this.stations = stations;
-    this.loadedAt = Date.now();
+    this.loadedAt = fetchedAt;
   }
 
   // Train list for the picker, with first departure, last arrival and journey length.

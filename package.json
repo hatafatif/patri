@@ -4,6 +4,7 @@
   "description": "Live train tracker using the Track My Train backend",
   "scripts": {
     "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server.js",
+    "build": "node --env-file-if-exists=.env scripts/build-timetable.js",
     "track": "node --env-file-if-exists=.env track.js"
   },
   "author": "",

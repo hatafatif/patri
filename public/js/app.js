@@ -110,22 +110,33 @@ function setConn(on) {
   el.textContent = t(on ? 'live' : 'reconnecting');
 }
 
-// ---- live feed
-let feed;
-function connectFeed() {
-  feed = new EventSource('/api/live');
-  feed.addEventListener('status', e => setConn(JSON.parse(e.data).connected));
-  feed.addEventListener('snapshot', e => {
-    state.runs = new Map(JSON.parse(e.data).map(r => [r.id, r]));
-    current?.view.update?.(null);
-  });
-  feed.addEventListener('position', e => {
-    const run = JSON.parse(e.data);
-    state.runs.set(run.id, run);
-    current?.view.update?.(run);
-  });
-  feed.onerror = () => setConn(false);
+// ---- live positions: polled, since the hosted version has no long-lived connection to stream from.
+// Upstream positions only change every 10-30 s, so this loses nothing. Paused while the tab is hidden.
+const POLL_MS = 15000;
+let pollTimer = 0, polling = false;
+async function poll() {
+  clearTimeout(pollTimer);
+  if (polling) return;
+  polling = true;
+  try {
+    const runs = await api('/api/snapshot');
+    const first = !state.connected && !state.runs.size;
+    const changed = runs.filter(r => !(state.runs.get(r.id)?.updatedAt >= r.updatedAt));
+    state.runs = new Map(runs.map(r => [r.id, r]));
+    setConn(true);
+    if (first) current?.view.update?.(null);
+    else changed.forEach(r => current?.view.update?.(r));
+  } catch {
+    setConn(false);
+  } finally {
+    polling = false;
+    if (!document.hidden) pollTimer = setTimeout(poll, POLL_MS);
+  }
 }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) clearTimeout(pollTimer);
+  else poll();
+});
 
 // ---- routing: #/  #/train/27?stop=116  #/station/108  #/trip/129/108
 let current = null;
@@ -169,7 +180,7 @@ async function start() {
   state.stationById = new Map(state.stations.map(s => [s.id, s]));
   for (const i of state.trains) i.search += ` ${[i.fromId, i.toId].map(id => state.stationById.get(id)?.nameUr ?? '').join(' ')}`;
   await ready;
-  connectFeed();
+  await poll();
   route();
 }
 

@@ -29,13 +29,43 @@ async function getRoute(trainId) {
   return stops.sort((a, b) => a.OrderNumber - b.OrderNumber);
 }
 
-function connectLive() {
+// Only the API key is required; we don't send the app's tmt-platform/tmt-app-version headers.
+// Reconnect attempts back off from 1 s to a minute apart.
+function connectLive(options = {}) {
   return io(SOCKET_URL, {
     transports: ['websocket'],
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
+    reconnectionDelayMax: 60000,
     timeout: 5000,
-    extraHeaders: { 'tmt-platform': 'android', 'tmt-app-version': '1', 'x-api-key': API_KEY },
+    extraHeaders: { 'x-api-key': API_KEY },
+    ...options,
+  });
+}
+
+// One-shot read of every live run for the given trains: connect, ask for all of them at once, close.
+// Resolves to { [instanceId]: rawPosition }. Replies aren't tagged with their train, but the run IDs
+// inside them are, so the requests can all be in flight together (about a second in total).
+function fetchLiveRuns(trainNumbers, timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    const socket = connectLive({ reconnection: false });
+    const runs = {};
+    let replies = 0;
+    const finish = err => {
+      clearTimeout(timer);
+      socket.close();
+      if (err && !Object.keys(runs).length) reject(err);
+      else resolve(runs);
+    };
+    const timer = setTimeout(() => finish(new Error('No reply from the live feed')), timeoutMs);
+    socket.on('connect_error', finish);
+    socket.on('track-train', data => {
+      Object.assign(runs, data || {});
+      if (++replies === trainNumbers.length) finish();
+    });
+    socket.on('connect', () => {
+      for (const n of trainNumbers) socket.emit('track-train', { trainId: Number(n) });
+    });
   });
 }
 
@@ -87,4 +117,4 @@ function normalize(p) {
   };
 }
 
-module.exports = { getTrains, getRoute, connectLive, requestInstances, onPositions, normalize };
+module.exports = { getTrains, getRoute, connectLive, fetchLiveRuns, requestInstances, onPositions, normalize };

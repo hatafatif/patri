@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Web app: npm start, then open http://localhost:8787 (or this PC's IP from another device).
 // Listens on the local network by default; HOST=127.0.0.1 npm start keeps it to this PC.
+// Unlike the Vercel deployment, this keeps one live feed connection open and records history.
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
@@ -8,6 +9,7 @@ const path = require('path');
 const { connectLive, requestInstances, onPositions, normalize } = require('./lib');
 const { Timetable } = require('./data');
 const { Store } = require('./store');
+const { createRoutes, decorate, sendJson } = require('./routes');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -34,16 +36,9 @@ setInterval(loadTimetable, 6 * 3600e3).unref();
 const socket = connectLive();
 const latest = new Map(); // run id -> decorated position
 const known = new Map(); // run id -> train number, from track-train replies
-const clients = new Set();
-
-function decorate(id, pos) {
-  const train = known.get(id) ?? timetable.trainForRun(id);
-  if (train == null) return null; // cargo trains and anything we can't place
-  return { id, train, date: timetable.runDate(id, train), suspect: Math.abs(pos.lateBy) > 1440, ...pos };
-}
 
 function update(id, pos) {
-  const run = decorate(id, pos);
+  const run = decorate(timetable, id, pos, known.get(id));
   if (!run) return null;
   const prev = latest.get(id);
   if (prev && prev.updatedAt > run.updatedAt) return prev;
@@ -51,9 +46,6 @@ function update(id, pos) {
   store.record(id, run.train, run);
   return run;
 }
-
-const send = (res, event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-const broadcast = (event, data) => { for (const res of clients) send(res, event, data); };
 
 async function runsFor(train) {
   if (socket.connected) {
@@ -80,24 +72,31 @@ async function joinFeed() {
   joining = false;
 }
 
+// Rejoining backs off exponentially (5 s, 10 s, 20 s ... up to 10 min) so a feed that keeps dropping
+// doesn't get a burst of track-train requests on every reconnect. It resets once a connection has
+// held for five minutes.
+let rejoinDelay = 0, connectedAt = 0, rejoinTimer = null;
 socket.on('connect', () => {
   console.log('Live feed connected');
-  broadcast('status', { connected: true });
-  if (timetable.loadedAt) joinFeed();
+  connectedAt = Date.now();
+  if (!timetable.loadedAt) return;
+  clearTimeout(rejoinTimer);
+  rejoinTimer = setTimeout(joinFeed, rejoinDelay);
+  rejoinDelay = Math.min(Math.max(rejoinDelay * 2, 5000), 10 * 60e3);
 });
 socket.on('disconnect', reason => {
   console.log('Live feed disconnected:', reason);
-  broadcast('status', { connected: false });
+  clearTimeout(rejoinTimer);
+  if (Date.now() - connectedAt > 5 * 60e3) rejoinDelay = 0;
 });
 socket.on('connect_error', e => console.log('Live feed connection error:', e.message));
-onPositions(socket, (id, pos) => {
-  const run = update(id, pos);
-  if (run && latest.get(id) === run) broadcast('position', run);
-});
+onPositions(socket, (id, pos) => update(id, pos));
 
-function json(res, status, body) {
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(JSON.stringify(body));
-}
+const route = createRoutes(timetable, {
+  snapshot: () => [...latest.values()],
+  runsFor,
+  history: run => store.history(run),
+});
 
 function serveStatic(res, pathname) {
   const file = path.normalize(path.join(PUBLIC, pathname === '/' ? 'index.html' : pathname));
@@ -110,44 +109,12 @@ function serveStatic(res, pathname) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
-  const q = url.searchParams;
-  const p = url.pathname;
-
-  if (!p.startsWith('/api/')) return serveStatic(res, p);
-  if (p === '/api/live') {
-    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
-    send(res, 'status', { connected: socket.connected });
-    send(res, 'snapshot', [...latest.values()]);
-    clients.add(res);
-    const keepAlive = setInterval(() => res.write(': ping\n\n'), 25000);
-    req.on('close', () => {
-      clearInterval(keepAlive);
-      clients.delete(res);
-    });
-    return;
-  }
-  if (!timetable.loadedAt) return json(res, 503, { error: 'Timetables are still loading' });
-
+  if (!url.pathname.startsWith('/api/')) return serveStatic(res, url.pathname);
+  if (!timetable.loadedAt) return sendJson(res, [503, { error: 'Timetables are still loading' }]);
   try {
-    if (p === '/api/trains') return json(res, 200, timetable.trainList());
-    if (p === '/api/stations') return json(res, 200, timetable.stationList());
-    if (p === '/api/route') {
-      const stops = timetable.routes.get(Number(q.get('train')));
-      return stops ? json(res, 200, stops) : json(res, 404, { error: 'Unknown train' });
-    }
-    if (p === '/api/runs') return json(res, 200, await runsFor(Number(q.get('train'))));
-    if (p === '/api/history') return json(res, 200, store.history(q.get('run') || ''));
-    if (p === '/api/board') {
-      const board = timetable.board(q.get('station'), [...latest.values()]);
-      return board ? json(res, 200, board) : json(res, 404, { error: 'Unknown station' });
-    }
-    if (p === '/api/trip') {
-      const trip = timetable.trip(q.get('from'), q.get('to'), [...latest.values()]);
-      return trip ? json(res, 200, trip) : json(res, 404, { error: 'Unknown station' });
-    }
-    json(res, 404, { error: 'Not found' });
+    sendJson(res, await route(url.pathname.slice(5), url.searchParams));
   } catch (e) {
-    json(res, 502, { error: e.message });
+    sendJson(res, [502, { error: e.message }]);
   }
 });
 
