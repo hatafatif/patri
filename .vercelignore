@@ -4,3 +4,8 @@
 /data
 /build
 node_modules
+# Local-only: the always-on server, its SQLite store and the terminal tracker. Vercel would otherwise
+# detect server.js as the app's entrypoint instead of serving public/ with api/index.js.
+/server.js
+/store.js
+/track.js
