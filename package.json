@@ -1,0 +1,18 @@
+{
+  "name": "patri",
+  "version": "1.0.0",
+  "description": "Live train tracker using the Track My Train backend",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server.js",
+    "track": "node --env-file-if-exists=.env track.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io-client": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "private": true
+}
