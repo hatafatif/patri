@@ -1,0 +1,15 @@
+<!-- @dsCard group="Inputs" height=400 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    root.innerHTML = [
+      Patri.StationFields({ from: 'Lahore Jn', to: 'Karachi Cantt', fromLabel: 'From', toLabel: 'To' }),
+      Patri.StationFields({ from: 'Multan Cantt', to: null, fromLabel: 'From', toLabel: 'To' }),
+      Patri.StationFields({ from: null, to: null, fromLabel: 'From', toLabel: 'To' }),
+    ].join('');
+    Patri.bindStationFields(root, {});
+  })();
+</script>

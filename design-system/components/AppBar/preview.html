@@ -1,0 +1,18 @@
+<!-- @dsCard group="Shell" height=380 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    const row = (label, html) => '<div><div style="font:var(--t-label);letter-spacing:var(--t-label-tracking);text-transform:uppercase;color:var(--ink-muted);margin-block-end:4px">' + label + '</div>' + html + '</div>';
+    root.innerHTML =
+      row('Live', P.AppBar({ live: 'on', lang: 'en' })) +
+      row('Reconnecting', P.AppBar({ live: 'reconnecting', lang: 'en' })) +
+      row('Off', P.AppBar({ live: 'off', lang: 'en' })) +
+      row('With back link', P.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' } }));
+    // AppBar references brand/patri-logo.svg relative to the page; the library serves the logo from its assets.
+    root.querySelectorAll('.p-appbar__logo').forEach(function (img) { img.src = '/_blob/24c020f13cff6319d15f617e8824b35f'; });
+  })();
+</script>

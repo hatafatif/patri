@@ -1,0 +1,14 @@
+<!-- @dsCard group="Shell" height=110 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    root.style.gridAutoFlow = 'column';
+    root.style.justifyContent = 'start';
+    root.style.gap = '20px';
+    root.innerHTML = P.LiveIndicator({ state: 'on' }) + P.LiveIndicator({ state: 'reconnecting' }) + P.LiveIndicator({ state: 'off' });
+  })();
+</script>

@@ -1,0 +1,28 @@
+<!-- @dsCard group="Screens" height=1788 width=390 page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px 0;background:var(--ground);inline-size:max-content"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var P = window.Patri;
+    var unbind = function () {};
+    var frame = 'box-sizing:border-box;position:relative;inline-size:390px;block-size:844px;overflow:hidden;border:var(--border-thin) solid var(--line);border-radius:var(--radius-sheet)';
+    var caption = 'font:var(--t-label);letter-spacing:var(--t-label-tracking);text-transform:uppercase;color:var(--ink-muted)';
+    function setLang(lang) { var h = document.documentElement; h.lang = lang; h.dir = lang === 'ur' ? 'rtl' : 'ltr'; }
+    function render() {
+      unbind();
+      var lang = document.documentElement.lang === 'ur' ? 'ur' : 'en';
+      root.innerHTML =
+        '<div style="' + caption + '">Panel half</div>' +
+        '<div style="' + frame + '">' + P.screens.HomeScreen(P.samples.home, { layout: 'phone' }) + '</div>' +
+        '<div style="' + caption + '">Panel down</div>' +
+        '<div style="' + frame + '">' + P.screens.HomeScreen(P.samples.home, { layout: 'phone', snap: 'down' }) + '</div>';
+      root.querySelectorAll('.p-appbar__logo').forEach(function (img) { img.src = '/_blob/24c020f13cff6319d15f617e8824b35f'; });
+      unbind = P.screens.bindScreen(root, { data: P.samples.home, onLang: function (next) { setLang(next); render(); } });
+    }
+    // Links in the screen are placeholders: keep the preview where it is.
+    root.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a[href^="#"]')) e.preventDefault(); });
+    render();
+  })();
+</script>

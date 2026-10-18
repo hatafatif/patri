@@ -1,125 +1,130 @@
-// Home: every running train on the map, coloured by delay, with a filterable list.
-import { t, esc, bdi, delayTone, delayText } from '../i18n.js';
-import { trainName } from '../names.js';
-import { state, navigate, openTrainPicker, stationLabel } from '../app.js';
+// Home (#/): the station map, the search field (the way into Search), My trains and Running now.
+import { HomeScreen } from '../screens/index.js';
+import { place } from '../screens/_format.js';
+import { t, pktMidnight } from '../i18n.js';
+import { estimates } from '../eta.js';
+import {
+  state, paint, layout, api, navigate, getStop, followedTrains, recentTrains, stationLabel,
+} from '../app.js';
 import * as map from '../map.js';
-import { badge, delayPill, dotColor, icon } from '../ui.js';
 
-const $ = s => document.querySelector(s);
-let filter = 'all', sort = 'least', timer = 0, pending = false;
+const FRESH_MS = 3 * 3600e3; // a run not heard from for 3 hours is not running
+const MAX_MINE = 6;
 
-function running() {
-  return [...state.runs.values()].filter(r => !r.suspect && state.byNumber.has(r.train) && Date.now() - r.updatedAt < 3 * 3600e3);
+let timer = 0, noticeTimer = 0, notice = '', unfocus = null, mounted = false;
+const routes = new Map(); // train number -> stops, from the cached /api/route
+
+const liveRuns = () => [...state.runs.values()]
+  .filter(r => !r.suspect && state.byNumber.has(r.train) && Date.now() - r.updatedAt < FRESH_MS);
+
+/** Where a run is: between its previous and next station, stopped at one, or not yet departed. */
+function whereOf(run, info) {
+  const prev = state.stationById.get(String(run.prevStation));
+  const next = state.stationById.get(String(run.nextStation));
+  if (prev && run.speed <= 3 && run.prevStation === info.fromId) return { kind: 'notDeparted', at: prev };
+  if (prev && run.speed <= 3) return { kind: 'stopped', at: prev };
+  if (prev && next) return { kind: 'between', from: prev, to: next };
+  const at = prev || next;
+  return at ? { kind: 'stopped', at } : null;
 }
 
-function where(run, info) {
-  const prev = stationLabel(run.prevStation), next = stationLabel(run.nextStation);
-  if (run.speed <= 3 && run.prevStation === info.fromId) return t('notDepartedAt', { station: prev });
-  if (run.speed <= 3 && prev) return t('stoppedAt', { station: prev });
-  return [prev, next].filter(Boolean).join(' ➜ ');
+/** The rider's stop on a train, with the time the train reaches it, or nothing once it has passed. */
+function yourStopOf(number, run) {
+  const id = getStop(number), stops = routes.get(number);
+  if (!id || !stops) return null;
+  const i = stops.findIndex(s => s.id === id);
+  if (i < 0) return null;
+  const station = state.stationById.get(id) || stops[i];
+  if (!run) {
+    const sched = stops[i].arr ?? stops[i].dep;
+    return sched == null ? null : { station, est: sched, scheduled: true };
+  }
+  const e = estimates(stops, run)[i];
+  if (!e || e.passed || e.estMs == null) return null;
+  return { station, est: Math.round((e.estMs - pktMidnight()) / 60000) };
 }
 
-function rowsHTML(runs) {
-  const list = runs.filter(r => filter === 'all' || delayTone(r.lateBy) === filter);
-  list.sort((a, b) => (sort === 'least' ? a.lateBy - b.lateBy : sort === 'most' ? b.lateBy - a.lateBy : a.train - b.train));
-  return list.map(r => {
-    const info = state.byNumber.get(r.train);
-    const speed = r.speed > 3 ? t('kmh', { n: r.speed }) : t(r.prevStation === info.fromId ? 'waiting' : 'stopped');
-    return `<a class="run-row" href="#/train/${r.train}?run=${r.id}">
-      ${badge(info, 'sm')}
-      <span class="opt-info"><b>${esc(trainName(info))}</b><span class="opt-sub">${esc(where(r, info))}</span></span>
-      <span class="run-side">${delayPill(r.lateBy)}<span class="opt-sub">${esc(speed)}</span></span>
-    </a>`;
-  }).join('');
+function data() {
+  const runs = liveRuns();
+  const newest = new Map(); // the newest live run of each train
+  for (const r of runs) if (!(newest.get(r.train)?.updatedAt >= r.updatedAt)) newest.set(r.train, r);
+
+  const followed = followedTrains();
+  const numbers = [...followed, ...recentTrains().filter(n => !followed.includes(n))]
+    .slice(0, Math.max(followed.length, MAX_MINE));
+  const myTrains = numbers.map(n => {
+    const train = state.byNumber.get(n), run = newest.get(n);
+    const yourStop = yourStopOf(n, run);
+    return {
+      train, where: run ? whereOf(run, train) : null, late: run ? run.lateBy : null, gps: run ? true : train.live,
+      ...(run ? { runId: run.id } : {}), ...(yourStop ? { yourStop } : {}),
+    };
+  });
+  const running = runs.map(r => {
+    const train = state.byNumber.get(r.train);
+    return { train, where: whereOf(r, train), late: r.lateBy, gps: true, runId: r.id };
+  });
+  return { live: state.live, myTrains, running, runningCount: running.length, notice };
+}
+
+const handlers = {
+  // Typing is Search's job; the field only hands over what was typed.
+  onSearch: value => navigate(`#/search?q=${encodeURIComponent(value)}`),
+  onMap(action) {
+    if (action === 'layers') map.cycleStyle();
+    else if (action === 'zoomIn') map.zoomIn();
+    else if (action === 'zoomOut') map.zoomOut();
+    else if (action === 'locate') locate();
+  },
+};
+
+async function locate() {
+  const r = await map.locate();
+  if (!mounted) return;
+  say(r.ok ? t('nearestStation', { station: stationLabel(r.station.id) || place(r.station) })
+    : t(r.reason === 'denied' ? 'locateDenied' : 'locateUnavailable'));
+}
+function say(text) {
+  notice = text;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { notice = ''; render(); }, 5000);
+  render();
 }
 
 function render() {
-  const runs = running();
-  const counts = { all: runs.length, ontime: 0, late: 0, vlate: 0 };
-  runs.forEach(r => counts[delayTone(r.lateBy)]++);
-  const chip = (id, label, color) => `<button type="button" class="filter ${filter === id ? 'on' : ''}" data-filter="${id}" aria-pressed="${filter === id}">${color ? `<span class="dot" style="background:${color}"></span>` : ''}${esc(label)} ${bdi(counts[id])}</button>`;
-  $('#view').innerHTML = `
-    <div class="pad">
-      <button type="button" class="find-btn" id="findTrain">
-        <span class="find-ico">${icon.search}</span>
-        <span class="opt-info"><b>${esc(t('findTrain'))}</b><span class="opt-sub">${esc(t('findTrainSub', { n: state.trains.length }))}</span></span>
-      </button>
-    </div>
-    <div class="section-head">
-      <h2>${esc(t('runningNow', { n: runs.length }))}</h2>
-      <label class="sort"><span class="sr">Sort</span><select id="sort">
-        <option value="least" ${sort === 'least' ? 'selected' : ''}>${esc(t('sortLeast'))}</option>
-        <option value="most" ${sort === 'most' ? 'selected' : ''}>${esc(t('sortMost'))}</option>
-        <option value="number" ${sort === 'number' ? 'selected' : ''}>${esc(t('sortNumber'))}</option>
-      </select></label>
-    </div>
-    <div class="filters" role="group">
-      ${chip('all', t('all'))}${chip('ontime', t('onTime'), '#1fa35b')}${chip('late', t('underHour'), '#ffb000')}${chip('vlate', t('overHour'), '#e63946')}
-    </div>
-    <div class="run-list" id="runList">${rowsHTML(runs)}</div>`;
-  $('#mapLegend').innerHTML = `
-    <b>${esc(t('legendTitle', { n: runs.length }))}</b>
-    <span><span class="dot" style="background:#1fa35b"></span>${esc(t('legendOnTime'))}</span>
-    <span><span class="dot" style="background:#ffb000"></span>${esc(t('underHour'))}</span>
-    <span><span class="dot" style="background:#e63946"></span>${esc(t('overHour'))}</span>`;
-  drawDots(runs);
+  if (!mounted) return;
+  clearTimeout(timer);
+  timer = 0;
+  paint(HomeScreen(data(), { layout: layout(), standin: false }), handlers);
 }
-
-function drawDots(runs) {
-  map.setDots(runs.map(r => {
-    const info = state.byNumber.get(r.train);
-    return {
-      lat: r.lat, lon: r.lon, color: dotColor(r.lateBy), key: `${r.train}|${r.id}`,
-      html: `<b>${esc(trainName(info))} ${esc(info.label)}</b><br>${esc(delayText(r.lateBy))} · ${r.speed > 3 ? esc(t('kmh', { n: r.speed })) : esc(t('stopped'))}`,
-    };
-  }));
-}
-
-// Live updates: refresh the list, counts and legend in place (a full render would close an open menu).
-function refresh() {
-  if (timer) { pending = true; return; }
-  const runs = running();
-  const list = $('#runList');
-  if (list) list.innerHTML = rowsHTML(runs);
-  const counts = { all: runs.length, ontime: 0, late: 0, vlate: 0 };
-  runs.forEach(r => counts[delayTone(r.lateBy)]++);
-  document.querySelectorAll('[data-filter] bdi').forEach(b => { b.textContent = counts[b.closest('[data-filter]').dataset.filter]; });
-  const h2 = $('#view .section-head h2');
-  if (h2) h2.textContent = t('runningNow', { n: runs.length });
-  const legend = $('#mapLegend b');
-  if (legend) legend.textContent = t('legendTitle', { n: runs.length });
-  drawDots(runs);
-  timer = setTimeout(() => { timer = 0; if (pending) { pending = false; refresh(); } }, 2000);
-}
-
-function onClick(e) {
-  if (e.target.closest('#findTrain')) openTrainPicker(e.target.closest('#findTrain'));
-  const f = e.target.closest('[data-filter]');
-  if (f) { filter = f.dataset.filter; render(); }
-}
-function onChange(e) {
-  if (e.target.id === 'sort') { sort = e.target.value; refresh(); }
-}
+const later = (ms = 1000) => { if (mounted && !timer) timer = setTimeout(render, ms); };
 
 export default {
   mount() {
-    $('#mapLegend').hidden = false;
-    map.clearRoute();
-    map.setPins([]);
-    map.setTrain(null);
-    map.onDotClick(key => { const [num, run] = key.split('|'); navigate(`#/train/${num}?run=${run}`); });
-    map.fitPakistan();
-    $('#view').addEventListener('click', onClick);
-    $('#view').addEventListener('change', onChange);
+    mounted = true;
+    notice = '';
+    map.showStations({ key: 'home', stations: state.stations, fit: 'country' });
+    map.onStationClick(id => navigate(`#/station/${id}`));
+    // Focusing the search field opens Search, where the typing happens.
+    const root = document.getElementById('app');
+    const onFocus = e => { if (e.target.closest?.('.p-searchfield__input')) navigate('#/search'); };
+    root.addEventListener('focusin', onFocus);
+    unfocus = () => root.removeEventListener('focusin', onFocus);
     render();
+    // Your stops need each train's timetable, once (the answers are cached for the session).
+    for (const n of new Set([...followedTrains(), ...recentTrains()])) {
+      if (!getStop(n) || routes.has(n)) continue;
+      api(`/api/route?train=${n}`, { cache: true }).then(stops => { routes.set(n, stops); later(0); }).catch(() => {});
+    }
   },
-  update() { refresh(); },
+  render,
+  update() { later(); },
   unmount() {
-    $('#view').removeEventListener('click', onClick);
-    $('#view').removeEventListener('change', onChange);
-    $('#mapLegend').hidden = true;
-    map.setDots([]);
+    mounted = false;
     clearTimeout(timer);
-    timer = 0;
+    clearTimeout(noticeTimer);
+    timer = noticeTimer = 0;
+    unfocus?.();
+    unfocus = null;
   },
 };

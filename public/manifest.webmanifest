@@ -1,14 +1,16 @@
 {
-  "name": "Patri",
+  "name": "Patri · پٹڑی",
   "short_name": "Patri",
-  "description": "Pakistan Railways trains, live on the map",
+  "description": "Pakistan Railways trains, live: where your train is, how late it is, and when it reaches your stop.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff4dc",
-  "theme_color": "#e0218a",
+  "background_color": "#eef2ee",
+  "theme_color": "#01411c",
+  "lang": "en",
+  "dir": "auto",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "brand/patri-icon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]
 }

@@ -1,6 +1,7 @@
-// Base map styles. "Truck Art" is our own vector style on OpenFreeMap data: warm cream land,
-// teal water, quiet roads and the rail network drawn in. Every style gets a mask that fades out
-// everything beyond Pakistan's border (outline from Natural Earth, de facto boundaries).
+// Base map styles. "Sabz" is our own vector style on OpenFreeMap data: quiet land, water, province borders and
+// the rail network, all coloured from the design tokens. Satellite and Streets are alternatives. Every style
+// gets a mask that fades out everything beyond Pakistan's border (outline from Natural Earth, de facto boundaries).
+import { mapPaint } from './components/index.js';
 
 const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 const OMT = { type: 'vector', url: 'https://tiles.openfreemap.org/planet' };
@@ -10,7 +11,26 @@ const ESRI = layer => ({
   tiles: [`https://server.arcgisonline.com/ArcGIS/rest/services/${layer}/MapServer/tile/{z}/{y}/{x}`],
 });
 
-export const STYLES = ['truck', 'satellite', 'streets'];
+export const STYLES = ['sabz', 'satellite', 'streets'];
+
+/**
+ * The major cities drawn bigger and labelled in stations mode. `match` picks the city's main station by name
+ * from the station list; `label` is the city name shown on the map; `names` are the base map's own spellings,
+ * which the Sabz style hides so a city is not labelled twice.
+ */
+export const MAJORS = [
+  { label: 'Peshawar', match: /^peshawar cantt/i, names: ['Peshawar'] },
+  { label: 'Rawalpindi', match: /^rawalpindi$/i, names: ['Rawalpindi'] },
+  { label: 'Lahore', match: /^lahore jn/i, names: ['Lahore'] },
+  { label: 'Faisalabad', match: /^faisalabad$/i, names: ['Faisalabad'] },
+  { label: 'Multan', match: /^multan cantt/i, names: ['Multan'] },
+  { label: 'Sukkur', match: /^rohri jn/i, names: ['Sukkur', 'Rohri'] },
+  { label: 'Hyderabad', match: /^hyderabad jn/i, names: ['Hyderabad'] },
+  { label: 'Karachi', match: /^karachi cantt/i, names: ['Karachi'] },
+];
+const MAJOR_NAMES = MAJORS.flatMap(m => m.names);
+
+const token = name => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 
 let pakistan = null;
 export async function loadPakistan() {
@@ -29,50 +49,51 @@ function maskGeoJSON(pk) {
 }
 
 // Layers added on top of any base style: the fade and Pakistan's outline.
-export function maskLayers(pk, fadeColor) {
+export function maskLayers(pk, fadeColor, fadeOpacity = 0.92) {
   return {
     sources: {
       'pk-mask': { type: 'geojson', data: maskGeoJSON(pk) },
       'pk-outline': { type: 'geojson', data: pk },
     },
     layers: [
-      { id: 'pk-mask', type: 'fill', source: 'pk-mask', paint: { 'fill-color': fadeColor, 'fill-opacity': 0.92 } },
-      { id: 'pk-outline-casing', type: 'line', source: 'pk-outline', paint: { 'line-color': '#fff4dc', 'line-width': 5, 'line-opacity': 0.9 } },
-      { id: 'pk-outline', type: 'line', source: 'pk-outline', paint: { 'line-color': '#b0306e', 'line-width': 1.8, 'line-dasharray': [3, 1.6] } },
+      { id: 'pk-mask', type: 'fill', source: 'pk-mask', paint: { 'fill-color': fadeColor, 'fill-opacity': fadeOpacity } },
+      { id: 'pk-outline-casing', type: 'line', source: 'pk-outline', paint: { 'line-color': token('surface'), 'line-width': 5, 'line-opacity': 0.9 } },
+      { id: 'pk-outline', type: 'line', source: 'pk-outline', paint: { 'line-color': token('map-border'), 'line-width': 1.6, 'line-dasharray': [3, 1.6] } },
     ],
   };
 }
 
-function truckArt(pk) {
+function sabz(pk) {
+  const p = mapPaint();
   const inPk = ['within', pk];
-  const halo = { 'text-halo-color': '#fff4dc', 'text-halo-width': 1.8 };
+  const halo = { 'text-halo-color': token('surface'), 'text-halo-width': 1.6 };
+  const muted = token('ink-muted');
+  const hideMajors = ['!', ['in', NAME, ['literal', [...MAJOR_NAMES, 'Islamabad']]]];
+  const roundLine = { 'line-cap': 'round', 'line-join': 'round' };
+  const roads = ['literal', ['motorway', 'trunk', 'primary', 'secondary']];
   return {
     version: 8,
     glyphs: GLYPHS,
     sources: { omt: OMT },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#f3deaf' } },
-      { id: 'wood', type: 'fill', source: 'omt', 'source-layer': 'landcover', filter: ['==', ['get', 'class'], 'wood'], paint: { 'fill-color': '#cddc9c', 'fill-opacity': 0.5 } },
-      { id: 'grass', type: 'fill', source: 'omt', 'source-layer': 'landcover', filter: ['in', ['get', 'class'], ['literal', ['grass', 'farmland', 'wetland']]], paint: { 'fill-color': '#e2e3ab', 'fill-opacity': 0.4 } },
-      { id: 'sand', type: 'fill', source: 'omt', 'source-layer': 'landcover', filter: ['==', ['get', 'class'], 'sand'], paint: { 'fill-color': '#f1d595', 'fill-opacity': 0.55 } },
-      { id: 'ice', type: 'fill', source: 'omt', 'source-layer': 'landcover', filter: ['in', ['get', 'class'], ['literal', ['ice', 'rock']]], paint: { 'fill-color': '#f4efe6', 'fill-opacity': 0.8 } },
-      { id: 'urban', type: 'fill', source: 'omt', 'source-layer': 'landuse', minzoom: 7, filter: ['in', ['get', 'class'], ['literal', ['residential', 'suburb', 'neighbourhood', 'commercial', 'industrial', 'retail']]], paint: { 'fill-color': '#eecb8e', 'fill-opacity': 0.55 } },
-      { id: 'park', type: 'fill', source: 'omt', 'source-layer': 'park', minzoom: 8, paint: { 'fill-color': '#cfe0a0', 'fill-opacity': 0.5 } },
-      { id: 'water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: { 'fill-color': '#8ecfd0' } },
-      { id: 'river', type: 'line', source: 'omt', 'source-layer': 'waterway', filter: ['==', ['get', 'class'], 'river'], paint: { 'line-color': '#8ecfd0', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 10, 2.6, 14, 6] } },
-      { id: 'canal', type: 'line', source: 'omt', 'source-layer': 'waterway', minzoom: 8, filter: ['in', ['get', 'class'], ['literal', ['canal', 'stream']]], paint: { 'line-color': '#a6dadb', 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 13, 2] } },
-      { id: 'road-minor', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 9, filter: ['in', ['get', 'class'], ['literal', ['tertiary', 'minor', 'service']]], paint: { 'line-color': '#f0d9a8', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 14, 3] }, layout: { 'line-cap': 'round' } },
-      { id: 'road-mid', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 6, filter: ['in', ['get', 'class'], ['literal', ['primary', 'secondary']]], paint: { 'line-color': '#e8cd97', 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 3] }, layout: { 'line-cap': 'round' } },
-      { id: 'road-major-casing', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 5, filter: ['in', ['get', 'class'], ['literal', ['motorway', 'trunk']]], paint: { 'line-color': '#d9b273', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 12, 5] }, layout: { 'line-cap': 'round' } },
-      { id: 'road-major', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 5, filter: ['in', ['get', 'class'], ['literal', ['motorway', 'trunk']]], paint: { 'line-color': '#fff3d6', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.4, 12, 3] }, layout: { 'line-cap': 'round' } },
-      { id: 'rail', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'rail'], paint: { 'line-color': '#2b6b6b', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 12, 2] } },
-      { id: 'rail-ties', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 10, filter: ['==', ['get', 'class'], 'rail'], paint: { 'line-color': '#2b6b6b', 'line-opacity': 0.6, 'line-width': 5, 'line-dasharray': [0.15, 2.5] } },
-      { id: 'province', type: 'line', source: 'omt', 'source-layer': 'boundary', minzoom: 4, filter: ['all', ['==', ['get', 'admin_level'], 4], ['!=', ['get', 'maritime'], 1]], paint: { 'line-color': '#c69c63', 'line-width': 0.9, 'line-dasharray': [3, 2] } },
-      { id: 'sea-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', filter: ['in', ['get', 'class'], ['literal', ['ocean', 'sea', 'bay']]], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Italic'], 'text-size': 13, 'text-letter-spacing': 0.15 }, paint: { 'text-color': '#2f7a80', ...halo } },
-      { id: 'province-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 5, maxzoom: 9, filter: ['all', ['==', ['get', 'class'], 'state'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': 11, 'text-transform': 'uppercase', 'text-letter-spacing': 0.25 }, paint: { 'text-color': '#b0874f', ...halo } },
-      { id: 'village-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 10, filter: ['all', ['in', ['get', 'class'], ['literal', ['village', 'suburb']]], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Regular'], 'text-size': 11 }, paint: { 'text-color': '#5a4b62', ...halo } },
-      { id: 'town-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 6.5, filter: ['all', ['==', ['get', 'class'], 'town'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 7, 11, 12, 14], 'symbol-sort-key': ['get', 'rank'] }, paint: { 'text-color': '#3d2f45', ...halo } },
-      { id: 'city-label', type: 'symbol', source: 'omt', 'source-layer': 'place', filter: ['all', ['==', ['get', 'class'], 'city'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 5, 11.5, 10, 16], 'symbol-sort-key': ['get', 'rank'] }, paint: { 'text-color': '#1b1033', ...halo } },
+      { id: 'map-land', type: 'background', paint: { 'background-color': p.land['fill-color'] } },
+      { id: 'urban', type: 'fill', source: 'omt', 'source-layer': 'landuse', minzoom: 7, filter: ['in', ['get', 'class'], ['literal', ['residential', 'suburb', 'neighbourhood', 'commercial', 'industrial', 'retail']]], paint: { 'fill-color': token('line-soft'), 'fill-opacity': 0.9 } },
+      { id: 'map-water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: p.water },
+      { id: 'map-river', type: 'line', source: 'omt', 'source-layer': 'waterway', filter: ['==', ['get', 'class'], 'river'], paint: { 'line-color': p.water['fill-color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 10, 2.4, 14, 6] }, layout: roundLine },
+      { id: 'map-canal', type: 'line', source: 'omt', 'source-layer': 'waterway', minzoom: 9, filter: ['in', ['get', 'class'], ['literal', ['canal', 'stream']]], paint: { 'line-color': p.water['fill-color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 14, 2] } },
+      { id: 'road-minor', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 10, filter: ['in', ['get', 'class'], ['literal', ['tertiary', 'minor', 'service']]], paint: { 'line-color': token('line-soft'), 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 3] }, layout: roundLine },
+      { id: 'road-major', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 6, filter: ['in', ['get', 'class'], roads], paint: { 'line-color': token('line'), 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.4, 12, 2.4] }, layout: roundLine },
+      { id: 'map-rail', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'rail'], paint: { ...p.rail, 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.7, 8, 1.4, 12, 2.2] } },
+      { id: 'map-rail-ties', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 10, filter: ['==', ['get', 'class'], 'rail'], paint: { 'line-color': p.rail['line-color'], 'line-width': 5, 'line-dasharray': [0.15, 2.5] } },
+      { id: 'map-border', type: 'line', source: 'omt', 'source-layer': 'boundary', minzoom: 4, filter: ['all', ['==', ['get', 'admin_level'], 4], ['!=', ['get', 'maritime'], 1]], paint: p.border },
+      { id: 'sea-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', filter: ['in', ['get', 'class'], ['literal', ['ocean', 'sea', 'bay']]], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Italic'], 'text-size': 13, 'text-letter-spacing': 0.15 }, paint: { 'text-color': muted, ...halo } },
+      { id: 'province-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 5, maxzoom: 9, filter: ['all', ['==', ['get', 'class'], 'state'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': 11, 'text-transform': 'uppercase', 'text-letter-spacing': 0.25 }, paint: { 'text-color': token('map-border'), ...halo } },
+      { id: 'village-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 10, filter: ['all', ['in', ['get', 'class'], ['literal', ['village', 'suburb']]], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Regular'], 'text-size': 11 }, paint: { 'text-color': muted, ...halo } },
+      { id: 'town-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 6.5, filter: ['all', ['==', ['get', 'class'], 'town'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 7, 11, 12, 14], 'symbol-sort-key': ['get', 'rank'] }, paint: { 'text-color': token('ink'), ...halo } },
+      // Our own labels draw the major cities (map.js), so the base map's copies of them are left out. Islamabad,
+      // 15 km from Rawalpindi, appears once the map is zoomed in.
+      { id: 'city-label', type: 'symbol', source: 'omt', 'source-layer': 'place', filter: ['all', ['==', ['get', 'class'], 'city'], inPk, hideMajors], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 5, 11, 10, 15], 'symbol-sort-key': ['get', 'rank'] }, paint: { ...p.cityLabel, 'text-color': muted } },
+      { id: 'islamabad-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 9, filter: ['all', ['==', ['get', 'class'], 'city'], ['==', NAME, 'Islamabad']], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': 15 }, paint: { ...p.cityLabel, 'text-color': muted } },
     ],
   };
 }
@@ -90,13 +111,14 @@ function satellite() {
   };
 }
 
-// Returns a style object (or URL) plus the colour the outside-Pakistan fade should use.
+let liberty = null;
+// Returns a style object plus the colour the outside-Pakistan fade should use.
 export async function styleFor(name) {
   const pk = await loadPakistan();
-  if (name === 'satellite') return { style: satellite(), fade: '#3a3427', englishLabels: false };
+  if (name === 'satellite') return { style: satellite(), fade: token('sabz-900'), fadeOpacity: 0.8, englishLabels: false };
   if (name === 'streets') {
-    const base = await (await fetch('https://tiles.openfreemap.org/styles/liberty')).json();
-    return { style: base, fade: '#f4efe6', englishLabels: true };
+    liberty ||= fetch('https://tiles.openfreemap.org/styles/liberty').then(r => r.json()).catch(e => { liberty = null; throw e; });
+    return { style: structuredClone(await liberty), fade: token('map-land'), fadeOpacity: 0.92, englishLabels: true };
   }
-  return { style: truckArt(pk), fade: '#fbf6ec', englishLabels: false, maskBelow: 'sea-label' }; // labels are already Pakistan-only
+  return { style: sabz(pk), fade: token('ground'), fadeOpacity: 0.92, englishLabels: false, maskBelow: 'sea-label' }; // labels are already Pakistan-only
 }

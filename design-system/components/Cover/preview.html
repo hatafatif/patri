@@ -1,0 +1,38 @@
+<!-- @dsCard height=288 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&family=Barlow+Condensed:wght@700&display=swap">
+<style>
+  .cover { position: relative; width: 960px; height: 288px; background: var(--ground); overflow: hidden; }
+  .cover svg { position: absolute; inset: 0; }
+  .green { fill: var(--sabz-700); }
+  .night { fill: var(--sabz-900); }
+  .zard { fill: var(--zard-500); }
+  .tint { fill: var(--sabz-100); }
+  .sleeper { stroke: var(--sabz-100); stroke-width: 6px; }
+  .rail { stroke: var(--zard-500); stroke-width: 8px; }
+  .stop { fill: var(--zard-500); stroke: var(--sabz-900); stroke-width: 3px; }
+  .name { position: absolute; left: 40px; bottom: 64px; margin: 0; max-width: 440px; font: 700 96px/0.95 var(--font-label); color: var(--ink); letter-spacing: 0.01em; }
+  .tagline { position: absolute; left: 40px; bottom: 32px; margin: 0; max-width: 440px; font: 500 14px/1.4 var(--font-body); color: var(--ink-muted); }
+</style>
+<div class="cover">
+  <!--
+    blocks: sabz-700 280×288 slab, zard-500 200×120, sabz-900 200×88, sabz-100 120×80; square corners (radius-sm reads as square at this scale)
+    arrangement: one tall green slab bleeding top and bottom, satellites stacked flush to its right, like a timetable board
+    pattern: a railway track (literal motif): rail in zard-500 crossing the slab, 11 sleepers in sabz-100, one station diamond; Sabz is a train tracker, the track is the brand
+    steps: sleeper pitch 24px (space-6), rail at y 200, blocks on 8px (space-2) multiples
+  -->
+  <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+    <rect class="green" x="480" y="0" width="280" height="288"></rect>
+    <rect class="zard" x="760" y="0" width="200" height="120"></rect>
+    <rect class="night" x="760" y="120" width="200" height="88"></rect>
+    <rect class="tint" x="760" y="208" width="120" height="80"></rect>
+    <g class="sleeper">
+      <path d="M504 188 V212"></path><path d="M528 188 V212"></path><path d="M552 188 V212"></path><path d="M576 188 V212"></path>
+      <path d="M600 188 V212"></path><path d="M624 188 V212"></path><path d="M648 188 V212"></path><path d="M672 188 V212"></path>
+      <path d="M696 188 V212"></path><path d="M720 188 V212"></path><path d="M744 188 V212"></path>
+    </g>
+    <path class="rail" d="M480 200 H760"></path>
+    <polygon class="stop" points="616,180 636,200 616,220 596,200"></polygon>
+  </svg>
+  <h1 class="name">Patri Components</h1>
+  <p class="tagline">Pakistan Railways green and yellow, in a flat timetable style, in English and Urdu.</p>
+</div>

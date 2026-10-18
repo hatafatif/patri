@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server.js",
     "build": "node --env-file-if-exists=.env scripts/build-timetable.js",
-    "track": "node --env-file-if-exists=.env track.js"
+    "track": "node --env-file-if-exists=.env track.js",
+    "ds": "node scripts/build-design-system.js"
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +16,8 @@
   "engines": {
     "node": ">=22.9"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
 }

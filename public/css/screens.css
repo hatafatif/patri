@@ -1,0 +1,130 @@
+/* Patri screens: layout for the templates in public/js/screens/.
+ * Layout only: wrappers, flex and grid, and spacing from the tokens. Every visual piece is a registered
+ * component (components.css); the preview-only map stand-in has its own file (map-standin.css).
+ * `npm run ds` appends this file to design-system/components/bundle.css. */
+
+/* ---------- Frame ---------- */
+/* A screen fills the box it is rendered into; the caller gives that box its size (the viewport in the app,
+ * a 390×844 or 1440×900 frame in the previews). It is the Panel's host. */
+.p-screen {
+  position: relative;
+  container-type: inline-size;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+  background: var(--map-land);
+  color: var(--ink);
+  font: var(--t-body);
+  letter-spacing: var(--t-body-tracking);
+}
+[lang="ur"] .p-screen { font: var(--t-urdu-body); letter-spacing: normal; }
+
+/* The AppBar band across the top of the phone Home screen; the map starts below it. */
+.p-screen__top { position: absolute; inset-block-start: 0; inset-inline: 0; z-index: 1; }
+
+/* The map area: the map itself (MapLibre in the app, the stand-in in previews) plus the controls floating on it. */
+.p-screen__map {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0;
+  transition: inset-block-end 0.25s ease;
+}
+.p-screen--top .p-screen__map { inset-block-start: 56px; }
+.p-screen__backdrop {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  overflow: hidden;
+  background: var(--map-land);
+  /* The map's own stacking (MapLibre markers use z-index) stays inside the backdrop, under the Panel. */
+  isolation: isolate;
+}
+
+.p-screen__controls {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.p-screen__controls--start { inset-inline-start: var(--space-3); align-items: flex-start; }
+.p-screen__controls--end { inset-inline-end: var(--space-3); align-items: flex-end; }
+
+/* The Panel's host. It covers the screen but lets clicks through to the map; only the Panel takes them. */
+.p-screen__sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  container-type: inline-size;
+  pointer-events: none;
+}
+.p-screen__sheet > .p-panel { pointer-events: auto; }
+
+/* Phone: the map fills the space above the sheet at each snap (the Panel's heights: 150px, 55%, all). */
+.p-screen--phone:has(.p-panel[data-snap="down"]) .p-screen__map { inset-block-end: 150px; }
+.p-screen--phone:has(.p-panel[data-snap="half"]) .p-screen__map { inset-block-end: 55%; }
+
+/* Expanded (showcase frames only): a phone-height map band at the top and the panel open in full below it,
+ * so a tall frame shows the whole panel without scrolling. */
+.p-screen.p-screen--expanded:has(.p-panel[data-snap]) .p-screen__map { inset-block-end: auto; block-size: 300px; }
+.p-screen--expanded .p-screen__sheet { inset-block-start: 280px; }
+
+/* Web: the Panel is the 440px sidebar; the map takes the rest. */
+.p-screen--web .p-screen__map { inset-inline-start: 440px; }
+.p-screen--web .p-screen__controls { inset-block-start: var(--space-5); }
+.p-screen--web .p-screen__controls--start { inset-inline-start: var(--space-5); }
+.p-screen--web .p-screen__controls--end { inset-inline-end: var(--space-5); }
+
+/* With a dock, the map fits its content into the area above it (as MapLibre's padding would), so nothing hides
+ * behind the dock. --dock-size is the dock's measured height (the app sets it; Urdu text makes the chart taller);
+ * 192px is the docked speed chart's usual height, for the previews. Plus the dock's gap below and a little above. */
+.p-screen--web .p-screen__map:has(> .p-screen__dock) > .p-screen__backdrop {
+  inset-block-end: calc(var(--dock-size, 192px) + var(--space-5) + var(--space-2));
+}
+
+/* Docked along the bottom of the web map (the Train page's speed chart). */
+.p-screen__dock {
+  position: absolute;
+  inset-inline: var(--space-5);
+  inset-block-end: var(--space-5);
+  z-index: 1;
+}
+
+/* ---------- Panel body ---------- */
+/* Sections in the panel, with the side gutter: 16px on phones, 20px in the sidebar. */
+.p-screen__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-block: 0 var(--space-6);
+  padding-inline: var(--space-4);
+}
+.p-screen--web .p-screen__body { padding-block-start: var(--space-5); padding-inline: var(--space-5); }
+
+/* A section: its SectionHeader, then a list or cards. */
+.p-screen__section { min-inline-size: 0; }
+/* Cards one under another. */
+.p-screen__cards { display: flex; flex-direction: column; gap: var(--space-2); }
+/* Pieces stacked inside a card (strip, timeline, progress, button). */
+.p-screen__stack { display: flex; flex-direction: column; gap: var(--space-4); }
+/* Pieces side by side; .p-screen__fill takes the free space. */
+.p-screen__row { display: flex; align-items: center; gap: var(--space-2); }
+.p-screen__row > * { min-inline-size: 0; }
+.p-screen__fill { flex: 1 1 auto; min-inline-size: 0; }
+
+/* A line of help text. */
+.p-screen__note {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--t-caption);
+  letter-spacing: var(--t-caption-tracking);
+}
+[lang="ur"] .p-screen__note { font: var(--t-urdu-label); letter-spacing: normal; }
+
+/* ---------- The live app ---------- */
+/* MapLibre's container, moved into the backdrop of whichever screen is showing (public/js/app.js). */
+.p-screen__canvas { position: absolute; inset: 0; }
+
+/* Feedback under a PageHeader ("Link copied"). Always in the DOM as a live region; it takes no space while empty. */
+.p-screen__body > .p-screen__notice:empty { margin-block-start: calc(var(--space-6) * -1); }

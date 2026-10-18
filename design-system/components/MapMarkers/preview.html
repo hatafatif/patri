@@ -1,0 +1,20 @@
+<!-- @dsCard group="Map" height=520 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);max-width:440px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var map = 'display:flex;flex-wrap:wrap;gap:16px 12px;align-items:center;padding:16px;background:var(--map-land);border-radius:var(--radius-md)';
+    root.innerHTML =
+      '<div style="' + map + '"><div style="padding-inline-end:160px">' + window.Patri.MapMarkers({ type: 'train', label: '28 DN · 105 km/h' }) + '</div></div>'
+      + '<div style="' + map + '">'
+      + window.Patri.MapMarkers({ type: 'label', title: 'Khanewal Jn', sub: '~12:40 PM', kind: 'next' })
+      + window.Patri.MapMarkers({ type: 'label', title: 'Multan Cantt', sub: '~1:20 PM', kind: 'yourstop' })
+      + window.Patri.MapMarkers({ type: 'label', title: 'Sahiwal', kind: 'selected' })
+      + window.Patri.MapMarkers({ type: 'label', title: 'Bahawalpur', kind: 'hover' })
+      + '</div>'
+      + '<pre id="paint" style="margin:0;padding:8px;background:var(--surface);font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all"></pre>';
+    root.querySelector('#paint').textContent = JSON.stringify(window.Patri.mapPaint());
+  })();
+</script>

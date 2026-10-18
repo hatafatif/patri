@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patri screens</title>
+<link rel="icon" href="brand/patri-favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/screens.css">
+<link rel="stylesheet" href="css/map-standin.css">
+<style>
+  /* Gallery scaffolding only. Screens and components keep their own styles. */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { background: var(--ground); }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: var(--t-body); letter-spacing: var(--t-body-tracking); }
+  [lang="ur"] body { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
+
+  .g-top { background: var(--surface); }
+  .g-intro { padding: var(--space-4); }
+  .g-title { margin: 0; font: var(--t-title); }
+  .g-lede { margin: var(--space-1) 0 0; font: var(--t-caption); color: var(--ink-muted); }
+
+  .g-page { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-8); }
+  .g-group { min-inline-size: 0; }
+  .g-cap { margin: 0 0 var(--space-2); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); color: var(--ink-muted); }
+  .g-cap b { color: var(--ink); font-weight: 700; }
+
+  /* Phone frames sit side by side and wrap; web frames scroll inside their wrapper. */
+  .g-phones { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-4); }
+  .g-phone { flex: none; max-inline-size: 100%; }
+  .g-scroll { overflow-x: auto; padding-block-end: var(--space-2); }
+  .g-frame { position: relative; overflow: hidden; border: var(--border-thin) solid var(--line); border-radius: var(--radius-sheet); }
+  .g-frame--phone { inline-size: 390px; max-inline-size: 100%; }
+  .g-frame--web { inline-size: 1440px; block-size: 900px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="js/screens-gallery.js"></script>
+</body>
+</html>

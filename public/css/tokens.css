@@ -1,0 +1,107 @@
+/* GENERATED FILE: do not edit by hand.
+ * Built by scripts/build-design-system.js from design-system/tokens.json (Patri Sabz v1).
+ * Change the JSON and run `npm run ds`. */
+
+:root {
+  /* Colour */
+  --ground: #eef2ee; /* Page background behind panels and lists. */
+  --surface: #ffffff; /* Panel, sheet, card and input background. */
+  --ink: #0b1f17; /* Primary text and icons on ground or surface. 16.9:1 on surface. */
+  --ink-muted: #56665d; /* Secondary text: routes, sub-lines, captions. 6.1:1 on surface. */
+  --ink-passed: #66736b; /* Stops and times the train has already passed. 4.9:1 on surface. */
+  --ink-on-dark: #ffffff; /* Text on sabz-900 or sabz-700. */
+  --ink-on-dark-muted: #c9d6ce; /* Secondary text on sabz-900. 11.6:1. */
+  --line: #d5ddd7; /* Control borders and dividers between cards. */
+  --line-soft: #e3e9e5; /* Row dividers inside a list or timeline. */
+  --rule: #0b1f17; /* 2px timetable rule under section headers and above the sheet. */
+  --sabz-700: #01411c; /* Primary: Pakistan green. Primary buttons, active controls, key-panel borders, route done on the map. */
+  --sabz-800: #022c14; /* Primary pressed and hover. */
+  --sabz-900: #0b1f17; /* Dark surfaces: train number badge, your-stop row. */
+  --sabz-100: #e3ede6; /* Green tint: on-time status background, progress track. */
+  --zard-500: #f2c230; /* Yellow accent: the train marker, the badge number, highlights on sabz-900. Never as text on white. */
+  --zard-100: #fdf3d2; /* Next-stop row background. */
+  --status-ontime-bg: var(--sabz-100); /* On time (up to 15 min late) background. */
+  --status-ontime-fg: var(--sabz-700); /* On time text. 9.7:1 on its background. */
+  --status-late-bg: #c8361f; /* Late (more than 15 min) background: a solid red block, darker than on time so they differ in lightness. */
+  --status-late-fg: #ffffff; /* Late text. 5.0:1 on its background. */
+  --status-early-bg: #dcebf6; /* Early background. */
+  --status-early-fg: #0b4a6f; /* Early text. 8.0:1 on its background. */
+  --status-nogps-bg: #e3e6e4; /* No live GPS / timetable only background. */
+  --status-nogps-fg: #4a5650; /* No live GPS text. 6.6:1 on its background. */
+  --focus: #0b4a6f; /* 3px keyboard focus ring on every control. */
+  --map-land: #f2efe6; /* Map land fill. */
+  --map-water: #b8d4e9; /* Rivers and sea. */
+  --map-border: #8e8799; /* Province and country borders, dashed. */
+  --map-rail: #9aa59f; /* Rail lines with no train selected. */
+  --map-station: #56665d; /* Small station dots. */
+
+  /* Type families */
+  --font-body: Barlow, system-ui, sans-serif;
+  --font-label: "Barlow Condensed", Barlow, system-ui, sans-serif;
+  --font-urdu: Barlow, "Noto Nastaliq Urdu", serif;
+
+  /* Type styles, for component CSS: font: var(--t-label); letter-spacing: var(--t-label-tracking); */
+  --t-title: 700 22px/28px var(--font-body); /* Page title: train or station name. */
+  --t-title-tracking: normal;
+  --t-heading: 700 17px/22px var(--font-body); /* Card and row titles. */
+  --t-heading-tracking: normal;
+  --t-body-strong: 700 16px/22px var(--font-body); /* Station and train names in lists. */
+  --t-body-strong-tracking: normal;
+  --t-body: 400 15px/22px var(--font-body); /* Running text and inputs. */
+  --t-body-tracking: normal;
+  --t-caption: 500 13px/18px var(--font-body); /* Secondary lines under names. */
+  --t-caption-tracking: normal;
+  --t-label: 700 14px/16px var(--font-label); /* Section headers, status chips, buttons. Uppercase in English only. */
+  --t-label-tracking: 0.08em;
+  --t-time: 700 17px/20px var(--font-label); /* Expected times. Tabular numbers. */
+  --t-time-tracking: 0.04em;
+  --t-time-sm: 600 13px/16px var(--font-label); /* Countdowns, scheduled times under expected ones. */
+  --t-time-sm-tracking: 0.04em;
+  --t-number: 700 26px/26px var(--font-label); /* Train number inside the badge. */
+  --t-number-tracking: normal;
+  --t-urdu-title: 600 20px/40px var(--font-urdu); /* Page title in Urdu. Nastaliq needs line-height 2 or more. */
+  --t-urdu-title-tracking: normal;
+  --t-urdu-body: 600 16px/32px var(--font-urdu); /* Names and running text in Urdu. */
+  --t-urdu-body-tracking: normal;
+  --t-urdu-label: 600 15px/28px var(--font-urdu); /* Replaces the condensed uppercase label in Urdu: no capitals, one size up. */
+  --t-urdu-label-tracking: normal;
+
+  /* Spacing */
+  --space-1: 4px; /* Gap between a dot and its label. */
+  --space-2: 8px; /* Gap between chips and between cards in a list. */
+  --space-3: 12px; /* Gap between a badge and its text; card padding on phones. */
+  --space-4: 16px; /* Panel side gutter on phones. */
+  --space-5: 20px; /* Sidebar side gutter on desktop. */
+  --space-6: 24px; /* Space between sections. */
+  --space-8: 32px; /* Space above the first section on desktop. */
+  --tap: 44px; /* Minimum height and width of anything tappable. */
+
+  /* Radius */
+  --radius-sm: 5px; /* Chips, small controls, status blocks. */
+  --radius-md: 6px; /* Cards, buttons, inputs, the badge, rows. */
+  --radius-sheet: 14px; /* Top corners of the phone panel only. */
+  --radius-round: 999px; /* The panel handle and map dots. */
+
+  /* Shadow */
+  --shadow-float: 0 2px 8px rgba(11,31,23,0.18); /* Controls and labels floating over the map, so they stay legible on any base map. Nothing else casts a shadow. */
+  --shadow-sheet: 0 -6px 20px rgba(11,31,23,0.12); /* The phone panel's edge over the map. */
+
+  /* Border */
+  --border-thin: 1px; /* Row dividers. */
+  --border-key: 1.5px; /* Control borders and key panels (sabz-700). */
+  --border-rule: 2px; /* Timetable rules (rule). */
+}
+
+/* Type styles as utility classes */
+.t-title { font: var(--t-title); letter-spacing: var(--t-title-tracking); }
+.t-heading { font: var(--t-heading); letter-spacing: var(--t-heading-tracking); }
+.t-body-strong { font: var(--t-body-strong); letter-spacing: var(--t-body-strong-tracking); }
+.t-body { font: var(--t-body); letter-spacing: var(--t-body-tracking); }
+.t-caption { font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
+.t-label { font: var(--t-label); letter-spacing: var(--t-label-tracking); }
+.t-time { font: var(--t-time); letter-spacing: var(--t-time-tracking); }
+.t-time-sm { font: var(--t-time-sm); letter-spacing: var(--t-time-sm-tracking); }
+.t-number { font: var(--t-number); letter-spacing: var(--t-number-tracking); }
+.t-urdu-title { font: var(--t-urdu-title); letter-spacing: var(--t-urdu-title-tracking); }
+.t-urdu-body { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
+.t-urdu-label { font: var(--t-urdu-label); letter-spacing: var(--t-urdu-label-tracking); }
