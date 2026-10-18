@@ -1,0 +1,13 @@
+<!-- @dsCard group="Shell" height=360 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    root.innerHTML =
+      P.Card({ header: 'About this train', tone: 'plain', body: '<p style="margin:0">28 DN Shalimar Express runs from Lahore Jn to Karachi Cantt, stopping at Sahiwal, Khanewal Jn, Multan Cantt and Bahawalpur.</p>' }) +
+      P.Card({ header: 'Right now', tone: 'key', body: '<p style="margin:0">Running at 105 km/h near Sahiwal, 30 min late.</p>' });
+  })();
+</script>

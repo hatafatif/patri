@@ -87,18 +87,3 @@ export function status(stops, run, positions = [], now = Date.now()) {
   const near = nearest && haversineKm(run, nearest) < 1.5 ? nearest : null;
   return near ? { kind: 'stopAt', station: near, minutes: stoppedMin } : { kind: 'stopBetween', from: prev, to: next, minutes: stoppedMin };
 }
-
-// Speed stats for the chart header.
-export function speedStats(positions) {
-  if (positions.length < 2) return null;
-  const moving = positions.filter(p => p[3] > 3);
-  let stoppedMs = 0;
-  for (let i = 1; i < positions.length; i++) {
-    if (positions[i - 1][3] <= 3) stoppedMs += Math.min(positions[i][0] - positions[i - 1][0], 15 * 60e3);
-  }
-  return {
-    avg: moving.length ? Math.round(moving.reduce((s, p) => s + p[3], 0) / moving.length) : 0,
-    top: Math.max(...positions.map(p => p[3])),
-    stoppedMin: stoppedMs / 60e3,
-  };
-}

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Train & station" height=285 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);max-width:390px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const { TrainRow: R } = window.Patri;
+    root.innerHTML =
+      '<div>' +
+        R({ href: '#', badge: { number: 28, direction: 'dn' }, name: 'Shalimar Express', sub: 'Lahore Jn → Karachi Cantt',
+            status: { tone: 'late', text: '30 min late' }, follow: { followed: false } }) +
+        R({ href: '#', badge: { number: 115, direction: 'up' }, name: 'Allama Iqbal Express', sub: 'Karachi Cantt → Lahore Jn',
+            status: { tone: 'ontime', text: 'On time' }, follow: { followed: true } }) +
+        R({ href: '#', badge: { number: 108, direction: 'up' }, name: 'Karakoram Express', sub: 'Lahore Jn → Karachi Cantt',
+            status: { tone: 'nogps', text: 'No GPS' } }) +
+      '</div>' +
+      '<div>' +
+        R({ href: '#', badge: { number: 28, direction: 'dn' }, name: 'Shalimar Express', sub: 'Lahore Jn → Karachi Cantt',
+            status: { tone: 'late', text: '30 min late' }, match: 'shal kara', follow: { followed: false } }) +
+      '</div>';
+    window.Patri.bindFollowButton(root, { onToggle: () => {} });
+  })();
+</script>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Shell" height=900 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    const body = '<div style="display:grid;gap:12px;padding:16px">' +
+      P.AppBar({ live: 'on', lang: 'en' }) +
+      P.Card({ header: 'Right now', tone: 'key', body: '<p style="margin:0">Running at 105 km/h near Sahiwal</p>' }) +
+      P.SectionHeader({ label: 'My trains', count: 2, action: { label: 'Edit', href: '#/' } }) +
+      P.SectionHeader({ label: 'Running now', count: 54, ruled: true }) +
+      P.Card({ header: 'About this train', body: '<p style="margin:0">28 DN Shalimar Express, Lahore Jn to Karachi Cantt.</p>' }) +
+      '</div>';
+    const host = 'position:relative;container-type:inline-size;block-size:420px;background:var(--map-land);overflow:hidden';
+    root.innerHTML =
+      '<div style="' + host + ';max-inline-size:390px" id="phone">' + P.Panel({ label: 'Right now', body: body }) + '</div>' +
+      '<div style="overflow-x:auto"><div style="' + host + ';inline-size:960px" id="side">' + P.Panel({ label: 'Right now', body: body }) + '</div></div>';
+    P.bindPanel(root.querySelector('#phone'), { onSnap: function () {} });
+    P.bindPanel(root.querySelector('#side'));
+  })();
+</script>

@@ -1,0 +1,14 @@
+<!-- @dsCard group="Train & station" height=200 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    root.innerHTML = [
+      Patri.JourneyProgress({ fraction: 305 / 1165, start: 'Left Lahore Jn 7:10 AM', end: '305 of 1,165 km' }),
+      Patri.JourneyProgress({ fraction: 0.62, start: 'Left Lahore Jn 7:10 AM', end: '722 of 1,165 km' }),
+      Patri.JourneyProgress({ fraction: 0, start: 'Not departed', end: '0 of 1,165 km' }),
+    ].join('');
+  })();
+</script>

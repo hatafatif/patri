@@ -1,0 +1,18 @@
+<!-- @dsCard group="Inputs" height=230 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);max-inline-size:420px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var P = window.Patri;
+    root.innerHTML = [
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">',
+      P.Button({ label: 'See all stops', icon: 'chevronEnd' }),
+      P.Button({ label: 'Choose your stop', variant: 'secondary' }),
+      '</div>',
+      P.Button({ label: 'See all stops', href: '#', icon: 'chevronEnd', full: true }),
+      '<p style="margin:0;font:var(--t-body)">Your stop is Multan Cantt. ' + P.Button({ label: 'Change', variant: 'link' }) + '</p>',
+    ].join('');
+  })();
+</script>

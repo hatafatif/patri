@@ -1,0 +1,26 @@
+<!-- @dsCard group="Train & station" height=1700 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);max-width:440px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var rows = [
+      { kind: 'passed', name: 'Lahore Jn', time: { expected: '7:10 AM' } },
+      { kind: 'passed', name: 'Raiwind Jn', sub: 'Platform 2', time: { expected: '7:52 AM' } },
+      { kind: 'more', name: '8 more stops', href: '#' },
+      { kind: 'passed', name: 'Sahiwal', time: { expected: '11:02 AM' } },
+      { kind: 'train', name: 'Train here · 27 km to Multan Cantt' },
+      { kind: 'next', name: 'Khanewal Jn', sub: 'Next stop', time: { expected: '~12:40 PM', scheduled: '12:10 PM' }, countdown: 'in 20 min', href: '#' },
+      { kind: 'yourstop', name: 'Multan Cantt', sub: 'Your stop', time: { expected: '~1:20 PM', scheduled: '12:50 PM' }, countdown: 'in 1 h', change: true },
+      { kind: 'stop', name: 'Bahawalpur', sub: 'Stops 2 min', time: { expected: '~3:35 PM' }, href: '#' },
+      { kind: 'final', name: 'Karachi Cantt', sub: 'Last stop', time: { expected: '~6:05 AM' } }
+    ];
+    var label = function (s) { return '<div class="t-label" style="margin-top:4px">' + s + '</div>'; };
+    var box = function (id, html) { return '<div id="' + id + '" style="border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface);overflow:hidden">' + html + '</div>'; };
+    root.innerHTML = label('Compact (Right now)') + box('compact', window.Patri.StopTimeline({ rows: rows, mode: 'compact' }))
+      + label('Full (All stops)') + box('full', window.Patri.StopTimeline({ rows: rows, mode: 'full' }))
+      + label('Full, with legend') + box('legend', window.Patri.StopTimeline({ rows: rows, mode: 'full', legend: true }));
+    window.Patri.bindStopTimeline(root.querySelector('#compact'), { onChangeStop: function () {} });
+  })();
+</script>

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Train & station" height=440 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="padding:16px;background:var(--ground);max-width:390px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const { DepartureRow: D } = window.Patri;
+    root.innerHTML =
+      D({ href: '#', time: { expected: '~1:20 PM', scheduled: '12:50 PM' }, train: { number: 28, direction: 'dn', name: 'Shalimar Express' },
+          sub: 'To Karachi Cantt · 48 km away', status: { tone: 'late', text: '30 min late' } }) +
+      D({ href: '#', time: { expected: '2:05 PM' }, train: { number: 115, direction: 'up', name: 'Allama Iqbal Express' },
+          sub: 'Starts here → Lahore Jn', status: { tone: 'ontime', text: 'On time' } }) +
+      D({ href: '#', time: { expected: '3:10 PM' }, train: { number: 108, direction: 'up', name: 'Karakoram Express' },
+          sub: 'This train has no GPS', status: { tone: 'nogps', text: 'No GPS' } }) +
+      D({ href: '#', time: { expected: '7:10 AM', caption: 'Left' }, train: { number: 27, direction: 'dn', name: 'Karakoram Express' },
+          sub: 'To Karachi Cantt', status: { tone: 'ontime', text: 'On time' } });
+  })();
+</script>

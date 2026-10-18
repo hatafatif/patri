@@ -1,0 +1,13 @@
+<!-- @dsCard group="Train & station" height=190 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    root.innerHTML =
+      P.SectionHeader({ label: 'My trains', count: 2, action: { label: 'Edit', href: '#/' } }) +
+      P.SectionHeader({ label: 'Running now', count: 54, ruled: true });
+  })();
+</script>

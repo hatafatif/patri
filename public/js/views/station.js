@@ -1,153 +1,112 @@
-// Station board: trains due in the next five hours with live times, and approaching trains on the map.
-import { t, esc, bdi, clockMin, dur, delayText } from '../i18n.js';
-import { trainInfo, trainName, stationName } from '../names.js';
-import { state, api, navigate, openStationPicker, stationLabel } from '../app.js';
-import { openShare } from '../share.js';
+// Station page: the board of next trains through one station (/api/board), with the map zoomed to it.
+import { StationScreen } from '../screens/index.js';
+import { trainInfo } from '../names.js';
+import { place } from '../screens/_format.js';
+import { t } from '../i18n.js';
+import { share } from '../share.js';
+import { state, api, paint, layout, navigate, addRecentSearch, isSaved, setSaved } from '../app.js';
 import * as map from '../map.js';
-import { chipBadge, delayPill, dotColor, icon } from '../ui.js';
 
-const $ = s => document.querySelector(s);
-const phone = () => matchMedia('(max-width: 800px)').matches;
-let v = null, refreshTimer = 0, dotTimer = 0;
+const REFRESH_MS = 30e3;
+const LIVE_DEBOUNCE_MS = 5e3;
+const NOTICE_MS = 3e3;
 
-function lastStation() {
-  try { return localStorage.getItem('lastStation'); } catch { return null; }
-}
+let v = null;
 
-function rowHTML(r) {
-  const info = state.byNumber.get(r.number) || trainInfo(r);
-  const live = r.runId != null;
-  const time = clockMin(r.est);
-  const schedChanged = live && Math.abs(r.est - r.sched) >= 1;
-  const other = r.kind === 'starts' ? stationName(r.dest, r.destUr) : stationName(r.origin, r.originUr);
-  const routeText = r.kind === 'starts' ? t('departsTo', { x: other }) : r.kind === 'ends' ? t('arrivesFrom', { x: other })
-    : t('passesFromTo', { a: stationName(r.origin, r.originUr), b: stationName(r.dest, r.destUr) });
-  let note;
-  if (r.atPlatform) note = r.kind === 'ends' ? t('atPlatform') : `${t('atPlatform')} · ${t('leavingNow')}`;
-  else if (live && r.kmAway != null) note = `${t('kmAway', { km: r.kmAway })} · ${t('inTime', { d: dur(r.est - v.board.now) })}`;
-  else if (!r.gps) note = t('trainNoGps');
-  else if (r.kind === 'starts') note = t('startsHere');
-  else note = t('noLivePos');
-  return `<a class="board-row ${live ? '' : 'timetable'}" href="#/train/${r.number}?stop=${encodeURIComponent(v.id)}${r.runId ? `&run=${r.runId}` : ''}">
-    <span class="board-time"><b>${bdi((live && !r.atPlatform && schedChanged ? '~' : '') + time)}</b>${schedChanged ? `<s>${bdi(clockMin(r.sched))}</s>` : ''}</span>
-    <span class="opt-info">
-      <span class="board-name">${chipBadge(info)}<b>${esc(trainName(info))}</b></span>
-      <span class="opt-sub teal">${esc(routeText)}</span>
-      <span class="opt-sub">${esc(note)}</span>
-    </span>
-    ${delayPill(r.late, phone())}
-  </a>`;
+const lastStation = () => { try { return localStorage.getItem('lastStation'); } catch { return null; } };
+
+function data() {
+  const { id, board } = v;
+  const station = state.stationById.get(id);
+  // The board's clock moves on between fetches, so "Updated … ago" keeps counting.
+  const now = board ? board.now + (Date.now() - v.fetchedAt) / 60000 : 0;
+  return {
+    live: state.live,
+    station,
+    saved: isSaved(id),
+    now,
+    updatedAt: board ? board.now : 0,
+    loading: !board,
+    notice: v.notice,
+    // The board's order (expected time); never sorted or filtered by lateness.
+    rows: (board?.rows || []).map(r => ({
+      train: state.byNumber.get(r.number) || trainInfo(r),
+      kind: r.kind,
+      origin: { name: r.origin, nameUr: r.originUr },
+      dest: { name: r.dest, nameUr: r.destUr },
+      sched: r.sched, est: r.est, late: r.late, gps: r.gps,
+      runId: r.runId, kmAway: r.kmAway, atPlatform: r.atPlatform,
+    })),
+  };
 }
 
 function render() {
   if (!v) return;
-  const st = v.id ? state.stationById.get(v.id) : null;
-  if (!st) {
-    $('#view').innerHTML = `<div class="pad"><section class="prompt-card">
-      <span class="prompt-ico">${icon.station}</span>
-      <span class="opt-info"><b>${esc(t('chooseStation'))}</b></span>
-      <button type="button" class="btn royal" data-pick-station>${esc(t('chooseStation'))}</button>
-    </section></div>`;
-    $('#mapLegend').hidden = true;
-    return;
-  }
-  const rows = (v.board?.rows || []).filter(r => v.filter === 'all' || (v.filter === 'arr' ? r.kind !== 'starts' : r.kind !== 'ends'));
-  const seg = (id, label) => `<button type="button" data-filter="${id}" aria-pressed="${v.filter === id}" class="${v.filter === id ? 'on' : ''}">${esc(label)}</button>`;
-  $('#view').innerHTML = `
-    <div class="pad">
-      <div class="train-head">
-        <span class="badge badge-lg station">${icon.station}</span>
-        <button type="button" class="title-btn" data-pick-station>
-          <b>${esc(stationName(st.name, st.nameUr))} ${icon.chevron}</b>
-          <span class="opt-sub teal">${v.board ? esc(t('trainsNext', { n: v.board.rows.length })) : esc(t('loading'))}</span>
-        </button>
-        <button type="button" class="round-btn saffron" id="shareBtn" aria-label="${esc(t('share'))}">${icon.share}</button>
-      </div>
-      <div class="seg-row">
-        <div class="segmented" role="group">${seg('all', t('all'))}${seg('arr', t('arriving'))}${seg('dep', t('departing'))}</div>
-        ${v.board ? `<span class="opt-sub">${esc(t('nowAt', { time: clockMin(v.board.now) }))}</span>` : ''}
-      </div>
-    </div>
-    <div class="board">${v.board ? rows.map(rowHTML).join('') || `<p class="note">${esc(t('noTrainsSoon'))}</p>` : `<p class="note">${esc(t('loading'))}</p>`}</div>`;
-  drawMap(false);
+  paint(StationScreen(data(), { layout: layout(), standin: false }), {
+    onFollow: saved => { setSaved(v.id, saved); render(); },
+    onShare,
+    onMap: action => {
+      if (action === 'zoomIn') map.zoomIn();
+      else if (action === 'zoomOut') map.zoomOut();
+      else if (action === 'layers') map.cycleStyle();
+    },
+  });
 }
 
-function approaching() {
-  return (v.board?.rows || []).filter(r => r.runId && !r.atPlatform).map(r => ({ r, run: state.runs.get(r.runId) })).filter(x => x.run);
-}
-
-function drawMap(fit) {
-  const st = state.stationById.get(v.id);
-  if (!st) return;
-  const near = approaching();
-  map.setPins(st.lat ? [{ kind: 'station', lat: st.lat, lon: st.lon, label: stationName(st.name, st.nameUr) }] : []);
-  map.setDots(near.map(({ r, run }) => {
-    const info = state.byNumber.get(r.number);
-    return {
-      lat: run.lat, lon: run.lon, color: dotColor(r.late), key: `${r.number}|${r.runId}`,
-      html: `<b>${esc(trainName(info))} ${esc(info.label)}</b><br>${esc(t('kmAway', { km: r.kmAway ?? '?' }))} · ${esc(delayText(r.late))}`,
-    };
-  }));
-  $('#mapLegend').hidden = !near.length;
-  $('#mapLegend').innerHTML = `<b>${esc(t('headingTo', { n: near.length, station: stationName(st.name, st.nameUr) }))}</b>
-    <span><span class="dot" style="background:#1fa35b"></span>${esc(t('onTime'))}</span>
-    <span><span class="dot" style="background:#ffb000"></span>${esc(t('underHour'))}</span>
-    <span><span class="dot" style="background:#e63946"></span>${esc(t('overHour'))}</span>`;
-  if (fit && st.lat) {
-    const pts = [st, ...near.map(x => x.run)];
-    if (pts.length > 1) map.fitTo(pts, phone() ? 40 : { top: 90, bottom: 90, left: 90, right: 200 });
-    else map.fitTo([{ lat: st.lat - 0.3, lon: st.lon - 0.3 }, { lat: st.lat + 0.3, lon: st.lon + 0.3 }], 40);
-  }
-}
-
-async function load(fit) {
-  if (!v?.id) return;
-  const id = v.id;
-  const board = await api(`/api/board?station=${encodeURIComponent(id)}`).catch(() => null);
-  if (!v || v.id !== id) return;
-  v.board = board;
+async function onShare() {
+  const mine = v;
+  const s = state.stationById.get(mine.id);
+  const name = place(s);
+  const url = `${location.origin}/#/station/${mine.id}`;
+  const result = await share({ title: name, text: t('shareStation', { station: name, url }), url });
+  if (v !== mine) return;
+  const text = result === 'copied' ? t('linkCopied') : result === 'failed' ? t('copyFailed') : '';
+  if (!text) return;
+  mine.notice = text;
   render();
-  if (fit) drawMap(true);
+  clearTimeout(mine.noticeTimer);
+  mine.noticeTimer = setTimeout(() => { if (v === mine) { mine.notice = ''; render(); } }, NOTICE_MS);
 }
 
-function onClick(e) {
-  const pick = e.target.closest('[data-pick-station]');
-  if (pick) return openStationPicker(pick, v.id, s => navigate(`#/station/${s.id}`));
-  const f = e.target.closest('[data-filter]');
-  if (f) { v.filter = f.dataset.filter; return render(); }
-  if (e.target.closest('#shareBtn')) {
-    const st = state.stationById.get(v.id);
-    const url = `${location.origin}/#/station/${v.id}`;
-    openShare({ anchor: e.target.closest('#shareBtn'), title: t('shareTitle', { name: stationLabel(v.id) }), url: () => url, message: () => t('shareStation', { station: stationName(st.name, st.nameUr), url }) });
+async function load() {
+  clearTimeout(v?.timer);
+  if (!v) return;
+  const mine = v;
+  try {
+    const board = await api(`/api/board?station=${encodeURIComponent(mine.id)}`);
+    if (v !== mine) return;
+    mine.board = board;
+    mine.fetchedAt = Date.now();
+  } catch {
+    if (v !== mine) return;
   }
+  render();
+  // Repaint at least every 30 s, so the "Updated … ago" chip moves even when a fetch fails; retry sooner with nothing to show.
+  mine.timer = setTimeout(load, mine.board ? REFRESH_MS : 10e3);
 }
 
 export default {
   mount(params) {
     const id = params.id || lastStation();
-    if (!params.id && id) return navigate(`#/station/${id}`);
-    try { if (id) localStorage.setItem('lastStation', id); } catch {}
-    v = { id, filter: 'all', board: null };
-    $('#view').addEventListener('click', onClick);
-    map.clearRoute();
-    map.setTrain(null);
-    map.onDotClick(key => { const [num, run] = key.split('|'); navigate(`#/train/${num}?stop=${encodeURIComponent(v.id)}&run=${run}`); });
+    if (!id || !state.stationById.has(id)) return navigate('#/search', { replace: true });
+    if (!params.id) return navigate(`#/station/${id}`, { replace: true });
+    try { localStorage.setItem('lastStation', id); } catch {}
+    addRecentSearch({ kind: 'station', id });
+    v = { id, board: null, fetchedAt: 0, notice: '', timer: 0, live: 0, noticeTimer: 0 };
+    map.showStations({ key: `station:${id}`, stations: state.stations, selected: [id], fit: 'selected' });
+    map.onStationClick(other => { if (v && other !== v.id) navigate(`#/station/${other}`); });
     render();
-    load(true);
-    refreshTimer = setInterval(() => load(false), 30e3);
+    load();
   },
+  render,
   update() {
-    if (!v?.board || dotTimer) return;
-    dotTimer = setTimeout(() => { dotTimer = 0; if (v) drawMap(false); }, 2000);
+    // The board's times follow the live trains: refetch, but not on every poll.
+    if (!v?.board || v.live) return;
+    const mine = v;
+    mine.live = setTimeout(() => { mine.live = 0; if (v === mine) load(); }, LIVE_DEBOUNCE_MS);
   },
   unmount() {
-    $('#view').removeEventListener('click', onClick);
-    clearInterval(refreshTimer);
-    clearTimeout(dotTimer);
-    dotTimer = 0;
-    $('#mapLegend').hidden = true;
-    map.setDots([]);
-    map.setPins([]);
+    if (v) { clearTimeout(v.timer); clearTimeout(v.live); clearTimeout(v.noticeTimer); }
     v = null;
   },
 };

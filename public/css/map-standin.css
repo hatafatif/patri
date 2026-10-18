@@ -1,0 +1,119 @@
+/* Preview-only stand-in for the map (js/screens/_map-standin.js). Real views use MapLibre.
+   The SVG draws geometry; dots, names and cards are HTML overlays so they keep one on-screen size at any scale.
+   The parent is position:absolute; inset:0; container-type:size; overflow:hidden with the map-land background. */
+
+.p-mapstandin {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  direction: ltr; /* geography never mirrors; cards and names set their own text direction */
+  color: var(--ink);
+}
+.p-mapstandin__box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+/* Home: contain, at 92% so edge labels are not cut. */
+.p-mapstandin--country .p-mapstandin__box {
+  width: min(92cqw, calc(92cqh * var(--w) / var(--h)));
+  height: min(92cqh, calc(92cqw * var(--h) / var(--w)));
+}
+/* Train and Station: cover, cropping at the edges around the centre. */
+.p-mapstandin--zoom .p-mapstandin__box {
+  width: max(100cqw, calc(100cqh * var(--w) / var(--h)));
+  height: max(100cqh, calc(100cqw * var(--h) / var(--w)));
+}
+.p-mapstandin__svg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible; /* the sea runs past the viewBox */
+}
+.p-mapstandin__layer { position: absolute; inset: 0; pointer-events: none; }
+
+/* ---------- Geometry (strokes stay the same width at any scale) ---------- */
+.p-mapstandin__sea { fill: var(--map-water); stroke: none; }
+.p-mapstandin__border {
+  fill: none;
+  stroke: var(--map-border);
+  stroke-width: 1px;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.p-mapstandin__rail {
+  fill: none;
+  stroke: var(--map-rail);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.p-mapstandin__route-casing,
+.p-mapstandin__route-done,
+.p-mapstandin__route-ahead {
+  fill: none;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.p-mapstandin__route-casing { stroke: var(--surface); stroke-width: 8px; stroke-linecap: round; }
+.p-mapstandin__route-done { stroke: var(--sabz-700); stroke-width: 5px; stroke-linecap: round; }
+.p-mapstandin__route-ahead { stroke: var(--sabz-700); stroke-width: 3px; stroke-dasharray: 6 6; }
+
+/* ---------- Dots ---------- */
+.p-mapstandin__dot {
+  position: absolute;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-round);
+}
+.p-mapstandin__dot--station { inline-size: 5px; block-size: 5px; background: var(--map-station); }
+.p-mapstandin__dot--onroute { inline-size: 11px; block-size: 11px; border: 2.5px solid var(--surface); box-shadow: 0 0 0 1px var(--map-station); }
+.p-mapstandin__dot--city { inline-size: 13px; block-size: 13px; border: 2px solid var(--ink); background: var(--surface); }
+.p-mapstandin__dot--selected { inline-size: 17px; block-size: 17px; border: 3px solid var(--sabz-700); background: var(--zard-500); }
+
+/* ---------- Placement: a point plus a side, offset by --g ---------- */
+.p-mapstandin__at {
+  position: absolute;
+  --g: 8px;
+  --tx: 0px;
+  --ty: 0px;
+  transform: translate(var(--tx), var(--ty));
+}
+.p-mapstandin__at--e  { --tx: var(--g); --ty: -50%; }
+.p-mapstandin__at--w  { --tx: calc(-100% - var(--g)); --ty: -50%; }
+.p-mapstandin__at--n  { --tx: -50%; --ty: calc(-100% - var(--g)); }
+.p-mapstandin__at--s  { --tx: -50%; --ty: var(--g); }
+.p-mapstandin__at--ne { --tx: calc(var(--g) * 0.5); --ty: calc(-100% - var(--g) * 0.4); }
+.p-mapstandin__at--nw { --tx: calc(-100% - var(--g) * 0.5); --ty: calc(-100% - var(--g) * 0.4); }
+.p-mapstandin__at--se { --tx: calc(var(--g) * 0.5); --ty: calc(var(--g) * 0.7); }
+.p-mapstandin__at--sw { --tx: calc(-100% - var(--g) * 0.5); --ty: calc(var(--g) * 0.7); }
+
+/* ---------- Place names ---------- */
+.p-mapstandin__name {
+  font: var(--t-caption);
+  letter-spacing: var(--t-caption-tracking);
+  color: var(--ink-muted);
+  white-space: nowrap;
+  text-shadow: 0 0 2px var(--surface), 0 0 2px var(--surface), 0 0 3px var(--surface), 0 0 4px var(--surface);
+  pointer-events: none;
+}
+.p-mapstandin__name--major {
+  font: var(--t-body-strong);
+  letter-spacing: var(--t-body-strong-tracking);
+  color: var(--ink);
+  --g: 10px;
+}
+.p-mapstandin__name--ur { font: var(--t-urdu-label); letter-spacing: normal; }
+.p-mapstandin__name--major.p-mapstandin__name--ur { font: var(--t-urdu-body); letter-spacing: normal; }
+
+/* ---------- MapMarkers cards ---------- */
+.p-mapstandin__pin { --g: 12px; pointer-events: none; }
+.p-mapstandin__pin--wide { --g: 16px; }
+.p-mapstandin__train {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}

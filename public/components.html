@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patri components</title>
+<link rel="icon" href="brand/patri-favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/components.css">
+<style>
+  /* Gallery scaffolding only. Components keep their own p- styles. */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { background: var(--ground); }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: var(--t-body); letter-spacing: var(--t-body-tracking); }
+  [lang="ur"] body { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
+
+  .g-top { background: var(--surface); }
+  .g-intro { padding: var(--space-4); }
+  .g-title { margin: 0; font: var(--t-title); }
+  .g-lede { margin: var(--space-1) 0 0; font: var(--t-caption); color: var(--ink-muted); }
+
+  .g-page { padding: var(--space-4); }
+  .g-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .g-col { container-type: inline-size; min-inline-size: 0; }
+  .g-coltitle { margin: 0 0 var(--space-2); font: var(--t-caption); color: var(--ink-muted); }
+  .g-coltitle b { color: var(--ink); }
+  @media (min-width: 1400px) {
+    .g-cols { grid-template-columns: 390px minmax(960px, 1fr); align-items: start; }
+  }
+
+  .g-group { margin-block-start: var(--space-8); }
+  .g-group:first-of-type { margin-block-start: var(--space-4); }
+  .g-spec { margin-block-start: var(--space-5); }
+  .g-cap { margin: 0 0 var(--space-2); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); color: var(--ink-muted); }
+  .g-cap b { color: var(--ink); font-weight: 700; }
+
+  .g-stage { padding: var(--space-3); background: var(--surface); border: var(--border-thin) solid var(--line); border-radius: var(--radius-md); }
+  .g-stage--flush { padding: 0; overflow: hidden; }
+  .g-stage--map { background: var(--map-land); }
+  .g-stack { display: flex; flex-direction: column; gap: var(--space-2); }
+  .g-stack--loose { gap: var(--space-4); }
+  .g-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .g-wrap--start { align-items: flex-start; }
+  .g-pad { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .g-pad + .g-pad { padding-block-start: 0; }
+
+  /* Host frame for a Panel: it becomes a bottom sheet under 940px and a sidebar from 940px. */
+  .g-host { position: relative; container-type: inline-size; block-size: 640px; overflow: hidden; background: var(--map-land); border-radius: var(--radius-md); }
+  .g-host--short { block-size: 360px; }
+  .g-hostmap { position: absolute; inset: 0; pointer-events: none; }
+  .g-hostmap > * { position: absolute; pointer-events: auto; }
+  .g-hostmap__controls { inset-block-start: var(--space-4); inset-inline-end: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .g-hostmap__train { inset-block-start: 24%; inset-inline-start: 56%; }
+  .g-hostmap__label { inset-block-start: 14%; inset-inline-start: 18%; }
+  @container (min-width: 940px) { .g-hostmap__label { inset-inline-start: 62%; } }
+  .g-host--short .g-hostmap__train, .g-host--short .g-hostmap__label { display: none; }
+
+  .g-markerslot { padding: var(--space-2); min-inline-size: 260px; }
+  .g-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-2); }
+  .g-swatch { display: flex; align-items: center; gap: var(--space-2); font: var(--t-caption); color: var(--ink); }
+  .g-swatch__chip { flex: none; inline-size: 28px; block-size: 28px; border: var(--border-thin) solid var(--line); border-radius: var(--radius-sm); }
+  .g-swatch small { display: block; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="js/gallery.js"></script>
+</body>
+</html>

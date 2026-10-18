@@ -1,0 +1,14 @@
+<!-- @dsCard group="Inputs" height=180 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    root.innerHTML = [
+      Patri.SegmentedControl({ label: 'Search by', value: 'trains', options: [{ value: 'trains', label: 'Train or station', href: '#/' }, { value: 'trip', label: 'From → To', href: '#/trip' }] }),
+      Patri.SegmentedControl({ label: 'Show', value: 'arr', options: [{ value: 'arr', label: 'Arriving' }, { value: 'dep', label: 'Departing' }, { value: 'all', label: 'All' }] }),
+    ].join('');
+    Patri.bindSegmentedControl(root, {});
+  })();
+</script>

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Screens" height=932 width=1440 page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px 0;background:var(--ground);inline-size:max-content"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var P = window.Patri;
+    var unbind = function () {};
+    var frame = 'box-sizing:border-box;position:relative;inline-size:1440px;block-size:900px;overflow:hidden;border:var(--border-thin) solid var(--line);border-radius:var(--radius-sheet)';
+    function setLang(lang) { var h = document.documentElement; h.lang = lang; h.dir = lang === 'ur' ? 'rtl' : 'ltr'; }
+    function render() {
+      unbind();
+      var lang = document.documentElement.lang === 'ur' ? 'ur' : 'en';
+      root.innerHTML =
+        '<div style="' + frame + '">' + P.screens.StationScreen(P.samples.station, { layout: 'web' }) + '</div>';
+      root.querySelectorAll('.p-appbar__logo').forEach(function (img) { img.src = '/_blob/24c020f13cff6319d15f617e8824b35f'; });
+      unbind = P.screens.bindScreen(root, { data: P.samples.station, onLang: function (next) { setLang(next); render(); } });
+    }
+    // Links in the screen are placeholders: keep the preview where it is.
+    root.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a[href^="#"]')) e.preventDefault(); });
+    render();
+  })();
+</script>

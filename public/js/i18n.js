@@ -46,7 +46,33 @@ const STRINGS = {
     shareMsg: '{name} is {delay}. Arrives {stop} around {time}. Track it live: {url}', shareMsgNoStop: '{name} is {delay}. Track it live: {url}',
     shareStation: 'Live departures and arrivals at {station}: {url}', loading: 'Loading…',
     up: 'UP', dn: 'DN', close: 'Close', zoomIn: 'Zoom in', zoomOut: 'Zoom out', language: 'Language',
-    allTrains: 'All trains', mapStyle: 'Map style', styleTruck: 'Truck Art', styleSatellite: 'Satellite', styleStreets: 'Streets',
+    allTrains: 'All trains', mapStyle: 'Map style', styleSatellite: 'Satellite', styleStreets: 'Streets',
+    // Sabz components
+    panelHandle: 'Resize panel', clearSearch: 'Clear search', follow: 'Follow {name}', scheduled: 'Scheduled',
+    moreStops: '{n} more stops', journeyProgress: 'Journey progress', back: 'Back', running: 'Running',
+    updated: 'Updated {ago}', myTrains: 'My trains', rightNow: 'Right now', aboutTrain: 'About this train',
+    seeAllStops: 'See all stops', returnTrain: 'Return train', edit: 'Edit', trainOrStation: 'Train or station', fromTo: 'From → To',
+    trainHereKm: 'Train here · {km} km to {station}', leftAt: 'Left {station} {time}', kmOf: '{done} of {total} km',
+    detailNumber: 'Number', detailUrduName: 'Urdu name', detailRoute: 'Route', detailDistance: 'Distance', detailRuns: 'Runs', detailDeparts: 'Departs', daily: 'Daily',
+    runningNowHead: 'Running now', home: 'Home',
+    // Screens (public/js/screens/)
+    search: 'Search', searchBy: 'Search by', recent: 'Recent', stationBoard: 'Station board', stationsNearMe: 'Stations near me',
+    searchHint: 'Type a train number (28), a name (Shalimar), a station (Multan Cantt) or a city (Karachi). One box finds all of them.',
+    today: 'Today', tomorrow: 'Tomorrow', dayChoice: 'Day', dateShort: '{wd} {day} {month}',
+    wd0: 'Sun', wd1: 'Mon', wd2: 'Tue', wd3: 'Wed', wd4: 'Thu', wd5: 'Fri', wd6: 'Sat',
+    leavingNext: 'Leaving {station} next', onTheWay: 'Already on the way', arrives: 'Arrives {time}',
+    showWholeRoute: 'Show the whole route', lastPassed: 'Last stop', finalStop: 'Final stop', halt: '{d} halt',
+    seeAllStopsN: 'See all {n} stops', allStopsN: 'All {n} stops', start: 'Start', end: 'End',
+    detailDirection: 'Direction', detailLocomotive: 'Locomotive', detailScheduledTime: 'Scheduled time', detailThisRun: 'This run',
+    gps: 'GPS', down: 'Down', upDir: 'Up', directionTo: '{dir} · to {x}', leftOn: 'Left {date}', returnShort: 'Return',
+    nextTrains: 'Next trains', justNow: 'just now', toStation: 'To {x}', startsHereTo: 'Starts here → {x}', clickForStation: 'Click for station',
+    mapStations: 'Map of railway stations, with major cities labelled', mapFollowing: 'Map following {train}', mapAround: 'Map around {station}',
+    // The Sabz app (views, component variants)
+    leftCaption: 'Left', speedSoFar: 'Speed so far', legendExpected: 'expected', legendScheduled: 'scheduled',
+    saveStation: 'Save {name}', saved: 'Saved', savedStations: 'Saved stations', linkCopied: 'Link copied', copyFailed: 'Couldn’t copy the link',
+    notRunningNow: 'Not running now', mainStations: 'Main stations', nearestStation: 'Nearest station: {station}',
+    locateDenied: 'Location is off, so the map stays where it is.', locateUnavailable: 'Couldn’t find where you are.',
+    whichRun: 'Which run', pickStopHint: 'Tap the station where you get on or off.', timetableTimes: 'Times are from the timetable.', loadFailed: 'Couldn’t load this. Trying again…',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -93,7 +119,33 @@ const STRINGS = {
     shareMsg: '{name}: {delay}۔ {stop} تقریباً {time} پہنچے گی۔ لائیو دیکھیں: {url}', shareMsgNoStop: '{name}: {delay}۔ لائیو دیکھیں: {url}',
     shareStation: '{station} پر ٹرینوں کی لائیو آمد و روانگی: {url}', loading: 'لوڈ ہو رہا ہے…',
     up: 'اپ', dn: 'ڈاؤن', close: 'بند کریں', zoomIn: 'قریب کریں', zoomOut: 'دور کریں', language: 'زبان',
-    allTrains: 'تمام ٹرینیں', mapStyle: 'نقشے کا انداز', styleTruck: 'ٹرک آرٹ', styleSatellite: 'سیٹلائٹ', styleStreets: 'سڑکیں',
+    allTrains: 'تمام ٹرینیں', mapStyle: 'نقشے کا انداز', styleSatellite: 'سیٹلائٹ', styleStreets: 'سڑکیں',
+    // Sabz components
+    panelHandle: 'پینل کا سائز بدلیں', clearSearch: 'تلاش صاف کریں', follow: '{name} کو فالو کریں', scheduled: 'مقررہ وقت',
+    moreStops: '{n} مزید اسٹیشن', journeyProgress: 'سفر کی پیش رفت', back: 'واپس', running: 'رواں',
+    updated: '{ago} اپ ڈیٹ ہوا', myTrains: 'میری ٹرینیں', rightNow: 'ابھی', aboutTrain: 'اس ٹرین کے بارے میں',
+    seeAllStops: 'تمام اسٹیشن دیکھیں', returnTrain: 'واپسی کی ٹرین', edit: 'ترمیم کریں', trainOrStation: 'ٹرین یا اسٹیشن', fromTo: 'کہاں سے ← کہاں تک',
+    trainHereKm: 'ٹرین یہاں ہے · {station} تک {km} کلومیٹر', leftAt: '{station} سے {time} پر روانہ', kmOf: '{total} میں سے {done} کلومیٹر',
+    detailNumber: 'نمبر', detailUrduName: 'اردو نام', detailRoute: 'روٹ', detailDistance: 'فاصلہ', detailRuns: 'چلتی ہے', detailDeparts: 'روانگی', daily: 'روزانہ',
+    runningNowHead: 'اس وقت رواں', home: 'ہوم',
+    // Screens (public/js/screens/)
+    search: 'تلاش', searchBy: 'تلاش بذریعہ', recent: 'حالیہ', stationBoard: 'اسٹیشن بورڈ', stationsNearMe: 'میرے قریب اسٹیشن',
+    searchHint: 'ٹرین نمبر (28)، نام (شالیمار)، اسٹیشن (ملتان کینٹ) یا شہر (کراچی) لکھیں۔ ایک ہی خانہ سب کچھ ڈھونڈ لیتا ہے۔',
+    today: 'آج', tomorrow: 'کل', dayChoice: 'دن', dateShort: '{wd} {day} {month}',
+    wd0: 'اتوار', wd1: 'پیر', wd2: 'منگل', wd3: 'بدھ', wd4: 'جمعرات', wd5: 'جمعہ', wd6: 'ہفتہ',
+    leavingNext: '{station} سے اگلی روانگیاں', onTheWay: 'پہلے ہی راستے میں', arrives: '{time} پہنچے گی',
+    showWholeRoute: 'پورا روٹ دکھائیں', lastPassed: 'پچھلا اسٹیشن', finalStop: 'آخری اسٹیشن', halt: '{d} کا ٹھہراؤ',
+    seeAllStopsN: 'تمام {n} اسٹیشن دیکھیں', allStopsN: 'تمام {n} اسٹیشن', start: 'آغاز', end: 'اختتام',
+    detailDirection: 'سمت', detailLocomotive: 'انجن', detailScheduledTime: 'مقررہ سفری وقت', detailThisRun: 'موجودہ سفر',
+    gps: 'جی پی ایس', down: 'ڈاؤن', upDir: 'اپ', directionTo: '{dir} · {x} کی طرف', leftOn: '{date} کو روانہ', returnShort: 'واپسی',
+    nextTrains: 'اگلی ٹرینیں', justNow: 'ابھی', toStation: '{x} کی طرف', startsHereTo: 'یہاں سے شروع ← {x}', clickForStation: 'اسٹیشن دیکھنے کے لیے کلک کریں',
+    mapStations: 'ریلوے اسٹیشنوں کا نقشہ، بڑے شہروں کے ناموں کے ساتھ', mapFollowing: '{train} کے ساتھ چلتا نقشہ', mapAround: '{station} کے آس پاس کا نقشہ',
+    // The Sabz app (views, component variants)
+    leftCaption: 'روانہ', speedSoFar: 'اب تک کی رفتار', legendExpected: 'متوقع', legendScheduled: 'مقررہ',
+    saveStation: '{name} محفوظ کریں', saved: 'محفوظ ہے', savedStations: 'محفوظ اسٹیشن', linkCopied: 'لنک کاپی ہو گیا', copyFailed: 'لنک کاپی نہیں ہو سکا',
+    notRunningNow: 'اس وقت نہیں چل رہی', mainStations: 'بڑے اسٹیشن', nearestStation: 'قریب ترین اسٹیشن: {station}',
+    locateDenied: 'مقام کی اجازت نہیں ملی، اس لیے نقشہ جہاں تھا وہیں ہے۔', locateUnavailable: 'آپ کا مقام معلوم نہیں ہو سکا۔',
+    whichRun: 'کون سا سفر', pickStopHint: 'وہ اسٹیشن چنیں جہاں آپ سوار ہوں گے یا اتریں گے۔', timetableTimes: 'اوقات ٹائم ٹیبل کے مطابق ہیں۔', loadFailed: 'لوڈ نہیں ہو سکا۔ دوبارہ کوشش ہو رہی ہے…',
   },
 };
 
@@ -167,7 +219,6 @@ export function delayText(late) {
   return t(late > 0 ? 'late' : 'early', { d: dur(Math.abs(late)) });
 }
 
-export const delayTone = late => (late == null ? 'none' : late <= 15 ? 'ontime' : late <= 60 ? 'late' : 'vlate');
 
 export function monthName(m) {
   return MONTHS[lang][m];
