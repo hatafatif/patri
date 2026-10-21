@@ -73,10 +73,15 @@ id patri >/dev/null 2>&1 || useradd --system --home /opt/patri --shell /usr/sbin
 mkdir -p /opt/patri/data /etc/patri
 chown -R patri:patri /opt/patri
 
-echo "==> Opening ports 80 and 443 in the VM firewall (only if not already open)"
-for port in 80 443; do
-  iptables -C INPUT -m state --state NEW -p tcp --dport "$port" -j ACCEPT 2>/dev/null \
-    || iptables -I INPUT 6 -m state --state NEW -p tcp --dport "$port" -j ACCEPT
+echo "==> Opening ports 80 and 443 in the VM firewall"
+# Oracle's images end INPUT with a REJECT rule, and its position varies by image. Each ACCEPT must sit
+# above it, so remove any existing copy (a rule below the REJECT never matches) and insert it right
+# before the REJECT; without one, append.
+for port in 443 80; do
+  rule=(-m state --state NEW -p tcp --dport "$port" -j ACCEPT)
+  while iptables -C INPUT "${rule[@]}" 2>/dev/null; do iptables -D INPUT "${rule[@]}"; done
+  reject=$(iptables -L INPUT -n --line-numbers | awk '$2 == "REJECT" { print $1; exit }')
+  if [ -n "$reject" ]; then iptables -I INPUT "$reject" "${rule[@]}"; else iptables -A INPUT "${rule[@]}"; fi
 done
 netfilter-persistent save
 
