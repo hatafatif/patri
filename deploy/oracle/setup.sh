@@ -108,6 +108,37 @@ ReadWritePaths=/opt/patri/data
 WantedBy=multi-user.target
 UNIT
 
+echo "==> Writing the archive service and timer"
+cat > /etc/systemd/system/patri-archive.service <<UNIT
+[Unit]
+Description=Patri nightly archive (uploads the previous day's history)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=patri
+WorkingDirectory=/opt/patri
+EnvironmentFile=/etc/patri/recorder.env
+Environment=DATA_DIR=/opt/patri/data
+ExecStart=$(command -v node) --disable-warning=ExperimentalWarning archive.js
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/patri/data
+UNIT
+cat > /etc/systemd/system/patri-archive.timer <<UNIT
+[Unit]
+Description=Patri nightly archive (00:45 PKT)
+
+[Timer]
+OnCalendar=*-*-* 19:45:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+UNIT
+
 echo "==> Validating the Caddy config"
 if ! caddy validate --config "$CADDYFILE" --adapter caddyfile; then
   echo "Caddy config is invalid (see above). Not reloading Caddy. Fix /etc/caddy and run again." >&2
@@ -116,6 +147,7 @@ fi
 
 systemctl daemon-reload
 systemctl enable patri-recorder
+systemctl enable --now patri-archive.timer
 if systemctl is-active --quiet caddy; then
   echo "==> Reloading Caddy"
   systemctl reload caddy

@@ -87,6 +87,49 @@ curl https://patri-monitor.hataf.dev/healthz
 
 Expected: `{"ok":true,"feed":true,"runs":...,"lastUpdate":...,"timetable":true}`. Right after a deploy `runs` may be 0 for a minute while the feed joins. Then open the app: train pages show recorded history after a few minutes.
 
+## Archive
+
+The live database keeps 90 days. Every night at 00:45 PKT (19:45 UTC) `archive.js` writes the previous Pakistan day's positions and passes into a small SQLite file, gzips it and uploads it to an Oracle Object Storage bucket as `daily/YYYY-MM-DD.db.gz`. Each day is uploaded once and kept forever; together the files are the full history. Only Node built-ins are used.
+
+### Bucket and write-only URL
+
+1. **Storage > Buckets > Create bucket**: name `patri-archive`, tier **Standard**, **Auto-Tiering off**. Everything stays inside the 10 GiB Always Free allowance.
+2. Optional: **Lifecycle Policy Rules** on the bucket, to move objects older than 90 days to the **Archive** tier (note that archived objects must be restored before they can be downloaded).
+3. In the bucket, **Pre-Authenticated Requests > Create**: type **Permit object writes** (write-only), target **Bucket**, a far-off expiry. Copy the URL when it is shown; it appears once. It must end in `/o/`.
+
+### Save it on the VM
+
+This keeps the URL out of the shell history:
+
+```
+read -rsp "Paste the archive URL: " U && echo "ARCHIVE_URL=$U" | sudo tee -a /etc/patri/recorder.env >/dev/null && unset U
+```
+
+Until `ARCHIVE_URL` is set the job logs "ARCHIVE_URL not set; nothing to do" and succeeds.
+
+### Running and checking
+
+- Run now: `sudo systemctl start patri-archive.service`. The first run archives every finished day in the live DB (at most 90 days back); after that, each run archives the days since the last success.
+- Logs: `journalctl -u patri-archive -n 50`. One line per day: rows (positions/passes), bytes and result. Days with no data are skipped.
+- Timer: `systemctl list-timers patri-archive.timer`
+- Progress is in `/opt/patri/data/archive-state.json` (`lastDay`, `uploadedBytes`, `files`). A failed upload leaves it untouched, so the next run retries the same day.
+
+### Restore a day
+
+Download the object from the bucket (console, or a read PAR of your own), then:
+
+```
+gunzip 2026-10-20.db.gz
+sqlite3 2026-10-20.db 'select count(*) from positions'   # or any SQLite tool
+```
+
+or from another database: `ATTACH 'file:2026-10-20.db?mode=ro' AS day;`. The file has the same `positions` and `passes` tables as `trains.db`.
+
+### Cap and heartbeat
+
+- `ARCHIVE_CAP_BYTES` (default 8 GiB) is checked against the total uploaded so far before every upload. If the next file would pass it, the job stops with an error and exits 1, so the bucket never exceeds the 10 GiB free tier. Raise it or clean the bucket by hand to continue.
+- Optional: set `ARCHIVE_HEARTBEAT_URL` in `/etc/patri/recorder.env` to a Healthchecks.io-style ping URL. It is pinged after a fully successful run, and at `<url>/fail` after an error, so a silent failure gets noticed.
+
 ## Shared machine
 
 Each project on the VM gets its own:
