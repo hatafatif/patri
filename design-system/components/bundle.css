@@ -149,27 +149,8 @@
 }
 .p-panel[data-snap="down"] { block-size: 150px; }
 .p-panel[data-snap="half"] { block-size: 55%; }
-.p-panel[data-snap="full"] { block-size: calc(100% - 8px); }
+.p-panel[data-snap="full"] { block-size: calc(100% - var(--panel-top-gap, 8px)); }
 .p-panel--dragging { transition: none; }
-.p-panel__top { position: relative; flex: none; }
-/* Over the handle's row, at the inline-start, so the bar stays centred. A sibling of the handle, so a tap never starts a drag. */
-.p-panel__back {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-block-size: var(--tap);
-  padding-inline: var(--space-4);
-  color: var(--sabz-700);
-  font: var(--t-label);
-  letter-spacing: var(--t-label-tracking);
-  text-transform: uppercase;
-  text-decoration: none;
-}
-[lang="ur"] .p-panel__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 .p-panel__handle {
   display: flex;
   align-items: center;
@@ -209,7 +190,6 @@
     box-shadow: none;
     transition: none;
   }
-  .p-panel__top,
   .p-panel__handle { display: none; }
   .p-panel .p-appbar { min-block-size: 64px; padding-inline: var(--space-5); }
 }
@@ -411,6 +391,10 @@
 .p-iconbutton--outline:hover,
 .p-iconbutton--float:hover { background: var(--sabz-100); }
 .p-iconbutton[aria-pressed="true"] { color: var(--sabz-700); }
+/* With text: a pill, the icon followed by the label. */
+.p-iconbutton--text { display: inline-flex; align-items: center; inline-size: auto; gap: var(--space-1); padding-inline: var(--space-3) var(--space-4); }
+.p-iconbutton__text { font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
+[lang="ur"] .p-iconbutton__text { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 
 /* ---------- 9. FollowButton ---------- */
 .p-followbutton { color: var(--ink-muted); }
@@ -1029,6 +1013,20 @@
   letter-spacing: normal;
 }
 
+/* Large variant (size 'lg'), the extra item fields and tones. */
+.p-detailgrid__item--wide { grid-column: 1 / -1; }
+.p-detailgrid__sub { margin: 0; color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
+.p-detailgrid--lg { row-gap: var(--space-4); }
+.p-detailgrid--lg .p-detailgrid__label { font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
+.p-detailgrid--lg .p-detailgrid__value { font: var(--t-title); letter-spacing: var(--t-title-tracking); }
+.p-detailgrid__value--ontime { color: var(--status-ontime-fg); }
+.p-detailgrid__value--late { color: var(--status-late-bg); }
+.p-detailgrid__value--early { color: var(--status-early-fg); }
+.p-detailgrid__value--nogps { color: var(--status-nogps-fg); }
+[lang="ur"] .p-detailgrid--lg .p-detailgrid__label { font: var(--t-urdu-caption); letter-spacing: normal; text-transform: none; }
+[lang="ur"] .p-detailgrid--lg .p-detailgrid__value { font: var(--t-urdu-title); letter-spacing: normal; }
+[lang="ur"] .p-detailgrid__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
+
 /* ---------- 20. LinkRow ---------- */
 .p-linkrow {
   display: flex;
@@ -1456,6 +1454,9 @@
 }
 .p-screen__controls--start { inset-inline-start: var(--space-3); align-items: flex-start; }
 .p-screen__controls--end { inset-inline-end: var(--space-3); align-items: flex-end; }
+/* Phone: the Home/Back pill floats above the panel; at full snap the panel stops below it (12px + 44px pill + 12px). */
+.p-screen--phone .p-screen__controls--start { z-index: 3; }
+.p-screen--back .p-panel { --panel-top-gap: 68px; }
 
 /* The Panel's host. It covers the screen but lets clicks through to the map; only the Panel takes them. */
 .p-screen__sheet {
