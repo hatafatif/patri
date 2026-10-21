@@ -50,7 +50,7 @@ const STRINGS = {
     // Sabz components
     panelHandle: 'Resize panel', clearSearch: 'Clear search', follow: 'Follow {name}', scheduled: 'Scheduled',
     moreStops: '{n} more stops', journeyProgress: 'Journey progress', back: 'Back', running: 'Running',
-    updated: 'Updated {ago}', myTrains: 'Recently checked', rightNow: 'Right now', aboutTrain: 'About this train',
+    updated: 'Updated {ago}', myTrains: 'Recently checked', rightNow: 'Current status', aboutTrain: 'About this train',
     seeAllStops: 'See all stops', returnTrain: 'Return train', edit: 'Edit', trainOrStation: 'Train or station', fromTo: 'From → To',
     trainHereKm: 'Train here · {km} km to {station}', leftAt: 'Left {station} {time}', kmOf: '{done} of {total} km',
     detailNumber: 'Number', detailUrduName: 'Urdu name', detailRoute: 'Route', detailDistance: 'Distance', detailRuns: 'Runs', detailDeparts: 'Departs', daily: 'Daily',
@@ -77,6 +77,7 @@ const STRINGS = {
     startedFrom: 'Started from', startsFrom: 'Starts from', kmAwayNow: '{km} km away · {speed} km/h now', plannedAt: 'Planned {time}',
     yesterday: 'Yesterday', dayTime: '{day} {time}', timeOnDay: '{time} {day}', nextDay: 'next day', dayN: 'day {n}',
     photoBy: 'Photo: {author} · {licence}',
+    journey: 'Journey', firstStop: 'First stop', currentStop: 'Current stop', speedLabel: 'Speed', delayLabel: 'Delay',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -127,7 +128,7 @@ const STRINGS = {
     // Sabz components
     panelHandle: 'پینل کا سائز بدلیں', clearSearch: 'تلاش صاف کریں', follow: '{name} کو فالو کریں', scheduled: 'مقررہ وقت',
     moreStops: '{n} مزید اسٹیشن', journeyProgress: 'سفر کی پیش رفت', back: 'واپس', running: 'رواں',
-    updated: '{ago} اپ ڈیٹ ہوا', myTrains: 'حال ہی میں دیکھی گئی ٹرینیں', rightNow: 'ابھی', aboutTrain: 'اس ٹرین کے بارے میں',
+    updated: '{ago} اپ ڈیٹ ہوا', myTrains: 'حال ہی میں دیکھی گئی ٹرینیں', rightNow: 'موجودہ صورتحال', aboutTrain: 'اس ٹرین کے بارے میں',
     seeAllStops: 'تمام اسٹیشن دیکھیں', returnTrain: 'واپسی کی ٹرین', edit: 'ترمیم کریں', trainOrStation: 'ٹرین یا اسٹیشن', fromTo: 'کہاں سے ← کہاں تک',
     trainHereKm: 'ٹرین یہاں ہے · {station} تک {km} کلومیٹر', leftAt: '{station} سے {time} پر روانہ', kmOf: '{total} میں سے {done} کلومیٹر',
     detailNumber: 'نمبر', detailUrduName: 'اردو نام', detailRoute: 'روٹ', detailDistance: 'فاصلہ', detailRuns: 'چلتی ہے', detailDeparts: 'روانگی', daily: 'روزانہ',
@@ -154,6 +155,7 @@ const STRINGS = {
     startedFrom: 'روانگی کا اسٹیشن', startsFrom: 'روانگی کا اسٹیشن', kmAwayNow: '{km} کلومیٹر دور · ابھی {speed} کلومیٹر فی گھنٹہ', plannedAt: 'مقررہ وقت {time}',
     yesterday: 'گزشتہ روز', dayTime: '{day} {time}', timeOnDay: '{day} {time}', nextDay: 'اگلے دن', dayN: 'دن {n}',
     photoBy: 'تصویر: {author} · {licence}',
+    journey: 'سفر', firstStop: 'پہلا اسٹیشن', currentStop: 'موجودہ اسٹیشن', speedLabel: 'رفتار', delayLabel: 'تاخیر',
   },
 };
 
