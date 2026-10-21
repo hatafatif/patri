@@ -1,4 +1,4 @@
-<!-- @dsCard group="Train & station" height=260 -->
+<!-- @dsCard group="Train & station" height=420 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
 <div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground)"></div>
 <script>
@@ -12,6 +12,11 @@
       { label: 'Runs', value: 'Daily' },
       { label: 'Departs', value: '7:10 AM' },
       { label: 'Urdu name', value: 'شالیمار ایکسپریس', lang: 'ur' },
+    ] }) + Patri.DetailGrid({ size: 'lg', items: [
+      { label: 'Speed', value: '104 km/h' },
+      { label: 'Delay', value: '1 h 13 min late', tone: 'late' },
+      { label: 'Next stop', value: 'Lahore Jn', sub: '210 km away' },
+      { label: 'Arrival', value: 'in 2 h 42 min', sub: 'Today ~4:42 PM' },
     ] });
   })();
 </script>

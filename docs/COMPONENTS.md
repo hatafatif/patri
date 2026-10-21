@@ -227,8 +227,8 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 
 ### 19. DetailGrid
 **What it is:** key/value facts about a train.
-**Props:** `items: [{ label, value, lang? }]`.
-**Markup:** a two-column `<dl>` grid. The label is a small `ink-muted` caption and the value is body-strong. A value with `lang: 'ur'` renders in Nastaliq.
+**Props:** `items: [{ label, value, lang?, sub?, tone?, wide? }]`, `size?: 'md' | 'lg'` (default `'md'`). `sub` is a small `ink-muted` caption line under the value; `tone` (`'ontime' | 'late' | 'early' | 'nogps'`) colours the value like a status; `wide` makes the item span both columns.
+**Markup:** a two-column `<dl>` grid. The label is a small `ink-muted` caption and the value is body-strong. A value with `lang: 'ur'` renders in Nastaliq. `size: 'lg'` (class `p-detailgrid--lg`) shows big figures: uppercase label over a title-size value, with more row gap. Used for the Train page's Current status.
 
 ### 20. LinkRow
 **What it is:** a full-width link row, such as Return train → 27 UP Shalimar Express.
@@ -327,7 +327,7 @@ The app's pages, built from the components above. **Views render their pages thr
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
 | RouteScreen | Search › From → To: trains leaving next and already on the way | phone |
-| TrainScreen | Train page: map following the train, Right now, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
+| TrainScreen | Train page: map following the train, Current status, Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen) | phone |
 | StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
 
