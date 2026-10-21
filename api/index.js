@@ -3,10 +3,10 @@
 // (scripts/build-timetable.js) and live positions are read on demand, then cached briefly here and
 // at the edge so all viewers share one read every 15 seconds.
 //
-// Recorder: when RECORDER_URL and RECORDER_KEY are set, live positions and recorded history come
-// from the always-on recorder (server.js in recorder mode, see deploy/oracle/). If it is down, slow
-// or has an empty feed, snapshot() falls back to reading the upstream feed directly, and history()
-// returns nothing, exactly as without a recorder.
+// Recorder: when RECORDER_URL and RECORDER_KEY are set, recorded history (the speed chart and actual
+// passing times) comes from the always-on recorder (server.js in recorder mode, see deploy/oracle/).
+// Live positions are always read from the upstream feed directly, so the recorder is only asked when a
+// Train page opens. If it is down or slow, history() returns nothing, exactly as without a recorder.
 const { fetchLiveRuns, normalize } = require('../lib');
 const { Timetable } = require('../data');
 const { createRoutes, decorate, sendJson } = require('../routes');
@@ -14,9 +14,6 @@ const { createRoutes, decorate, sendJson } = require('../routes');
 const timetable = Timetable.fromRaw(require('../build/timetable.json'));
 const liveTrains = timetable.trains.filter(t => t.IsLive).map(t => t.TrainNumber);
 
-// One read asks for every live train at once, so reads are kept to one per 15 s per instance (the
-// edge cache in routes.js shares them further). Failures back off from 2 s to a minute, serving the
-// last good snapshot meanwhile, so an upstream outage isn't retried on every request.
 const RECORDER_URL = (process.env.RECORDER_URL || '').replace(/\/+$/, '');
 const RECORDER_KEY = process.env.RECORDER_KEY || '';
 const useRecorder = !!(RECORDER_URL && RECORDER_KEY);
@@ -39,35 +36,15 @@ async function recorderHistory(run) {
   }
 }
 
+// One read asks for every live train at once, so reads are kept to one per 15 s per instance (the
+// edge cache in routes.js shares them further). Failures back off from 2 s to a minute, serving the
+// last good snapshot meanwhile, so an upstream outage isn't retried on every request.
 let cached = { at: 0, runs: null };
 let pending = null, failures = 0, retryAt = 0;
-let recorderPending = null;
 
-// Already-decorated runs from the recorder, or null when it can't help. Shares the 15 s cache.
-function recorderSnapshot() {
-  recorderPending ??= recorderGet('/api/snapshot', 3000)
-    .then(runs => {
-      if (!Array.isArray(runs) || !runs.length) return null;
-      cached = { at: Date.now(), runs };
-      return runs;
-    })
-    .catch(e => { console.error('Recorder snapshot failed:', e.message); return null; })
-    .finally(() => { recorderPending = null; });
-  return recorderPending;
-}
-
-async function snapshot() {
+function snapshot() {
   const now = Date.now();
   if (cached.runs && now - cached.at < 15000) return cached.runs;
-  if (useRecorder) {
-    const runs = await recorderSnapshot();
-    if (runs) return runs;
-  }
-  return upstreamSnapshot();
-}
-
-function upstreamSnapshot() {
-  const now = Date.now();
   if (now < retryAt) {
     if (cached.runs) return cached.runs;
     throw new Error('The live feed is unavailable, retrying shortly');

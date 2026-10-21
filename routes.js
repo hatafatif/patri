@@ -3,6 +3,8 @@
 // runs, history(run) -> recorded positions and station passes.
 const TIMETABLE = 'public, s-maxage=3600, stale-while-revalidate=86400'; // changes only with a deploy
 const LIVE = 'public, s-maxage=15, stale-while-revalidate=30';
+// History only grows; a minute's staleness is fine and lets one recorder read serve everyone on that train.
+const HISTORY = 'public, s-maxage=60, stale-while-revalidate=300';
 
 // A raw position with the train and departure date it belongs to. Runs we can't place (cargo
 // trains) come back as null; delays over a day are flagged as suspect and hidden by default.
@@ -28,7 +30,7 @@ function createRoutes(timetable, source) {
       case 'runs':
         return [200, await source.runsFor(Number(q.get('train'))), LIVE];
       case 'history':
-        return [200, await source.history(q.get('run') || '')];
+        return [200, await source.history(q.get('run') || ''), HISTORY];
       case 'board': {
         const board = timetable.board(q.get('station'), await source.snapshot());
         return board ? [200, board, LIVE] : [404, { error: 'Unknown station' }];

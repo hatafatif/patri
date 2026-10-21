@@ -3,8 +3,8 @@
 // Listens on the local network by default; HOST=127.0.0.1 npm start keeps it to this PC.
 // Unlike the Vercel deployment, this keeps one live feed connection open and records history.
 //
-// Recorder mode (deploy/oracle/): run 24/7 on a small VM so the Vercel function can read live
-// positions and history from it. Env, all optional (nothing set = plain local behaviour):
+// Recorder mode (deploy/oracle/): run 24/7 on a small VM so the Vercel function can read
+// recorded history from it (live positions still come from the feed). Env, all optional (nothing set = plain local behaviour):
 //   RECORDER_KEY  every /api/* request must send header x-recorder-key; static files are not served
 //   DATA_DIR      where trains.db lives (default ./data)
 //   KEEP_DAYS     how long positions are kept (store.js, default 14)

@@ -1,6 +1,6 @@
 # Patri recorder on Oracle Cloud (Always Free)
 
-The recorder is `server.js` running 24/7 on a small free VM. It keeps one live feed socket open and records every train's positions and station passes into SQLite (90 days). The Vercel API reads live positions and history from it, and falls back to reading the feed directly if the recorder is down. Cost: $0.
+The recorder is `server.js` running 24/7 on a small free VM. It keeps one live feed socket open and records every train's positions and station passes into SQLite (90 days). The Vercel API reads only recorded history from it (the speed chart and actual passing times), when a Train page opens, cached for a minute; live positions still come straight from the Pakistan Railways feed. If the recorder is down, the app simply shows no history. Cost: $0.
 
 You need: this repo on your PC with a working `.env` (it holds `PAKRAIL_API_KEY`), `ssh`, `rsync` and `openssl`.
 
