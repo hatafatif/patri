@@ -81,7 +81,8 @@ export function StopsScreen(data, options = {}) {
   );
   const map = options.standin === false ? '' : trainMapFor(data, web ? 'web' : 'phone');
   if (!web) {
-    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content });
+    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content,
+      back: { href: `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, label: t('back') } });
   }
   return frame({
     name: 'stops', options, snap: 'full', label: title,

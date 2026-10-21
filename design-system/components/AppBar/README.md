@@ -43,3 +43,6 @@ Patri.AppBar({ live: 'on', lang: 'en' });
 Patri.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' } });
 ```
 The app imports it from `/js/components/index.js`.
+
+## Sticky in the sidebar
+In the web sidebar the AppBar is the first thing in the Panel body and is `position: sticky` at the top (`.p-panel .p-appbar`), so its back link stays visible while the sidebar scrolls.

@@ -70,6 +70,7 @@
 .p-appbar__logo { display: block; block-size: 44px; inline-size: auto; max-inline-size: 140px; }
 .p-appbar__back { gap: var(--space-1); font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
 .p-appbar__back:hover { color: var(--sabz-700); }
+.p-panel .p-appbar { position: sticky; inset-block-start: 0; z-index: 2; }
 .p-appbar__end { display: flex; align-items: center; gap: var(--space-3); min-inline-size: 0; margin-inline-start: auto; }
 [lang="ur"] .p-appbar__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 /* On narrow phones the live word gives way first, so the language toggle never leaves the bar. */
@@ -143,6 +144,25 @@
 .p-panel[data-snap="half"] { block-size: 55%; }
 .p-panel[data-snap="full"] { block-size: calc(100% - 8px); }
 .p-panel--dragging { transition: none; }
+.p-panel__top { position: relative; flex: none; }
+/* Over the handle's row, at the inline-start, so the bar stays centred. A sibling of the handle, so a tap never starts a drag. */
+.p-panel__back {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: var(--tap);
+  padding-inline: var(--space-4);
+  color: var(--sabz-700);
+  font: var(--t-label);
+  letter-spacing: var(--t-label-tracking);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+[lang="ur"] .p-panel__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 .p-panel__handle {
   display: flex;
   align-items: center;
@@ -182,6 +202,7 @@
     box-shadow: none;
     transition: none;
   }
+  .p-panel__top,
   .p-panel__handle { display: none; }
   .p-panel .p-appbar { min-block-size: 64px; padding-inline: var(--space-5); }
 }

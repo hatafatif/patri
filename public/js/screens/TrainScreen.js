@@ -364,7 +364,7 @@ export function TrainScreen(data, options = {}) {
     return frame({
       name: 'train', options, label, snap: 'half',
       map,
-      start: backButton('#/', 'float'),
+      back: { href: '#/', label: t('home') },
       end: following + wholeRoute,
       body: body(...content, d.first ? speedCard(data) : '', d.first ? about(data, d) : ''),
     });

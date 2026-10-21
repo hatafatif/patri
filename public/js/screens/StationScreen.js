@@ -79,7 +79,7 @@ export function StationScreen(data, options = {}) {
     label: name,
     snap: 'half',
     map: stationMap({ layout: web ? 'web' : 'phone', selected, ...(hover ? { hover } : {}) }),
-    start: web ? '' : backButton('#/', 'float'),
+    back: { href: '#/', label: t('home') },
     end: web ? mapButton('zoomIn') + mapButton('zoomOut') + mapButton('layers') : '',
     body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: '#/', label: t('home') } }) + panel : panel,
   });

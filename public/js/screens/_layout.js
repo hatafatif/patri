@@ -27,11 +27,12 @@ import { t } from '../i18n.js';
  * @param {'down' | 'half' | 'full'} [f.snap] - The screen's default snap; options.snap wins.
  * @param {string} [f.top] - Phone only: a band across the top (the Home AppBar); the map starts below it.
  * @param {string} [f.map] - The backdrop content: the map stand-in, or nothing.
+ * @param {{ href: string, label: string }} [f.back] - Phone only: the Panel's back link in its top bar (always visible).
  * @param {string} [f.start] - Controls floating at the map's top start (the back button).
  * @param {string} [f.end] - Controls floating at the map's top end (zoom, layers, Following).
  * @param {string} [f.dock] - Web only: content docked along the bottom of the map.
  */
-export function frame({ name, options = {}, label = '', body = '', snap = 'half', top = '', map = '', start = '', end = '', dock = '' }) {
+export function frame({ name, options = {}, label = '', body = '', snap = 'half', top = '', map = '', start = '', end = '', dock = '', back }) {
   const web = options.layout === 'web';
   const expanded = !web && options.expanded;
   const sheetSnap = options.snap || (expanded ? 'full' : snap);
@@ -45,7 +46,7 @@ export function frame({ name, options = {}, label = '', body = '', snap = 'half'
     + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : '')
     + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : '')
     + '</div>'
-    + `<div class="p-screen__sheet">${Panel({ body, snap: sheetSnap, label })}</div>`
+    + `<div class="p-screen__sheet">${Panel({ body, snap: sheetSnap, label, ...(!web && back ? { back } : {}) })}</div>`
     + '</div>';
 }
 

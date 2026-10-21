@@ -15,7 +15,7 @@
       '</div>';
     const host = 'position:relative;container-type:inline-size;block-size:420px;background:var(--map-land);overflow:hidden';
     root.innerHTML =
-      '<div style="' + host + ';max-inline-size:390px" id="phone">' + P.Panel({ label: 'Right now', body: body }) + '</div>' +
+      '<div style="' + host + ';max-inline-size:390px" id="phone">' + P.Panel({ label: 'Right now', body: body, back: { href: '#/', label: 'Home' } }) + '</div>' +
       '<div style="overflow-x:auto"><div style="' + host + ';inline-size:960px" id="side">' + P.Panel({ label: 'Right now', body: body }) + '</div></div>';
     P.bindPanel(root.querySelector('#phone'), { onSnap: function () {} });
     P.bindPanel(root.querySelector('#side'));
