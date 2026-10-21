@@ -1,4 +1,4 @@
-<!-- @dsCard group="Train & station" height=1700 -->
+<!-- @dsCard group="Train & station" height=2100 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap">
 <div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);max-width:440px"></div>
 <script>
@@ -16,9 +16,17 @@
       { kind: 'stop', name: 'Bahawalpur', sub: 'Stops 2 min', time: { expected: '~3:35 PM' }, href: '#' },
       { kind: 'final', name: 'Karachi Cantt', sub: 'Last stop', time: { expected: '~6:05 AM' } }
     ];
+    var cardRows = [
+      { kind: 'passed', label: 'Started from', name: 'Karachi Cantt', time: { expected: 'Yesterday 10:00 PM' } },
+      { kind: 'passed', label: 'Just passed', name: 'Khanewal Jn', time: { expected: 'Today 11:45 AM' } },
+      { kind: 'next', label: 'Next stop', name: 'Lahore Jn', sub: '240 km away · 104 km/h now', time: { expected: 'Today ~4:48 PM' }, countdown: 'in 3 h 4 min' },
+      { kind: 'more', name: '2 more stops', href: '#' },
+      { kind: 'final', label: 'Last stop', name: 'Margala', sub: 'Planned 9:10 PM', time: { expected: 'Today ~10:23 PM' } }
+    ];
     var label = function (s) { return '<div class="t-label" style="margin-top:4px">' + s + '</div>'; };
     var box = function (id, html) { return '<div id="' + id + '" style="border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface);overflow:hidden">' + html + '</div>'; };
-    root.innerHTML = label('Compact (Right now)') + box('compact', window.Patri.StopTimeline({ rows: rows, mode: 'compact' }))
+    root.innerHTML = label('Card (Right now)') + box('card', window.Patri.StopTimeline({ rows: cardRows, mode: 'card' }))
+      + label('Compact') + box('compact', window.Patri.StopTimeline({ rows: rows, mode: 'compact' }))
       + label('Full (All stops)') + box('full', window.Patri.StopTimeline({ rows: rows, mode: 'full' }))
       + label('Full, with legend') + box('legend', window.Patri.StopTimeline({ rows: rows, mode: 'full', legend: true }));
     window.Patri.bindStopTimeline(root.querySelector('#compact'), { onChangeStop: function () {} });

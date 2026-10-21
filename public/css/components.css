@@ -837,13 +837,30 @@
   background: var(--ink);
 }
 
-/* Urdu: names in urdu-body, the train label and sub lines in urdu-label; times stay condensed Latin. */
-[lang="ur"] .p-stoptimeline__name { font: var(--t-urdu-body); letter-spacing: normal; }
+/* Card mode (Right now): a label over each name, bigger names, the sub line under them. */
+.p-stoptimeline__label {
+  color: var(--ink-muted);
+  font: var(--t-label);
+  letter-spacing: var(--t-label-tracking);
+  text-transform: uppercase;
+}
+.p-stoptimeline--card .p-stoptimeline__row { min-block-size: 64px; }
+.p-stoptimeline--card .p-stoptimeline__main,
+.p-stoptimeline--card .p-stoptimeline__time { padding-block: var(--space-3); }
+.p-stoptimeline--card .p-stoptimeline__row:not(.p-stoptimeline__row--more) .p-stoptimeline__name { font: var(--t-heading); letter-spacing: var(--t-heading-tracking); }
+.p-stoptimeline__row--passed .p-stoptimeline__label { color: var(--ink-passed); }
+.p-stoptimeline__row--yourstop .p-stoptimeline__label { color: var(--ink-on-dark-muted); }
+
+/* Urdu: names bold (urdu-strong), labels and sub lines light and small (urdu-caption), so it keeps the English hierarchy. The more and train rows keep their own sizes; times stay condensed Latin. */
+[lang="ur"] .p-stoptimeline__name,
+[lang="ur"] .p-stoptimeline--card .p-stoptimeline__row:not(.p-stoptimeline__row--more) .p-stoptimeline__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-stoptimeline__row--more .p-stoptimeline__name { font: var(--t-urdu-body); letter-spacing: normal; }
 [lang="ur"] .p-stoptimeline__row--train .p-stoptimeline__name { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-stoptimeline__sub,
+[lang="ur"] .p-stoptimeline__countdown { font: var(--t-urdu-caption); letter-spacing: normal; }
+[lang="ur"] .p-stoptimeline__label { font: var(--t-urdu-caption); letter-spacing: normal; text-transform: none; }
+[lang="ur"] .p-stoptimeline__legend,
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font: var(--t-urdu-label); letter-spacing: normal; }
-[lang="ur"] .p-stoptimeline__countdown,
-[lang="ur"] .p-stoptimeline__legend { font: var(--t-urdu-label); letter-spacing: normal; }
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font-weight: 700; }
 
 /* ---------- 17. JourneyProgress ---------- */
