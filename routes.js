@@ -94,6 +94,10 @@ function createRoutes(timetable, source) {
         const board = timetable.board(q.get('station'), await source.snapshot());
         return board ? [200, board, LIVE] : [404, { error: 'Unknown station' }];
       }
+      case 'timetable': {
+        const tt = timetable.stationTimetable(q.get('station'));
+        return tt ? [200, tt, TIMETABLE] : [404, { error: 'Unknown station' }];
+      }
       case 'trip': {
         const trip = timetable.trip(q.get('from'), q.get('to'), await source.snapshot());
         return trip ? [200, trip, LIVE] : [404, { error: 'Unknown station' }];

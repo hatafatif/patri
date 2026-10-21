@@ -329,7 +329,7 @@ The app's pages, built from the components above. **Views render their pages thr
 | RouteScreen | Search › Plan a trip: trains you can still board | phone |
 | TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with Change stop and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey button, then the upcoming stops as links) | phone |
-| StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
+| StationScreen | Station page: the board of next trains, or with the "Next trains / Timetable" switch (SegmentedControl, `?view=timetable`) the whole day's timetable (a Photo of the city above it when there is one) | phone, web |
 
 - **Library:** each screen has a showcase page in `design-system/components/<Name>Screen[Web]/` (group "Screens").
 - **In-app gallery:** `/screens.html` shows every screen, phone and web, in English and Urdu.

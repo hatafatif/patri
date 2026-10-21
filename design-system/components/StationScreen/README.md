@@ -3,7 +3,7 @@
 The Station page on a phone: the map zoomed to one station, and a bottom sheet with the station's header and the next trains through it.
 
 ## Components
-[PageHeader](../PageHeader/README.md) (station mark, name with its Urdu twin, city, follow and share), [SectionHeader](../SectionHeader/README.md), [StatusChip](../StatusChip/README.md) (the "Updated" note), [DepartureRow](../DepartureRow/README.md) (one per train), [IconButton](../IconButton/README.md) (the float back button), [Panel](../Panel/README.md) (the sheet), plus the preview-only map stand-in. The web layout is [StationScreenWeb](../StationScreenWeb/README.md).
+[PageHeader](../PageHeader/README.md) (station mark, name with its Urdu twin, city, follow and share), [SegmentedControl](../SegmentedControl/README.md) (the "Next trains / Timetable" switch, links to `#/station/<id>` and `?view=timetable`), [SectionHeader](../SectionHeader/README.md), [StatusChip](../StatusChip/README.md) (the "Updated" note), [DepartureRow](../DepartureRow/README.md) (one per train), [IconButton](../IconButton/README.md) (the float back button), [Panel](../Panel/README.md) (the sheet), plus the preview-only map stand-in. The web layout is [StationScreenWeb](../StationScreenWeb/README.md).
 
 ## Data
 `StationScreen(data, options)` returns an HTML string. `data` is `samples.station` in previews and a `/api/board` result in the view.
@@ -15,6 +15,7 @@ The Station page on a phone: the map zoomed to one station, and a bottom sheet w
 | `saved` | `boolean` | Whether the follow star is on. |
 | `now`, `updatedAt` | `number` | Minutes after midnight. "Updated just now" when they match, otherwise "Updated 3 min ago". |
 | `rows` | `StationRow[]` | The next trains, in expected-time order. |
+| `view`, `timetable`, `loadingTimetable` | `'next' \| 'timetable'`, `TimetableRow[]`, `boolean` | With `view: 'timetable'` the switch is on Timetable and the list is every train through the station by scheduled time (`/api/timetable`), with a status only on trains running towards it. Never ordered by lateness. |
 | `map.hover` | `{ key, station }` | Map stand-in only: a station shown hovered on the web map. |
 
 A `StationRow` is `{ train, kind: 'starts' \| 'passes' \| 'ends', origin, dest, sched, est, late \| null, gps, runId?, kmAway?, atPlatform? }`.
