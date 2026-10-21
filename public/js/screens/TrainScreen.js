@@ -38,6 +38,7 @@ import { trainMap } from './_map-standin.js';
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
  * @property {{ count: number, href: string }} [hiddenRuns] - Suspect runs that are not shown: a note and a "Show anyway" link to href.
  * @property {string} [lastSeen] - Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip.
+ * @property {{ state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string }} [alerts] - The Alerts card: off (a Notify me button to the stop picker), on (for stopName, or the whole journey; Change stop and Turn off), or a note saying why not. Without it there is no card.
  * @property {boolean} [following=true] - The MapToggle's state.
  * @property {string} [notice] - Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives.
  */
@@ -200,6 +201,27 @@ function statusCard(data, d) {
   });
 }
 
+/** Alerts: push notifications for this run. The view works out the state (data.alerts); nothing without it. */
+function alertsCard(data) {
+  const a = data.alerts;
+  if (!a) return '';
+  const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
+  let content;
+  if (a.state === 'off') {
+    content = stack(note(t('alertsWhat')), Button({ label: t('notifyMe'), icon: 'bell', href: pick, variant: 'secondary', full: true }));
+  } else if (a.state === 'on') {
+    content = stack(
+      note(`${t('alertsOn')} · ${a.stopName ? t('alertsFor', { station: a.stopName }) : t('alertsWholeTrip')}`),
+      row(Button({ label: t('alertsChange'), href: pick, variant: 'link' }), Button({ label: t('alertsOff'), variant: 'link', className: 'p-alerts-off' })),
+    );
+  } else {
+    const key = { blocked: 'alertsBlocked', unsupported: 'alertsUnsupported', nolive: 'alertsNoLive' }[a.state];
+    if (!key) return '';
+    content = note(t(key));
+  }
+  return Card({ header: t('alertsHeader'), body: content });
+}
+
 /** Journey: first stop, the stop the train is at or heading for, last stop, progress and the link to all stops. */
 function journeyCard(data, d) {
   const { train, run } = data;
@@ -337,7 +359,7 @@ export function TrainScreen(data, options = {}) {
   const status = data.notice != null ? notice(data.notice) : '';
   // Without the route there is nothing to show but the header and a loading note.
   const content = d.first
-    ? [header(data, d), status, runChoice(data), statusCard(data, d), journeyCard(data, d)]
+    ? [header(data, d), status, runChoice(data), statusCard(data, d), alertsCard(data), journeyCard(data, d)]
     : [header(data, d), status, note(t('loading'))];
 
   if (!web) {
