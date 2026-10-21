@@ -233,6 +233,36 @@ class Timetable {
     return { station: { id: station.id, name: station.name, nameUr: station.nameUr, lat: station.lat, lon: station.lon }, now: nowMin, rows };
   }
 
+  // Every train that stops at a station, by scheduled time there (dep for starts and passes, arr for ends).
+  stationTimetable(stationId) {
+    const station = this.stations.get(stationId);
+    if (!station) return null;
+    const place = s => ({ id: s.id, name: s.name, nameUr: s.nameUr });
+    const rows = [];
+    for (const { number, index } of station.trains) {
+      const train = this.byNumber.get(number);
+      const stops = this.routes.get(number);
+      const stop = stops[index];
+      const first = index === 0, last = index === stops.length - 1;
+      const time = last && !first ? stop.arr ?? stop.dep : stop.dep ?? stop.arr;
+      if (time == null) continue;
+      rows.push({
+        number,
+        name: train.TrainName,
+        nameUr: train.TrainNameUR,
+        up: Boolean(train.IsUp),
+        gps: Boolean(train.IsLive),
+        kind: first ? 'starts' : last ? 'ends' : 'passes',
+        time: ((time % DAY) + DAY) % DAY,
+        before: stops.slice(0, index).map(s => s.id), // for the client: has a live run already passed this stop
+        origin: place(stops[0]),
+        dest: place(stops[stops.length - 1]),
+      });
+    }
+    rows.sort((a, b) => a.time - b.time || a.number - b.number);
+    return { station: { id: station.id, name: station.name, nameUr: station.nameUr }, rows };
+  }
+
   // Direct trains from one station to another, with today's live status where there is one.
   trip(fromId, toId, runs, now = Date.now()) {
     const from = this.stations.get(fromId), to = this.stations.get(toId);

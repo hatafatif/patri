@@ -6,7 +6,7 @@ import { t } from '../i18n.js';
 import { loadLastSeen, lastSeenOf, lastSeenText } from '../lastseen.js';
 import { share } from '../share.js';
 import { loadPhotos, cityPhoto } from '../photos.js';
-import { state, api, paint, layout, navigate, mapTrains, addRecentSearch, isSaved, setSaved } from '../app.js';
+import { state, api, FRESH_MS, paint, layout, navigate, mapTrains, addRecentSearch, isSaved, setSaved } from '../app.js';
 import * as map from '../map.js';
 
 const REFRESH_MS = 30e3;
@@ -14,6 +14,18 @@ const LIVE_DEBOUNCE_MS = 5e3;
 const NOTICE_MS = 3e3;
 
 let v = null;
+
+// The timetable changes only with a deploy: fetched once per station.
+const timetables = new Map();
+
+// The newest live run of a train that has not yet passed this stop (its last station is one before it).
+function liveRunTo(r) {
+  let best = null;
+  for (const run of state.runs.values()) {
+    if (run.train === r.number && !run.suspect && Date.now() - run.updatedAt < FRESH_MS && !(best && best.updatedAt >= run.updatedAt)) best = run;
+  }
+  return best && r.before.includes(best.prevStation) ? best : null;
+}
 
 const lastStation = () => { try { return localStorage.getItem('lastStation'); } catch { return null; } };
 
@@ -23,7 +35,21 @@ function data() {
   // The board's clock moves on between fetches, so "Updated … ago" keeps counting.
   if (board?.rows.some(r => r.late == null || r.gps === false)) loadLastSeen(render);
   const now = board ? board.now + (Date.now() - v.fetchedAt) / 60000 : 0;
+  const tt = timetables.get(id);
   return {
+    view: v.view,
+    loadingTimetable: !tt,
+    timetable: (tt?.rows || []).map(r => {
+      const run = liveRunTo(r);
+      return {
+        train: state.byNumber.get(r.number) || trainInfo(r),
+        kind: r.kind,
+        origin: r.origin,
+        dest: r.dest,
+        time: r.time,
+        ...(run ? { late: run.lateBy, gps: true, runId: run.id } : {}),
+      };
+    }),
     live: state.live,
     station,
     saved: isSaved(id),
@@ -77,6 +103,19 @@ async function onShare() {
   mine.noticeTimer = setTimeout(() => { if (v === mine) { mine.notice = ''; render(); } }, NOTICE_MS);
 }
 
+async function loadTimetable() {
+  const mine = v;
+  if (!mine || mine.view !== 'timetable' || timetables.has(mine.id)) return;
+  try {
+    const tt = await api(`/api/timetable?station=${encodeURIComponent(mine.id)}`);
+    timetables.set(mine.id, tt);
+  } catch {
+    if (v === mine) setTimeout(() => { if (v === mine) loadTimetable(); }, 10e3);
+    return;
+  }
+  if (v === mine) render();
+}
+
 async function load() {
   clearTimeout(v?.timer);
   if (!v) return;
@@ -101,13 +140,14 @@ export default {
     if (!params.id) return navigate(`#/station/${id}`, { replace: true });
     try { localStorage.setItem('lastStation', id); } catch {}
     addRecentSearch({ kind: 'station', id });
-    v = { id, board: null, fetchedAt: 0, notice: '', timer: 0, live: 0, noticeTimer: 0 };
+    v = { id, view: params.view === 'timetable' ? 'timetable' : 'next', board: null, fetchedAt: 0, notice: '', timer: 0, live: 0, noticeTimer: 0 };
     map.showStations({ key: `station:${id}`, stations: state.stations, selected: [id], fit: 'selected' });
     map.onStationClick(other => { if (v && other !== v.id) navigate(`#/station/${other}`); });
     map.onTrainClick(n => navigate(`#/train/${n}`));
     render();
     loadPhotos().then(() => { if (v) render(); });
     load();
+    loadTimetable();
   },
   render,
   update() {
