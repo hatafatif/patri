@@ -34,16 +34,16 @@
   --map-border: #8e8799; /* Province and country borders, dashed. */
   --map-rail: #7c8580; /* Rail lines with no train selected. */
   --map-station: var(--sabz-700); /* Small station dots, shown once the map is zoomed in. */
-  --map-outside: #e3e8e4; /* The fade over the neighbouring countries, so Pakistan stands out. */
+  --map-outside: #dde4df; /* The fade over the neighbouring countries, so Pakistan stands out. */
   --map-urban: #e9dfcf; /* Built-up areas, zoomed in. */
   --map-green: #dfe8cc; /* Farmland and grass, zoomed in. */
   --map-wood: #c9dcb8; /* Forest, zoomed in. */
   --map-ice: #f7fafc; /* Glaciers. */
-  --map-relief-low: #e6edd3; /* Relief tint for the plains, up to about 200 m. */
-  --map-relief-mid: #f1e8cf; /* Relief tint for the uplands, around 900 m. */
-  --map-relief-high: #ddc9a8; /* Relief tint for the mountains, around 2,600 m. */
-  --map-relief-peak: #f7f7f4; /* Relief tint for the high peaks, 4,800 m and up. */
-  --map-relief-shade: #4b5a4a; /* The colour of slopes facing away from the sun in the relief. */
+  --map-relief-low: #d9e6bd; /* Relief tint for the plains, up to about 200 m. */
+  --map-relief-mid: #efdfb7; /* Relief tint for the uplands, around 900 m. */
+  --map-relief-high: #cfb48a; /* Relief tint for the mountains, around 2,600 m. */
+  --map-relief-peak: #fbfbf8; /* Relief tint for the high peaks, 4,800 m and up. */
+  --map-relief-shade: #3a4a3b; /* The colour of slopes facing away from the sun in the relief. */
 
   /* Type families */
   --font-body: Barlow, system-ui, sans-serif;

@@ -243,7 +243,7 @@
       onTheWay: "Already on the way",
       arrives: "Arrives {time}",
       showWholeRoute: "Show the whole route",
-      lastPassed: "Last stop",
+      lastPassed: "Just passed",
       finalStop: "Final stop",
       halt: "{d} halt",
       seeAllStopsN: "See all {n} stops",
@@ -286,7 +286,18 @@
       whichRun: "Which run",
       pickStopHint: "Tap the station where you get on or off.",
       timetableTimes: "Times are from the timetable.",
-      loadFailed: "Couldn\u2019t load this. Trying again\u2026"
+      loadFailed: "Couldn\u2019t load this. Trying again\u2026",
+      // Right now rows, days on times, photos
+      startedFrom: "Started from",
+      startsFrom: "Starts from",
+      kmAwayNow: "{km} km away \xB7 {speed} km/h now",
+      plannedAt: "Planned {time}",
+      yesterday: "Yesterday",
+      dayTime: "{day} {time}",
+      timeOnDay: "{time} {day}",
+      nextDay: "next day",
+      dayN: "day {n}",
+      photoBy: "Photo: {author} \xB7 {licence}"
     },
     ur: {
       appTitle: "\u067E\u0679\u0691\u06CC",
@@ -521,7 +532,18 @@
       whichRun: "\u06A9\u0648\u0646 \u0633\u0627 \u0633\u0641\u0631",
       pickStopHint: "\u0648\u06C1 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA \u062C\u06C1\u0627\u06BA \u0622\u067E \u0633\u0648\u0627\u0631 \u06C1\u0648\u06BA \u06AF\u06D2 \u06CC\u0627 \u0627\u062A\u0631\u06CC\u06BA \u06AF\u06D2\u06D4",
       timetableTimes: "\u0627\u0648\u0642\u0627\u062A \u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644 \u06A9\u06D2 \u0645\u0637\u0627\u0628\u0642 \u06C1\u06CC\u06BA\u06D4",
-      loadFailed: "\u0644\u0648\u0688 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u0627\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06C1\u0648 \u0631\u06C1\u06CC \u06C1\u06D2\u2026"
+      loadFailed: "\u0644\u0648\u0688 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u0627\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06C1\u0648 \u0631\u06C1\u06CC \u06C1\u06D2\u2026",
+      // Right now rows, days on times, photos
+      startedFrom: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      startsFrom: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      kmAwayNow: "{km} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631 \u062F\u0648\u0631 \xB7 \u0627\u0628\u06BE\u06CC {speed} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631 \u0641\u06CC \u06AF\u06BE\u0646\u0679\u06C1",
+      plannedAt: "\u0645\u0642\u0631\u0631\u06C1 \u0648\u0642\u062A {time}",
+      yesterday: "\u06AF\u0632\u0634\u062A\u06C1 \u0631\u0648\u0632",
+      dayTime: "{day} {time}",
+      timeOnDay: "{day} {time}",
+      nextDay: "\u0627\u06AF\u0644\u06D2 \u062F\u0646",
+      dayN: "\u062F\u0646 {n}",
+      photoBy: "\u062A\u0635\u0648\u06CC\u0631: {author} \xB7 {licence}"
     }
   };
   var MONTHS = {
@@ -1081,10 +1103,10 @@
         const ms = x0 + Math.min(Math.max(f, 0), 1) * (x1 - x0);
         let best = points[0];
         for (const p of points) if (Math.abs(p[0] - ms) < Math.abs(best[0] - ms)) best = p;
-        const at2 = (best[0] - x0) / (x1 - x0) * 100;
+        const at3 = (best[0] - x0) / (x1 - x0) * 100;
         cursor.hidden = tip.hidden = false;
-        cursor.style.insetInlineStart = `${at2}%`;
-        tip.style.insetInlineStart = `${Math.min(Math.max(at2, 14), 86)}%`;
+        cursor.style.insetInlineStart = `${at3}%`;
+        tip.style.insetInlineStart = `${Math.min(Math.max(at3, 14), 86)}%`;
         tip.innerHTML = `${bdi(clock(best[0]))} \xB7 ${best[1] > MOVING ? bdi(t("kmh", { n: Math.round(best[1]) })) : esc(t("stopped"))}`;
       };
       const leave = (e) => {
@@ -1277,14 +1299,31 @@
   var place2 = (s) => s ? stationName(s.name, s.nameUr) : "";
   var placeEn = (s) => s ? place(s.name) : "";
   var placeUr2 = (s) => clean(s?.nameUr).replace(/[\s,،.]+$/, "");
-  var cityOf = (s) => isUrdu() && s?.cityUr ? s.cityUr : s?.city ? stationName(s.city, "") : place2(s);
+  var cityOf = (s) => isUrdu() ? s?.cityUr || place2(s) : s?.city ? stationName(s.city, "") : place2(s);
   var trainTitle = (train2) => trainName(train2);
   var trainNo = (train2) => `${train2.label ?? train2.number} ${t(train2.up ? "up" : "dn")}`;
   var badgeOf = (train2, size) => ({ number: train2.label ?? String(train2.number), direction: train2.up ? "up" : "dn", ...size ? { size } : {} });
   var route = (a, b) => t("passesFromTo", { a: place2(a), b: place2(b) });
   var ltr = (s) => isUrdu() ? `\u2066${s}\u2069` : s;
-  var time = (min) => ltr(`${clockMin(min)}${min >= 1440 ? ` +${Math.floor(min / 1440)}` : ""}`);
-  var approx = (min) => ltr(`~${time(min)}`);
+  var DAY_MS = 864e5;
+  function dayWord(diff) {
+    if (diff === -1) return t("yesterday");
+    if (diff === 0) return t("today");
+    if (diff === 1) return t("tomorrow");
+    const wd = new Date(Date.now() + 5 * 36e5 + diff * DAY_MS).getUTCDay();
+    return t(`wd${wd}`);
+  }
+  function at(min, now, mark, always) {
+    const clock2 = ltr(`${mark}${clockMin(min)}`);
+    if (now == null) {
+      const n = Math.floor(min / 1440);
+      return n <= 0 ? clock2 : t("timeOnDay", { time: clock2, day: n === 1 ? t("nextDay") : t("dayN", { n: n + 1 }) });
+    }
+    const diff = Math.floor(min / 1440) - Math.floor(now / 1440);
+    return diff === 0 && !always ? clock2 : t("dayTime", { day: dayWord(diff), time: clock2 });
+  }
+  var time = (min, now) => at(min, now, "", false);
+  var approx = (min, now) => at(min, now, "~", false);
   var kmNum = (n) => Math.round(n).toLocaleString("en-US");
   var km = (n) => t("km", { n: kmNum(n) });
   function dateLabel(iso) {
@@ -1431,7 +1470,7 @@
     }
   };
   var pct = (v, total) => `${+(v / total * 100).toFixed(3)}%`;
-  var at = (x, y, w, h) => `left:${pct(x, w)};top:${pct(y, h)}`;
+  var at2 = (x, y, w, h) => `left:${pct(x, w)};top:${pct(y, h)}`;
   var d = (pts) => pts.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join(" ");
   var dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
   var near = (p, list2, r) => list2.some((q) => dist(p, q) < r);
@@ -1453,15 +1492,15 @@
     }
     return out;
   }
-  var dotEl = (cls, [x, y], w, h) => `<span class="p-mapstandin__dot ${cls}" style="${at(x, y, w, h)}"></span>`;
+  var dotEl = (cls, [x, y], w, h) => `<span class="p-mapstandin__dot ${cls}" style="${at2(x, y, w, h)}"></span>`;
   var rtl = () => isUrdu() ? "rtl" : "ltr";
   function nameEl(key, [x, y], side, major, w, h) {
     const [en, ur] = NAMES[key];
     const cls = ["p-mapstandin__at", `p-mapstandin__at--${side}`, "p-mapstandin__name", major ? "p-mapstandin__name--major" : "", isUrdu() ? "p-mapstandin__name--ur" : ""].filter(Boolean).join(" ");
-    return `<span class="${cls}" style="${at(x, y, w, h)}">${esc(isUrdu() ? ur : en)}</span>`;
+    return `<span class="${cls}" style="${at2(x, y, w, h)}">${esc(isUrdu() ? ur : en)}</span>`;
   }
   function pin(kind, text, [x, y], side, w, h, wide = false) {
-    return `<div class="p-mapstandin__at p-mapstandin__at--${side} p-mapstandin__pin${wide ? " p-mapstandin__pin--wide" : ""}" dir="${rtl()}" style="${at(x, y, w, h)}">${mapLabel({ kind, title: text.title, sub: text.sub })}</div>`;
+    return `<div class="p-mapstandin__at p-mapstandin__at--${side} p-mapstandin__pin${wide ? " p-mapstandin__pin--wide" : ""}" dir="${rtl()}" style="${at2(x, y, w, h)}">${mapLabel({ kind, title: text.title, sub: text.sub })}</div>`;
   }
   function shell(mode, w, h, label, body2) {
     return `<div class="p-mapstandin p-mapstandin--${mode}"><div class="p-mapstandin__box" style="--w:${w};--h:${h}"><svg class="p-mapstandin__svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)}">${body2.svg}</svg><div class="p-mapstandin__layer" aria-hidden="true">${body2.layer}</div>${body2.cards || ""}</div></div>`;
@@ -1485,7 +1524,7 @@
     const svg = g.rails.map((r) => `<path class="p-mapstandin__rail" d="${d(r)}"/>`).join("") + `<path class="p-mapstandin__route-casing" d="${d(done)}"/><path class="p-mapstandin__route-done" d="${d(done)}"/><path class="p-mapstandin__route-ahead" d="${d(ahead)}"/>`;
     const showStop = yourStop && g.bahawalpur;
     const layer = g.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--station p-mapstandin__dot--onroute", [x, y], w, h)).join("") + dotEl("p-mapstandin__dot--city", g.multan, w, h) + (showStop ? dotEl("p-mapstandin__dot--station p-mapstandin__dot--onroute", g.bahawalpur, w, h) : "") + g.places.map(([k, x, y, side]) => nameEl(k, [x, y], side, false, w, h)).join("");
-    const cards2 = pin("next", next, g.multan, g.multanSide, w, h) + (showStop ? pin("yourstop", yourStop, g.bahawalpur, "e", w, h) : "") + `<div class="p-mapstandin__train" dir="ltr" style="${at(here[0], here[1], w, h)}">${trainMarker({ label: train2.label })}</div>`;
+    const cards2 = pin("next", next, g.multan, g.multanSide, w, h) + (showStop ? pin("yourstop", yourStop, g.bahawalpur, "e", w, h) : "") + `<div class="p-mapstandin__train" dir="ltr" style="${at2(here[0], here[1], w, h)}">${trainMarker({ label: train2.label })}</div>`;
     return shell("zoom", w, h, t("mapFollowing", { train: train2.label }), { svg, layer, cards: cards2 });
   }
   function stationMap({ layout = "phone", selected = { title: "" }, hover } = {}) {
@@ -1674,16 +1713,17 @@
     const ests2 = data.ests || [];
     const progress = run && data.progress ? data.progress : { passedIdx: -1, nextIdx: -1, kmDone: 0, kmToNext: 0 };
     const now = data.now ?? 0;
+    const ref = run && data.now != null ? data.now : void 0;
     const first = stops[0], last = stops.at(-1);
     const { nextIdx, passedIdx } = progress;
     const mineIdx = data.myStop ? stops.findIndex((s) => s.id === data.myStop) : -1;
     const est = (i) => ests2[i]?.est != null && !ests2[i].passed ? ests2[i].est : null;
     const inTime = (i) => est(i) != null ? t("inTime", { d: dur(est(i) - now) }) : "";
-    const exp = (i) => est(i) != null ? { expected: approx(est(i)) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i])) } : void 0;
+    const exp = (i) => est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : void 0;
     const both = (i) => {
       const sched = schedOf(stops[i]);
       if (est(i) == null) return exp(i);
-      return { expected: approx(est(i)), ...sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched) } : {} };
+      return { expected: approx(est(i), ref), ...sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched, ref) } : {} };
     };
     const trainText = (full) => {
       const st = run?.status;
@@ -1705,6 +1745,7 @@
       mineIdx,
       est,
       now,
+      ref,
       run,
       progress,
       stops,
@@ -1726,7 +1767,7 @@
     const d2 = derive(data);
     if (!data.run || !d2.next || !d2.prev) return "";
     const train2 = { label: `${trainNo(data.train)} \xB7 ${t("kmh", { n: data.run.speed })}` };
-    const when = d2.est(d2.nextIdx) != null ? approx(d2.est(d2.nextIdx)) : "";
+    const when = d2.est(d2.nextIdx) != null ? approx(d2.est(d2.nextIdx), d2.ref) : "";
     const join2 = (...p) => p.filter(Boolean).join(" \xB7 ");
     if (layout !== "web") {
       return trainMap({ layout, train: train2, next: { title: place2(d2.next), sub: join2(when, km(d2.progress.kmToNext)) } });
@@ -1735,7 +1776,7 @@
       layout,
       train: train2,
       next: { title: place2(d2.next), sub: join2(when, d2.inTime(d2.nextIdx), km(d2.progress.kmToNext)) },
-      ...d2.mine && d2.mineIdx > d2.nextIdx && d2.est(d2.mineIdx) != null ? { yourStop: { title: place2(d2.mine), sub: `${t("yourStop")} \xB7 ${approx(d2.est(d2.mineIdx))}` } } : {}
+      ...d2.mine && d2.mineIdx > d2.nextIdx && d2.est(d2.mineIdx) != null ? { yourStop: { title: place2(d2.mine), sub: `${t("yourStop")} \xB7 ${approx(d2.est(d2.mineIdx), d2.ref)}` } } : {}
     });
   }
   function speedCard(data) {
@@ -1758,7 +1799,7 @@
     const rows = [];
     let tail = passedIdx;
     if (passedIdx >= 0) {
-      rows.push({ kind: "passed", name: place2(d2.prev), sub: t("lastPassed"), ...d2.schedOf(d2.prev) != null ? { time: { expected: time(d2.schedOf(d2.prev)) } } : {} });
+      rows.push({ kind: "passed", name: place2(d2.prev), sub: t("lastPassed"), ...d2.schedOf(d2.prev) != null ? { time: { expected: time(d2.schedOf(d2.prev), d2.ref) } } : {} });
     }
     rows.push({ kind: "train", name: d2.trainText(false) });
     if (nextIdx >= 0) {
@@ -1805,9 +1846,9 @@
       );
     }
     if (run && d2.mineIdx <= d2.passedIdx) {
-      const at2 = data.ests?.[d2.mineIdx]?.at ?? (d2.schedOf(d2.mine) != null ? d2.schedOf(d2.mine) + run.late : null);
+      const at3 = data.ests?.[d2.mineIdx]?.at ?? (d2.schedOf(d2.mine) != null ? d2.schedOf(d2.mine) + run.late : null);
       return row(
-        fill(note(at2 != null ? t("passedYourStop", { time: time(at2) }) : `${t("yourStop")} \xB7 ${place2(d2.mine)}`)),
+        fill(note(at3 != null ? t("passedYourStop", { time: time(at3, d2.ref) }) : `${t("yourStop")} \xB7 ${place2(d2.mine)}`)),
         Button({ label: t("change"), href: pickHref, variant: "link" })
       );
     }
@@ -1847,7 +1888,7 @@
         StopTimeline({ mode: "compact", rows: timelineRows(data, d2) }),
         JourneyProgress({
           fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, d2.progress.kmDone / d2.totalKm)) : 0,
-          start: d2.passedIdx >= 0 && first.dep != null && run.status?.kind !== "wait" ? t("leftAt", { station: place2(first), time: time(first.dep) }) : place2(first),
+          start: d2.passedIdx >= 0 && first.dep != null && run.status?.kind !== "wait" ? t("leftAt", { station: place2(first), time: time(first.dep, d2.ref) }) : place2(first),
           end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) })
         }),
         yourStopPrompt(data, d2),
@@ -1954,10 +1995,10 @@
       const change = !pick ? { change: true } : {};
       if (passed) {
         const sched = d2.schedOf(s);
-        const at2 = sched != null ? { time: { expected: time(sched) } } : {};
+        const at3 = sched != null ? { time: { expected: time(sched, d2.ref) } } : {};
         const kmText = i === 0 ? join2(t("start"), km(0)) : i === passedIdx ? join2(km(s.km), t("lastPassed")) : km(s.km);
-        if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...at2, ...change });
-        else out.push({ kind: "passed", name, sub: kmText, ...at2 });
+        if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...at3, ...change });
+        else out.push({ kind: "passed", name, sub: kmText, ...at3 });
         if (i === passedIdx) out.push({ kind: "train", name: d2.trainText(true) });
         return;
       }
@@ -2028,7 +2069,7 @@
       notice(data.notice),
       data.loading ? note(t("loading")) : section(
         row(fill(SectionHeader({ label: t("nextTrains"), count: rows.length })), StatusChip({ tone: "neutral", text: t("updated", { ago: age }) })),
-        rows.length ? list(...rows.map((r) => boardRow(r, station2))) : note(t("noTrainsSoon"))
+        rows.length ? list(...rows.map((r) => boardRow(r, station2, data.now))) : note(t("noTrainsSoon"))
       )
     );
     return frame({
@@ -2042,14 +2083,14 @@
       body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + panel : panel
     });
   }
-  function boardRow(r, station2) {
+  function boardRow(r, station2, now) {
     const { train: train2, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
     const moved = est !== sched;
     let when;
-    if (atPlatform) when = { expected: time(est) };
-    else if (late != null) when = { expected: approx(est) };
-    else when = { expected: time(sched) };
-    if (when.expected !== time(sched) && moved) when.scheduled = time(sched);
+    if (atPlatform) when = { expected: time(est, now) };
+    else if (late != null) when = { expected: approx(est, now) };
+    else when = { expected: time(sched, now) };
+    if (when.expected !== time(sched, now) && moved) when.scheduled = time(sched, now);
     let sub;
     if (kind === "starts") sub = t("startsHereTo", { x: place2(dest) });
     else if (kind === "ends") sub = t("arrivesFrom", { x: place2(origin) });
