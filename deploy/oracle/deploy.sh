@@ -28,6 +28,8 @@ echo "==> Checking SSH to $TARGET"
 run true || { echo "Cannot SSH to $TARGET. Check the host, the user (ubuntu) and your key." >&2; exit 1; }
 
 echo "==> Copying files"
+# Minimal Ubuntu images (the usual Arm choice on Oracle) don't ship rsync.
+run 'command -v rsync >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq rsync; }'
 run 'sudo mkdir -p /opt/patri /etc/patri && sudo chown "$USER" /opt/patri'
 FILES=(server.js lib.js data.js store.js routes.js package.json package-lock.json)
 rsync -az -e "ssh ${SSH_OPTS[*]}" "${FILES[@]}" deploy/oracle/setup.sh "$TARGET:/opt/patri/"
