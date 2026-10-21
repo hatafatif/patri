@@ -53,13 +53,6 @@ export const store = {
     try { value == null ? localStorage.removeItem(key) : localStorage.setItem(key, JSON.stringify(value)); } catch {}
   },
 };
-// Your stop, per train: localStorage stop:<n>, a plain station id (as before the redesign).
-export function getStop(number) {
-  try { return localStorage.getItem(`stop:${number}`); } catch { return null; }
-}
-export function setStop(number, id) {
-  try { id ? localStorage.setItem(`stop:${number}`, id) : localStorage.removeItem(`stop:${number}`); } catch {}
-}
 // My trains: followed trains (localStorage myTrains, set by the FollowButton), then recently viewed ones.
 export const followedTrains = () => store.get('myTrains', []).map(Number).filter(n => state.byNumber.has(n));
 export const isFollowed = n => followedTrains().includes(Number(n));
@@ -189,8 +182,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---- Routing.
-//   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=&stop=]
-//   #/train/<n>/stops[?pick=1]  #/station/<id>.  Old links keep working: #27 is #/train/27.
+//   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=]
+//   #/train/<n>/stops  #/station/<id>.  Old links keep working: #27 is #/train/27.
 export function parse(hash = location.hash) {
   const h = hash.replace(/^#/, '');
   if (/^\d+$/.test(h)) return { view: 'train', params: { number: Number(h) }, legacy: `#/train/${h}` };
@@ -202,7 +195,7 @@ export function parse(hash = location.hash) {
   const id = x => (x && x !== '-' ? x : null);
   if (parts[0] === 'trip') return { view: 'trip', params: { from: id(parts[1]), to: id(parts[2]), day: q.get('day') === 'tomorrow' ? 'tomorrow' : 'today' } };
   if (parts[0] === 'train' && parts[1]) {
-    return { view: 'train', params: { number: Number(parts[1]), stops: parts[2] === 'stops', pick: q.get('pick') === '1', run: q.get('run'), stop: q.get('stop') } };
+    return { view: 'train', params: { number: Number(parts[1]), stops: parts[2] === 'stops', run: q.get('run') } };
   }
   if (parts[0] === 'station') return { view: 'station', params: { id: parts[1] || null } };
   return { view: 'home', params: {} };
@@ -225,7 +218,7 @@ export function goBack(fallback = '#/') {
   else navigate(fallback, { replace: true });
 }
 /**
- * Finishes a pick (a station for From → To, your stop on All stops): goes back to the page the pick was
+ * Finishes a pick (a station for From → To): goes back to the page the pick was
  * opened from and replaces it with hash, so history holds the updated page once. Without history it
  * simply replaces this entry with hash.
  */

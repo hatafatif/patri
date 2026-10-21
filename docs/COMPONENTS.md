@@ -113,11 +113,10 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 - `body`: an HTML string.
 - `snap`: `'down' | 'half' | 'full'`. Default `'half'`.
 - `label`: the accessible name.
-- `back?`: `{ href, label }`. A back link in the sheet's top bar (`<a class="p-panel__back">`, arrow plus label, at the inline-start beside the handle). The top bar never scrolls, so the link stays visible at every snap and scroll. Phone only; the web sidebar uses the AppBar's back link.
 **Phone (under 940px):** a bottom sheet over the map.
 - Top corners `radius-sheet`, `shadow-sheet`, and a 2px `rule` top border.
 - A handle `<button class="p-panel__handle" aria-label="…">`, 44px tall, with a 40×4 bar.
-- Snap heights: down shows 150px; half covers 55% of the viewport; full covers everything except 8px at the top.
+- Snap heights: down shows 150px; half covers 55% of the viewport; full covers everything except 8px at the top. A screen can raise that gap with the CSS variable `--panel-top-gap` (the Home/Back pill does, 68px); `bindPanel` reads it too.
 **Web (940px and up):** a fixed left sidebar, 440px wide.
 - The handle is hidden. The body scrolls on its own. It has a 1.5px `line` end border.
 **Behaviour:** `bindPanel(root, { onSnap(snap) })`.
@@ -148,12 +147,13 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 
 ### 8. IconButton
 **What it is:** a 44×44 icon control.
-**Props:** `icon` (a key in the icon set), `label` (required, becomes the aria-label), `variant`, `pressed?`, `href?`.
+**Props:** `icon` (a key in the icon set), `label` (required, becomes the aria-label), `variant`, `text?`, `pressed?`, `href?`.
 **Variants:**
 - `plain`: no border.
 - `outline`: 1.5px `line` border on `surface`.
 - `float`: over the map; `surface` with `shadow-float`.
 **Markup:** an `<a>` when there's an `href`, otherwise a `<button>`.
+**`text`:** when true the label also shows as text after the icon (`.p-iconbutton--text`, a pill: `<span class="p-iconbutton__text">`, uppercase label font, Urdu label font in Urdu). The aria-label is dropped because the visible text names it. Used with `float` for the phone "← Home" / "← Back" pill on the map.
 
 ### 9. FollowButton
 **What it is:** the star that adds a train to My trains.
@@ -227,8 +227,8 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 
 ### 19. DetailGrid
 **What it is:** key/value facts about a train.
-**Props:** `items: [{ label, value, lang? }]`.
-**Markup:** a two-column `<dl>` grid. The label is a small `ink-muted` caption and the value is body-strong. A value with `lang: 'ur'` renders in Nastaliq.
+**Props:** `items: [{ label, value, lang?, sub?, tone?, wide? }]`, `size?: 'md' | 'lg'` (default `'md'`). `sub` is a small `ink-muted` caption line under the value; `tone` (`'ontime' | 'late' | 'early' | 'nogps'`) colours the value like a status; `wide` makes the item span both columns.
+**Markup:** a two-column `<dl>` grid. The label is a small `ink-muted` caption and the value is body-strong. A value with `lang: 'ur'` renders in Nastaliq. `size: 'lg'` (class `p-detailgrid--lg`) shows big figures: uppercase label over a title-size value, with more row gap. Used for the Train page's Current status.
 
 ### 20. LinkRow
 **What it is:** a full-width link row, such as Return train → 27 UP Shalimar Express.
@@ -327,7 +327,7 @@ The app's pages, built from the components above. **Views render their pages thr
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
 | RouteScreen | Search › From → To: trains leaving next and already on the way | phone |
-| TrainScreen | Train page: map following the train, Right now, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
+| TrainScreen | Train page: map following the train, Current status, Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen) | phone |
 | StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
 

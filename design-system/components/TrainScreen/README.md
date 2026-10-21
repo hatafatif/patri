@@ -9,10 +9,11 @@ The Train page on a phone: the map following one train, with a bottom sheet that
 - Map: the train (label "28 DN · 105 km/h") and a "next stop" card. Back (IconButton, float) at the start; Following (MapToggle, on) and Show the whole route at the end.
 - Panel, half snap by default:
   1. PageHeader: train badge, name with its Urdu twin, route, follow star, share.
-  2. Right now card (key tone): StatusStrip, the compact StopTimeline (last stop passed, train here, next stop with its countdown, your stop with Change, "8 more stops", final stop), JourneyProgress, and "See all 16 stops".
+  2. Current status card (key tone): DetailGrid (large) with Speed, Delay, Next stop and Arrival, and when it last reported.
+  2b. Journey card: the StopTimeline (first stop, "N more stops", next stop, "N more stops", last stop), JourneyProgress, and "See all 16 stops".
   3. Speed card: the SpeedChart, which carries its own "Speed today" title, so there is no SectionHeader above it (the wireframe says "Speed so far"; a `title` prop on SpeedChart would let the screen use that wording).
   4. About this train card (DetailGrid) and, 12px below it, the Return train LinkRow.
-- Without `myStop` (or when it is not after the next stop) the your-stop row is left out; "more stops" counts the stops between the last row shown and the final stop and is left out at 0. A halt shows only when it is 5 minutes or more. Locomotive shows only when `details.locomotive` is given.
+- "More stops" counts the stops between the last row shown and the final stop and is left out at 0. A halt shows only when it is 5 minutes or more. Locomotive shows only when `details.locomotive` is given.
 
 ## Data: `TrainScreenData`
 | Field | Meaning |

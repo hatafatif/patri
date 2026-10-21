@@ -55,10 +55,12 @@ export interface DepartureRowProps {
   status: StatusChipProps;
 }
 
-/** Key and value facts about a train, in a two-column grid. (DetailGrid.js) */
+/** Key and value facts about a train, in a two-column grid. The 'lg' size shows big figures (the Train page's Current status). (DetailGrid.js) */
 export interface DetailGridProps {
-  /** Already localised. A value with lang 'ur' renders right-to-left in Nastaliq, even on an English page. */
-  items: { label: string, value: string, lang?: 'ur' }[];
+  /** Already localised. A value with lang 'ur' renders right-to-left in Nastaliq, even on an English page. `sub` is a small already-localised line under the value. `tone` colours the value like a status. `wide` makes the item span both columns. */
+  items: { label: string, value: string, lang?: 'ur', sub?: string, tone?: 'ontime' | 'late' | 'early' | 'nogps', wide?: boolean }[];
+  /** 'lg' shows the values as large figures with uppercase labels. Default 'md'. */
+  size?: 'md' | 'lg';
   /** Extra classes, so a composing component can hook its own styles. */
   className?: string;
 }
@@ -87,6 +89,8 @@ export interface IconButtonProps {
   label: string;
   /** plain has no border; outline has a 1.5px line border on surface; float sits over the map on surface with shadow-float. Default 'plain'. */
   variant?: 'plain' | 'outline' | 'float';
+  /** Also show the label as visible text after the icon, as a pill (use with the float variant over a map). The visible text names the control, so there is no aria-label. Default false. */
+  text?: boolean;
   /** For toggles only: sets aria-pressed. Leave it out for plain actions. */
   pressed?: boolean;
   /** Renders an <a> instead of a <button>. */
@@ -243,12 +247,10 @@ export interface PageHeaderHandlers {
 export interface PanelProps {
   /** An HTML string, inserted as-is. */
   body: string;
-  /** The sheet's starting height: 150px, 55% of the host, or the host minus 8px. Ignored in the sidebar. Default 'half'. */
+  /** The sheet's starting height: 150px, 55% of the host, or the host minus 8px (or minus the CSS variable `--panel-top-gap`, when a screen sets one, to stay clear of a floating control). Ignored in the sidebar. Default 'half'. */
   snap?: 'down' | 'half' | 'full';
   /** The accessible name of the panel. Already localised. */
   label: string;
-  /** A back link at the inline-start of the sheet's top bar (beside the handle), which never scrolls, so the way back stays visible at every snap and scroll. Phone sheet only; the sidebar's AppBar carries the web back link. The label is already localised. */
-  back?: { href: string, label: string };
 }
 
 /** Panel.js */
@@ -609,7 +611,7 @@ export interface StationRow {
   atPlatform?: boolean;
 }
 
-/** The Train page: the map following the train, and the Panel with the PageHeader, the Right now card (status, stops around the train, progress, See all stops), speed so far, About this train and the return train. Web: the same content in the sidebar, the speed chart docked along the bottom of the map. The same data renders StopsScreen. With `run` null (no live run now, or a train without GPS) the page is in timetable mode: a Right now card with a "Timetable" or "No GPS" chip, your stop with its scheduled time, About this train and the return train; no speed card. With no `stops` yet it shows the header and a loading note. (screens/TrainScreen.js) */
+/** The Train page: the map following the train, and the Panel with the PageHeader, the Current status card (speed, delay, next stop and arrival as big figures, when it last reported), the Journey card (first stop, the stop it is at or heading for, last stop, progress, See all stops), speed so far, About this train and the return train. Web: the same content in the sidebar, the speed chart docked along the bottom of the map. The same data renders StopsScreen. With `run` null (no live run now, or a train without GPS) the page is in timetable mode: a Current status card with a "Timetable" or "No GPS" chip, a Journey card with the first and last stop at their scheduled times, About this train and the return train; no speed card. With no `stops` yet it shows the header and a loading note. (screens/TrainScreen.js) */
 export interface TrainScreenData {
   /** The feed state, for the web sidebar's AppBar. */
   live: 'on' | 'reconnecting' | 'off';
@@ -648,8 +650,6 @@ export interface TrainScreenData {
   following?: boolean;
   /** Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives. */
   notice?: string;
-  /** StopsScreen only: choose-your-stop mode. */
-  pick?: boolean;
 }
 
 /** The live run of a train. (screens/TrainScreen.js) */

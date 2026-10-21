@@ -203,7 +203,7 @@
       running: "Running",
       updated: "Updated {ago}",
       myTrains: "Recently checked",
-      rightNow: "Right now",
+      rightNow: "Current status",
       aboutTrain: "About this train",
       seeAllStops: "See all stops",
       returnTrain: "Return train",
@@ -299,7 +299,13 @@
       timeOnDay: "{time} {day}",
       nextDay: "next day",
       dayN: "day {n}",
-      photoBy: "Photo: {author} \xB7 {licence}"
+      photoBy: "Photo: {author} \xB7 {licence}",
+      journey: "Journey",
+      firstStop: "First stop",
+      currentStop: "Current stop",
+      speedLabel: "Speed",
+      delayLabel: "Delay",
+      arrivalLabel: "Arrival"
     },
     ur: {
       appTitle: "\u067E\u0679\u0691\u06CC",
@@ -450,7 +456,7 @@
       running: "\u0631\u0648\u0627\u06BA",
       updated: "{ago} \u0627\u067E \u0688\u06CC\u0679 \u06C1\u0648\u0627",
       myTrains: "\u062D\u0627\u0644 \u06C1\u06CC \u0645\u06CC\u06BA \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC \u0679\u0631\u06CC\u0646\u06CC\u06BA",
-      rightNow: "\u0627\u0628\u06BE\u06CC",
+      rightNow: "\u0645\u0648\u062C\u0648\u062F\u06C1 \u0635\u0648\u0631\u062A\u062D\u0627\u0644",
       aboutTrain: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u06D2 \u0628\u0627\u0631\u06D2 \u0645\u06CC\u06BA",
       seeAllStops: "\u062A\u0645\u0627\u0645 \u0627\u0633\u0679\u06CC\u0634\u0646 \u062F\u06CC\u06A9\u06BE\u06CC\u06BA",
       returnTrain: "\u0648\u0627\u067E\u0633\u06CC \u06A9\u06CC \u0679\u0631\u06CC\u0646",
@@ -546,7 +552,13 @@
       timeOnDay: "{day} {time}",
       nextDay: "\u0627\u06AF\u0644\u06D2 \u062F\u0646",
       dayN: "\u062F\u0646 {n}",
-      photoBy: "\u062A\u0635\u0648\u06CC\u0631: {author} \xB7 {licence}"
+      photoBy: "\u062A\u0635\u0648\u06CC\u0631: {author} \xB7 {licence}",
+      journey: "\u0633\u0641\u0631",
+      firstStop: "\u067E\u06C1\u0644\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      currentStop: "\u0645\u0648\u062C\u0648\u062F\u06C1 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      speedLabel: "\u0631\u0641\u062A\u0627\u0631",
+      delayLabel: "\u062A\u0627\u062E\u06CC\u0631",
+      arrivalLabel: "\u0622\u0645\u062F"
     }
   };
   var MONTHS = {
@@ -683,13 +695,12 @@
   }
 
   // public/js/components/Panel.js
-  function Panel({ body: body2 = "", snap = "half", label = "", back } = {}) {
-    const link = back ? `<a class="p-panel__back" href="${esc(back.href)}">${icon.back}<span class="p-panel__backlabel">${esc(back.label)}</span></a>` : "";
-    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><div class="p-panel__top">${link}<button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button></div><div class="p-panel__body">${body2}</div></section>`;
+  function Panel({ body: body2 = "", snap = "half", label = "" } = {}) {
+    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button><div class="p-panel__body">${body2}</div></section>`;
   }
   var SNAPS = ["down", "half", "full"];
   var DOWN_PX = 150;
-  var TOP_GAP = 8;
+  var DEFAULT_TOP_GAP = 8;
   var DRAG_SLOP = 4;
   function bindPanel(root, handlers = {}) {
     const panels = root.matches?.(".p-panel") ? [root] : [...root.querySelectorAll(".p-panel")];
@@ -700,9 +711,10 @@
     const handle = panel.querySelector(".p-panel__handle");
     const host = () => panel.offsetParent || panel.parentElement;
     const hostH = () => host()?.clientHeight || 0;
+    const TOP_GAP = () => parseFloat(getComputedStyle(panel).getPropertyValue("--panel-top-gap")) || DEFAULT_TOP_GAP;
     const isSidebar = () => getComputedStyle(handle).display === "none";
     const current = () => SNAPS.includes(panel.dataset.snap) ? panel.dataset.snap : "half";
-    const heightOf = (snap, H2 = hostH()) => Math.min(H2, snap === "down" ? DOWN_PX : snap === "half" ? Math.round(H2 * 0.55) : H2 - TOP_GAP);
+    const heightOf = (snap, H2 = hostH()) => Math.min(H2, snap === "down" ? DOWN_PX : snap === "half" ? Math.round(H2 * 0.55) : H2 - TOP_GAP());
     let dragging = false;
     let moved = false;
     let suppressClick = false;
@@ -741,7 +753,7 @@
         moved = true;
         panel.classList.add("p-panel--dragging");
       }
-      dragH = Math.max(DOWN_PX, Math.min(hostH() - TOP_GAP, startH + dy));
+      dragH = Math.max(DOWN_PX, Math.min(hostH() - TOP_GAP(), startH + dy));
       panel.style.blockSize = `${dragH}px`;
       publish();
     }
@@ -808,12 +820,13 @@
   }
 
   // public/js/components/IconButton.js
-  function IconButton({ icon: icon2, label, variant = "plain", pressed, href, className } = {}) {
-    const cls = cx("p-iconbutton", `p-iconbutton--${variant}`, className);
-    const svg = icon[icon2] ?? "";
-    if (href) return `<a class="${cls}" href="${esc(href)}" aria-label="${esc(label)}">${svg}</a>`;
+  function IconButton({ icon: icon2, label, variant = "plain", pressed, href, text = false, className } = {}) {
+    const cls = cx("p-iconbutton", `p-iconbutton--${variant}`, text && "p-iconbutton--text", className);
+    const svg = (icon[icon2] ?? "") + (text ? `<span class="p-iconbutton__text">${esc(label)}</span>` : "");
+    const name = text ? "" : ` aria-label="${esc(label)}"`;
+    if (href) return `<a class="${cls}" href="${esc(href)}"${name}>${svg}</a>`;
     const state = pressed == null ? "" : ` aria-pressed="${pressed ? "true" : "false"}"`;
-    return `<button type="button" class="${cls}" aria-label="${esc(label)}"${state}>${svg}</button>`;
+    return `<button type="button" class="${cls}" ${name}${state}>${svg}</button>`;
   }
 
   // public/js/components/Button.js
@@ -1030,12 +1043,13 @@
   }
 
   // public/js/components/DetailGrid.js
-  function DetailGrid({ items = [], className } = {}) {
-    const rows = items.map(({ label, value, lang: lang2 }) => {
+  function DetailGrid({ items = [], size = "md", className } = {}) {
+    const rows = items.map(({ label, value, lang: lang2, sub, tone, wide }) => {
       const attrs = lang2 === "ur" ? ' lang="ur" dir="rtl"' : "";
-      return `<div class="p-detailgrid__item"><dt class="p-detailgrid__label">${esc(label)}</dt><dd class="p-detailgrid__value"${attrs}>${lang2 === "ur" ? esc(value) : bdi(value)}</dd></div>`;
+      const subHtml = sub ? `<dd class="p-detailgrid__sub">${bdi(sub)}</dd>` : "";
+      return `<div class="${cx("p-detailgrid__item", wide && "p-detailgrid__item--wide")}"><dt class="p-detailgrid__label">${esc(label)}</dt><dd class="${cx("p-detailgrid__value", tone && `p-detailgrid__value--${tone}`)}"${attrs}>${lang2 === "ur" ? esc(value) : bdi(value)}</dd>${subHtml}</div>`;
     }).join("");
-    return `<dl class="${cx("p-detailgrid", className)}">${rows}</dl>`;
+    return `<dl class="${cx("p-detailgrid", size === "lg" && "p-detailgrid--lg", className)}">${rows}</dl>`;
   }
 
   // public/js/components/LinkRow.js
@@ -1249,8 +1263,10 @@
     const web = options.layout === "web";
     const expanded = !web && options.expanded;
     const sheetSnap = options.snap || (expanded ? "full" : snap);
-    const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top"].filter(Boolean).join(" ");
-    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label, ...!web && back ? { back } : {} })}</div></div>`;
+    const pill = !web && back;
+    const startHtml = (pill ? IconButton({ icon: "back", label: back.label, href: back.href, variant: "float", text: true, className: "p-screen__back" }) : "") + start;
+    const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top", pill && "p-screen--back"].filter(Boolean).join(" ");
+    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (startHtml ? `<div class="p-screen__controls p-screen__controls--start">${startHtml}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label })}</div></div>`;
   }
   var join = (parts) => parts.filter(Boolean).join("");
   var body = (...parts) => `<div class="p-screen__body">${join(parts)}</div>`;
@@ -1661,12 +1677,12 @@
     const web = options.layout === "web";
     const { from, to, now } = data;
     const tomorrow = data.day === "tomorrow";
-    const link = (r, stop) => `#/train/${r.train.number}${stop?.id ? `?stop=${encodeURIComponent(stop.id)}${r.runId ? `&run=${r.runId}` : ""}` : r.runId ? `?run=${r.runId}` : ""}`;
+    const link = (r) => `#/train/${r.train.number}${r.runId ? `?run=${r.runId}` : ""}`;
     const trainOf = (r) => ({ number: r.train.label, direction: r.train.up ? "up" : "dn", name: trainTitle(r.train) });
     const leaving = data.leaving.map((r) => {
       const known = r.late != null;
       return DepartureRow({
-        href: link(r, from),
+        href: link(r),
         train: trainOf(r),
         time: known ? { expected: approx(r.dep + r.late), scheduled: time(r.dep) } : { expected: time(r.dep) },
         sub: `${t("arrives", { time: known ? approx(r.arr + r.late) : time(r.arr) })} \xB7 ${t("stopsBetween", { n: r.stopsBetween })}`,
@@ -1674,7 +1690,7 @@
       });
     });
     const onTheWay = data.onTheWay.map((r) => DepartureRow({
-      href: link(r, to),
+      href: link(r),
       train: trainOf(r),
       time: { caption: t("leftCaption"), expected: time(r.dep) },
       sub: t("arrives", { time: r.late != null ? approx(r.arr + r.late) : time(r.arr) }),
@@ -1808,11 +1824,70 @@
       })
     });
   }
-  function timelineRows(data, d2) {
+  function statusCard(data, d2) {
+    const { run, now } = data;
+    if (!run) {
+      const gps = data.gps !== false;
+      return Card({
+        tone: "key",
+        header: t("rightNow"),
+        body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? "noLiveRun" : "noGpsTrain")))
+      });
+    }
+    const st = run.status;
+    const ago = now - run.updatedAt;
+    const speed = { label: t("speedLabel") };
+    if (st?.kind === "stopAt") Object.assign(speed, { value: t("stopped"), sub: place2(st.station) });
+    else if (st?.kind === "stopBetween") speed.value = t("stopped");
+    else if (st?.kind === "wait") speed.value = t("stNotDeparted");
+    else if (st?.kind === "lost") speed.value = t("stLost", { d: dur(st.minutes) });
+    else if (st?.kind === "done") Object.assign(speed, { value: t("stArrived", { station: place2(st.station ?? d2.last) }), wide: true });
+    else speed.value = t("kmh", { n: run.speed });
+    const items = [speed, { label: t("delayLabel"), value: delayText(run.late), tone: statusTone(run.late) }];
+    if (st?.kind !== "done") {
+      if (st?.kind === "wait" || d2.passedIdx < 0) {
+        items.push(
+          { label: t("startsFrom"), value: place2(d2.first) },
+          { label: t("detailDeparts"), value: d2.inTime(0) || dayTime(d2.first.dep, d2.ref), sub: d2.inTime(0) ? dayTime(d2.first.dep, d2.ref) : "" }
+        );
+      } else if (d2.nextIdx >= 0) {
+        const i = d2.nextIdx;
+        const expected = d2.est(i) != null ? dayApprox(d2.est(i), d2.ref) : dayTime(d2.schedOf(d2.stops[i]), d2.ref);
+        items.push(
+          { label: t("nextStop"), value: place2(d2.next), sub: t("kmAway", { km: kmNum(d2.progress.kmToNext) }) },
+          { label: t("arrivalLabel"), value: d2.inTime(i) || expected, sub: d2.inTime(i) ? expected : "" }
+        );
+      }
+    }
+    return Card({
+      tone: "key",
+      header: t("rightNow"),
+      body: stack(
+        DetailGrid({ size: "lg", items: items.filter((i) => i.value) }),
+        note(t("updated", { ago: ago < 1 ? t("justNow") : t("ago", { d: dur(ago) }) }))
+      )
+    });
+  }
+  function journeyCard(data, d2) {
     const { train: train2, run } = data;
-    const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d2;
+    const { stops, lastIdx, passedIdx, progress, ref } = d2;
     const stopsHref = `#/train/${train2.number}/stops`;
-    const join2 = (...p) => p.filter(Boolean).join(" \xB7 ");
+    const seeAll = Button({ label: t("seeAllStopsN", { n: stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
+    const more = (n) => n > 0 ? [{ kind: "more", name: t("moreStops", { n }), href: stopsHref }] : [];
+    if (!run) {
+      const stopRow = (kind, label, s, at3) => ({ kind, label, name: place2(s), ...at3 != null ? { time: { expected: time(at3) } } : {} });
+      return Card({
+        header: t("journey"),
+        body: stack(
+          StopTimeline({
+            mode: "card",
+            rows: [stopRow("stop", t("firstStop"), d2.first, d2.first.dep), ...more(lastIdx - 1), stopRow("final", t("lastStop"), d2.last, d2.last.arr)]
+          }),
+          seeAll
+        )
+      });
+    }
+    const st = run.status;
     const passedAt = (i) => data.ests?.[i]?.at ?? d2.schedOf(stops[i]);
     const behind = (i) => passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {};
     const ahead = (i) => {
@@ -1824,117 +1899,35 @@
       const e = d2.est(i), s = d2.schedOf(stops[i]);
       return e != null && s != null && Math.round(e) !== s ? t("plannedAt", { time: time(s, ref) }) : "";
     };
-    const moving = run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind);
-    const away = moving ? t("kmAwayNow", { km: kmNum(progress.kmToNext), speed: run.speed }) : t("kmAway", { km: kmNum(progress.kmToNext) });
-    const rows = [];
-    if (run.status?.kind === "done" || passedIdx >= lastIdx) {
-      rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
-      rows.push({ kind: "final", label: t("lastStop"), name: place2(d2.last), ...behind(lastIdx) });
-      return rows;
+    const rows = [{ kind: passedIdx >= 0 ? "passed" : "next", label: t("firstStop"), name: place2(d2.first), ...passedIdx >= 0 ? behind(0) : ahead(0) }];
+    let f = -1, focus = null;
+    const k = st?.kind === "stopAt" ? stops.findIndex((s) => s.id === st.station?.id) : -1;
+    if (k >= 1 && k <= lastIdx - 1) {
+      f = k;
+      focus = { kind: "next", label: t("currentStop"), name: place2(stops[k]) };
+    } else if (d2.nextIdx > 0 && d2.nextIdx < lastIdx) {
+      f = d2.nextIdx;
+      focus = { kind: "next", label: t("nextStop"), name: place2(d2.next), ...ahead(f) };
     }
-    if (passedIdx >= 0) rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
-    else rows.push({ kind: "next", label: t("startsFrom"), name: place2(d2.first), ...ahead(0) });
-    let tail = 0;
-    if (passedIdx > 0) {
-      rows.push({ kind: "passed", label: t("lastPassed"), name: place2(d2.prev), ...behind(passedIdx) });
-      tail = passedIdx;
+    if (focus) rows.push(...more(f - 1), focus, ...more(lastIdx - f - 1));
+    else rows.push(...more(lastIdx - 1));
+    if (st?.kind === "done" || passedIdx >= lastIdx) {
+      rows.push({ kind: "passed", label: t("lastStop"), name: place2(d2.last), ...behind(lastIdx) });
+    } else {
+      rows.push({ kind: "final", label: t("lastStop"), name: place2(d2.last), sub: planned(lastIdx), ...ahead(lastIdx) });
     }
-    if (nextIdx > 0 && nextIdx < lastIdx) {
-      const mineNext = nextIdx === mineIdx;
-      rows.push({
-        kind: mineNext ? "yourstop" : "next",
-        label: t(mineNext ? "yourStop" : "nextStop"),
-        name: place2(d2.next),
-        sub: join2(away, d2.nextHalt ? t("halt", { d: dur(d2.nextHalt) }) : ""),
-        ...ahead(nextIdx),
-        ...mineNext ? { change: true } : {}
-      });
-      tail = nextIdx;
-    }
-    if (mineIdx > tail && mineIdx < lastIdx) {
-      rows.push({ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), ...ahead(mineIdx), change: true });
-      tail = mineIdx;
-    }
-    const more = lastIdx - tail - 1;
-    if (more > 0) rows.push({ kind: "more", name: t("moreStops", { n: more }), href: stopsHref });
-    const mineLast = mineIdx === lastIdx;
-    rows.push({
-      kind: mineLast ? "yourstop" : "final",
-      label: mineLast ? `${t("yourStop")} \xB7 ${t("lastStop")}` : t("lastStop"),
-      name: place2(d2.last),
-      sub: join2(nextIdx === lastIdx ? away : "", planned(lastIdx)),
-      ...ahead(lastIdx),
-      ...mineLast ? { change: true } : {}
-    });
-    return rows;
-  }
-  function runningText(run, d2) {
-    const st = run.status;
-    if (st?.kind === "stopAt") return t("stStoppedAt", { station: place2(st.station) });
-    if (st?.kind === "stopBetween") return t("stStoppedBetween");
-    if (st?.kind === "wait") return t("stNotDeparted");
-    if (st?.kind === "done") return t("stArrived", { station: place2(st.station ?? d2.last) });
-    if (st?.kind === "lost") return t("stLost", { d: dur(st.minutes) });
-    return t("stRunningShort", { speed: run.speed });
-  }
-  function yourStopPrompt(data, d2) {
-    const { train: train2, run } = data;
-    const pickHref = `#/train/${train2.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
-    if (!d2.mine) {
-      return stack(
-        Button({ label: t("chooseStop"), href: pickHref, variant: "secondary", full: true }),
-        note(t("promptStopSub"))
-      );
-    }
-    if (run && d2.mineIdx <= d2.passedIdx) {
-      const at3 = data.ests?.[d2.mineIdx]?.at ?? (d2.schedOf(d2.mine) != null ? d2.schedOf(d2.mine) + run.late : null);
-      return row(
-        fill(note(at3 != null ? t("passedYourStop", { time: time(at3, d2.ref) }) : `${t("yourStop")} \xB7 ${place2(d2.mine)}`)),
-        Button({ label: t("change"), href: pickHref, variant: "link" })
-      );
-    }
-    return "";
-  }
-  function rightNow(data, d2) {
-    const { train: train2, run, now } = data;
-    const { first } = d2;
-    const stopsHref = `#/train/${train2.number}/stops`;
-    const seeAll = Button({ label: t("seeAllStopsN", { n: d2.stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
-    if (!run) {
-      const gps = data.gps !== false;
-      const mineRow = d2.mine ? StopTimeline({ mode: "card", rows: [{ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), time: d2.exp(d2.mineIdx), change: true }] }) : "";
-      return Card({
-        tone: "key",
-        header: t("rightNow"),
-        body: stack(
-          row(StatusChip(delayStatus(null, { gps }))),
-          note(t(gps ? "noLiveRun" : "noGpsTrain")),
-          mineRow,
-          d2.mine ? note(t("timetableTimes")) : yourStopPrompt(data, d2),
-          seeAll
-        )
-      });
-    }
-    const ago = now - run.updatedAt;
-    const done = run.status?.kind === "done";
+    const done = st?.kind === "done";
     return Card({
-      tone: "key",
-      header: t("rightNow"),
+      header: t("journey"),
       body: stack(
-        StatusStrip({
-          running: { text: runningText(run, d2) },
-          delay: { tone: statusTone(run.late), text: delayText(run.late) },
-          updated: t("updated", { ago: ago < 1 ? t("justNow") : t("ago", { d: dur(ago) }) })
-        }),
-        StopTimeline({ mode: "card", rows: timelineRows(data, d2) }),
+        StopTimeline({ mode: "card", rows }),
         JourneyProgress({
-          fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, d2.progress.kmDone / d2.totalKm)) : 0,
+          fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, progress.kmDone / d2.totalKm)) : 0,
           start: "",
-          end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) }),
+          end: t("kmOf", { done: kmNum(done ? d2.totalKm : progress.kmDone), total: kmNum(d2.totalKm) }),
           train: true,
-          moving: run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind)
+          moving: run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(st?.kind)
         }),
-        yourStopPrompt(data, d2),
         seeAll
       )
     });
@@ -1993,7 +1986,7 @@
     const wholeRoute = mapButton("wholeRoute");
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     const status = data.notice != null ? notice(data.notice) : "";
-    const content = d2.first ? [header(data, d2), status, runChoice(data), rightNow(data, d2)] : [header(data, d2), status, note(t("loading"))];
+    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
     if (!web) {
       return frame({
         name: "train",
@@ -2020,37 +2013,30 @@
   // public/js/screens/StopsScreen.js
   function rowsOf(data, d2) {
     const { stops, run, train: train2 } = data;
-    const { passedIdx, nextIdx, mineIdx, lastIdx, haltOf: haltOf2 } = d2;
-    const pick = !!data.pick;
+    const { passedIdx, nextIdx, lastIdx, haltOf: haltOf2 } = d2;
     const halt = (s) => {
       const h = haltOf2(s);
       return h ? t("halt", { d: dur(h) }) : "";
     };
     const join2 = (...parts) => parts.filter(Boolean).join(" \xB7 ");
-    const hrefOf = (s) => `#/train/${train2.number}?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
     const out = [];
     if (run && passedIdx < 0) out.push({ kind: "train", name: d2.trainText(true) });
     stops.forEach((s, i) => {
       const name = place2(s);
       const passed = run && i <= passedIdx;
-      const mine = i === mineIdx;
-      const link = pick && !passed ? { href: hrefOf(s) } : {};
-      const change = !pick ? { change: true } : {};
       if (passed) {
         const sched = d2.schedOf(s);
         const at3 = sched != null ? { time: { expected: time(sched, d2.ref) } } : {};
         const kmText = i === 0 ? join2(t("start"), km(0)) : i === passedIdx ? join2(km(s.km), t("lastPassed")) : km(s.km);
-        if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...at3, ...change });
-        else out.push({ kind: "passed", name, sub: kmText, ...at3 });
+        out.push({ kind: "passed", name, sub: kmText, ...at3 });
         if (i === passedIdx) out.push({ kind: "train", name: d2.trainText(true) });
         return;
       }
       const tm = d2.both(i);
       const time_ = tm ? { time: tm } : {};
-      if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...time_, ...change, ...link });
-      else if (i === lastIdx) out.push({ kind: "final", name, sub: join2(t("end"), km(s.km)), ...time_, ...link });
-      else if (run && i === nextIdx) out.push({ kind: "next", name, sub: join2(t("nextStop"), km(s.km), halt(s)), ...time_, ...link });
-      else out.push({ kind: "stop", name, sub: join2(i === 0 ? t("start") : "", km(s.km), halt(s)), ...time_, ...link });
+      if (i === lastIdx) out.push({ kind: "final", name, sub: join2(t("end"), km(s.km)), ...time_ });
+      else if (run && i === nextIdx) out.push({ kind: "next", name, sub: join2(t("nextStop"), km(s.km), halt(s)), ...time_ });
+      else out.push({ kind: "stop", name, sub: join2(i === 0 ? t("start") : "", km(s.km), halt(s)), ...time_ });
     });
     return out;
   }
@@ -2058,8 +2044,7 @@
     const web = options.layout === "web";
     const d2 = derive(data);
     const { train: train2, run, stops } = data;
-    const pick = !!data.pick;
-    const title = pick ? t("chooseStop") : t("allStopsN", { n: stops.length });
+    const title = t("allStopsN", { n: stops.length });
     const header2 = PageHeader({
       title,
       subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
@@ -2070,7 +2055,6 @@
       data.notice != null ? notice(data.notice) : "",
       ...d2.first ? [
         row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false }))),
-        pick ? note(t("pickStopHint")) : "",
         !run ? note(t("timetableTimes")) : "",
         StopTimeline({ mode: "full", rows: rowsOf(data, d2), legend: !!run })
       ] : [note(t("loading"))]
@@ -2151,7 +2135,7 @@
     else if (gps === false) status = delayStatus(null, { gps: false });
     else status = delayStatus(late, { gps });
     return DepartureRow({
-      href: `#/train/${train2.number}?stop=${encodeURIComponent(station2.id)}${runId ? `&run=${runId}` : ""}`,
+      href: `#/train/${train2.number}${runId ? `?run=${runId}` : ""}`,
       time: when,
       train: { number: train2.label, direction: train2.up ? "up" : "dn", name: trainTitle(train2) },
       sub,
@@ -2304,7 +2288,6 @@
     now: 780,
     ests,
     progress: { passedIdx: PASSED, nextIdx: PASSED + 1, kmDone: 305, kmToNext: 27 },
-    myStop: S.bahawalpur.id,
     followed: true,
     speed: {
       illustrative: true,

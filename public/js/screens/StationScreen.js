@@ -106,7 +106,7 @@ function boardRow(r, station, now) {
   else status = delayStatus(late, { gps });
 
   return DepartureRow({
-    href: `#/train/${train.number}?stop=${encodeURIComponent(station.id)}${runId ? `&run=${runId}` : ''}`,
+    href: `#/train/${train.number}${runId ? `?run=${runId}` : ''}`,
     time: when,
     train: { number: train.label, direction: train.up ? 'up' : 'dn', name: trainTitle(train) },
     sub,
