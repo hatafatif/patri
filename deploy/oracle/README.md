@@ -130,6 +130,46 @@ or from another database: `ATTACH 'file:2026-10-20.db?mode=ro' AS day;`. The fil
 - `ARCHIVE_CAP_BYTES` (default 8 GiB) is checked against the total uploaded so far before every upload. If the next file would pass it, the job stops with an error and exits 1, so the bucket never exceeds the 10 GiB free tier. Raise it or clean the bucket by hand to continue.
 - Optional: set `ARCHIVE_HEARTBEAT_URL` in `/etc/patri/recorder.env` to a Healthchecks.io-style ping URL. It is pinged after a fully successful run, and at `<url>/fail` after an error, so a silent failure gets noticed.
 
+## Automatic deploys (GitHub Actions)
+
+`.github/workflows/deploy-monitor.yml` runs `deploy.sh` for you whenever server files change on `main` (server.js, lib.js, data.js, store.js, routes.js, archive.js, alerts.js, push.js, package.json, package-lock.json, `deploy/oracle/**`, or the workflow itself). It can also be started by hand from the Actions tab on any branch. It has no pull request trigger, so forks never see the secrets. The repository is public and so are the logs: nothing secret is printed, and in CI the script never prints `RECORDER_KEY`.
+
+The first-ever deploy must still be done from your PC (section 6): it creates `/etc/patri/recorder.env`. In CI the script stops with a clear message if that file is missing.
+
+Setup, once, on your PC:
+
+1. Make a dedicated key:
+   ```
+   ssh-keygen -t ed25519 -N "" -C "github-actions-patri" -f ~/.ssh/patri-gh-deploy
+   ```
+2. Authorise it on the VM (either one):
+   ```
+   ssh-copy-id -i ~/.ssh/patri-gh-deploy.pub hataf-oracle
+   cat ~/.ssh/patri-gh-deploy.pub | ssh hataf-oracle 'cat >> ~/.ssh/authorized_keys'
+   ```
+3. Pin the host key, and check it is really the VM's:
+   ```
+   ssh-keyscan -t ed25519 vm.hataf.dev > /tmp/vm_known_hosts
+   ssh-keygen -lf /tmp/vm_known_hosts
+   ssh hataf-oracle 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub'
+   ```
+   The two fingerprints (the `SHA256:...` part) must be identical.
+4. Add the secrets without printing them:
+   ```
+   gh secret set VM_SSH_KEY < ~/.ssh/patri-gh-deploy
+   gh secret set VM_KNOWN_HOSTS < /tmp/vm_known_hosts
+   gh variable set VM_HOST --body vm.hataf.dev
+   ```
+   Optional: `gh variable set MONITOR_HOSTNAME --body patri-monitor.hataf.dev` (that is the default).
+5. Test it:
+   ```
+   gh workflow run deploy-monitor.yml --ref main
+   gh run watch
+   ```
+6. To revoke: remove the key's line (the one ending `github-actions-patri`) from `~/.ssh/authorized_keys` on the VM, and delete the secret with `gh secret delete VM_SSH_KEY`.
+
+Order of changes: if a Vercel change needs a newer recorder, deploy the VM first (merge to main and let the workflow finish), or merge both together.
+
 ## Shared machine
 
 Each project on the VM gets its own:
