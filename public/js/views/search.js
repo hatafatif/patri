@@ -4,7 +4,7 @@ import { SearchScreen } from '../screens/index.js';
 import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
 import {
-  state, paint, layout, navigate, replaceHash, returnTo, store, setFollowed, isFollowed,
+  state, mapTrains, paint, layout, navigate, replaceHash, returnTo, store, setFollowed, isFollowed,
   recentSearches, addRecentSearch, savedStations,
 } from '../app.js';
 import * as map from '../map.js';
@@ -112,6 +112,7 @@ function setQuery(value) {
 
 function render() {
   if (!mounted) return;
+  map.setTrains(mapTrains());
   clearTimeout(timer);
   timer = 0;
   paint(SearchScreen(data(), { layout: layout(), standin: false }), handlers);
@@ -142,6 +143,7 @@ export default {
     pick = params.pick || null;
     map.showStations({ key: 'search', stations: state.stations, fit: 'keep' });
     map.onStationClick(id => navigate(`#/station/${id}`));
+    map.onTrainClick(n => navigate(`#/train/${n}`));
     const root = document.getElementById('app');
     root.addEventListener('click', onClick);
     unlisten = () => root.removeEventListener('click', onClick);

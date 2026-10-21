@@ -3,7 +3,7 @@
 import { RouteScreen } from '../screens/index.js';
 import { trainInfo } from '../names.js';
 import { pktMidnight } from '../i18n.js';
-import { state, api, store, paint, layout, navigate, addRecentSearch } from '../app.js';
+import { state, api, store, paint, layout, navigate, mapTrains, addRecentSearch } from '../app.js';
 import * as map from '../map.js';
 
 const REFRESH_MS = 60e3;
@@ -56,6 +56,7 @@ function data() {
 
 function render() {
   if (!v) return;
+  map.setTrains(mapTrains());
   paint(RouteScreen(data(), { layout: layout(), standin: false }), {
     onPickFrom: () => navigate('#/search?pick=from'),
     onPickTo: () => navigate('#/search?pick=to'),
@@ -100,6 +101,7 @@ export default {
       fit: 'selected',
     });
     map.onStationClick(id => navigate(`#/station/${id}`));
+    map.onTrainClick(n => navigate(`#/train/${n}`));
     render();
     load();
   },

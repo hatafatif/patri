@@ -5,7 +5,7 @@ import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
 import { share } from '../share.js';
 import { loadPhotos, cityPhoto } from '../photos.js';
-import { state, api, paint, layout, navigate, addRecentSearch, isSaved, setSaved } from '../app.js';
+import { state, api, paint, layout, navigate, mapTrains, addRecentSearch, isSaved, setSaved } from '../app.js';
 import * as map from '../map.js';
 
 const REFRESH_MS = 30e3;
@@ -44,6 +44,7 @@ function data() {
 
 function render() {
   if (!v) return;
+  map.setTrains(mapTrains());
   paint(StationScreen(data(), { layout: layout(), standin: false }), {
     onFollow: saved => { setSaved(v.id, saved); render(); },
     onShare,
@@ -97,6 +98,7 @@ export default {
     v = { id, board: null, fetchedAt: 0, notice: '', timer: 0, live: 0, noticeTimer: 0 };
     map.showStations({ key: `station:${id}`, stations: state.stations, selected: [id], fit: 'selected' });
     map.onStationClick(other => { if (v && other !== v.id) navigate(`#/station/${other}`); });
+    map.onTrainClick(n => navigate(`#/train/${n}`));
     render();
     loadPhotos().then(() => { if (v) render(); });
     load();
