@@ -61,7 +61,7 @@ const STRINGS = {
     today: 'Today', tomorrow: 'Tomorrow', dayChoice: 'Day', dateShort: '{wd} {day} {month}',
     wd0: 'Sun', wd1: 'Mon', wd2: 'Tue', wd3: 'Wed', wd4: 'Thu', wd5: 'Fri', wd6: 'Sat',
     leavingNext: 'Leaving {station} next', onTheWay: 'Already on the way', arrives: 'Arrives {time}',
-    showWholeRoute: 'Show the whole route', lastPassed: 'Last stop', finalStop: 'Final stop', halt: '{d} halt',
+    showWholeRoute: 'Show the whole route', lastPassed: 'Just passed', finalStop: 'Final stop', halt: '{d} halt',
     seeAllStopsN: 'See all {n} stops', allStopsN: 'All {n} stops', start: 'Start', end: 'End',
     detailDirection: 'Direction', detailLocomotive: 'Locomotive', detailScheduledTime: 'Scheduled time', detailThisRun: 'This run',
     gps: 'GPS', down: 'Down', upDir: 'Up', directionTo: '{dir} · to {x}', leftOn: 'Left {date}', returnShort: 'Return',
@@ -73,6 +73,10 @@ const STRINGS = {
     notRunningNow: 'Not running now', mainStations: 'Main stations', nearestStation: 'Nearest station: {station}',
     locateDenied: 'Location is off, so the map stays where it is.', locateUnavailable: 'Couldn’t find where you are.',
     whichRun: 'Which run', pickStopHint: 'Tap the station where you get on or off.', timetableTimes: 'Times are from the timetable.', loadFailed: 'Couldn’t load this. Trying again…',
+    // Right now rows, days on times, photos
+    startedFrom: 'Started from', startsFrom: 'Starts from', kmAwayNow: '{km} km away · {speed} km/h now', plannedAt: 'Planned {time}',
+    yesterday: 'Yesterday', dayTime: '{day} {time}', timeOnDay: '{time} {day}', nextDay: 'next day', dayN: 'day {n}',
+    photoBy: 'Photo: {author} · {licence}',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -146,6 +150,10 @@ const STRINGS = {
     notRunningNow: 'اس وقت نہیں چل رہی', mainStations: 'بڑے اسٹیشن', nearestStation: 'قریب ترین اسٹیشن: {station}',
     locateDenied: 'مقام کی اجازت نہیں ملی، اس لیے نقشہ جہاں تھا وہیں ہے۔', locateUnavailable: 'آپ کا مقام معلوم نہیں ہو سکا۔',
     whichRun: 'کون سا سفر', pickStopHint: 'وہ اسٹیشن چنیں جہاں آپ سوار ہوں گے یا اتریں گے۔', timetableTimes: 'اوقات ٹائم ٹیبل کے مطابق ہیں۔', loadFailed: 'لوڈ نہیں ہو سکا۔ دوبارہ کوشش ہو رہی ہے…',
+    // Right now rows, days on times, photos
+    startedFrom: 'روانگی کا اسٹیشن', startsFrom: 'روانگی کا اسٹیشن', kmAwayNow: '{km} کلومیٹر دور · ابھی {speed} کلومیٹر فی گھنٹہ', plannedAt: 'مقررہ وقت {time}',
+    yesterday: 'گزشتہ روز', dayTime: '{day} {time}', timeOnDay: '{day} {time}', nextDay: 'اگلے دن', dayN: 'دن {n}',
+    photoBy: 'تصویر: {author} · {licence}',
   },
 };
 

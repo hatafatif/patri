@@ -15,6 +15,10 @@
 
 /* Urdu is Nastaliq everywhere. Zero specificity, so a component's own font (times, numbers) wins. */
 :where([lang="ur"]) :where([class^="p-"], [class*=" p-"]) { font-family: var(--font-urdu); }
+/* An element marked Urdu is Nastaliq on an English page too (a train's Urdu name under its English title). */
+:where([lang="ur"]) { font-family: var(--font-urdu); }
+/* English inside an Urdu page (a train's English name) stays Barlow. */
+:where([lang="ur"]) :where([lang="en"]) { font-family: var(--font-body); }
 
 [class^="p-"]:focus-visible,
 [class*=" p-"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -342,11 +346,14 @@
 /* Nastaliq's tall marks need air between the label and the name. */
 [lang="ur"] .p-stationfields__field { gap: var(--space-1); padding-block: var(--space-2); }
 [lang="ur"] .p-stationfields__label {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
-[lang="ur"] .p-stationfields__name,
+[lang="ur"] .p-stationfields__name {
+  font: var(--t-urdu-strong);
+  letter-spacing: normal;
+}
 [lang="ur"] .p-stationfields__name--empty {
   font: var(--t-urdu-body);
   letter-spacing: normal;
@@ -533,9 +540,13 @@
   text-transform: uppercase;
 }
 [lang="ur"] .p-statusstrip__running,
-[lang="ur"] .p-statusstrip__delay,
-[lang="ur"] .p-statusstrip__updated {
+[lang="ur"] .p-statusstrip__delay {
   font: var(--t-urdu-label);
+  letter-spacing: normal;
+  text-transform: none;
+}
+[lang="ur"] .p-statusstrip__updated {
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
@@ -572,8 +583,8 @@
 .p-traincard__stoplabel { color: var(--ink-muted); }
 .p-traincard__stop bdi { white-space: nowrap; }
 .p-traincard__status { flex: none; align-self: flex-start; }
-[lang="ur"] .p-traincard__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-traincard__position { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-traincard__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-traincard__position { font: var(--t-urdu-caption); letter-spacing: normal; }
 [lang="ur"] .p-traincard__stop { font: var(--t-urdu-label); letter-spacing: normal; }
 [lang="ur"] .p-traincard__stop bdi { font: var(--t-time-sm); letter-spacing: var(--t-time-sm-tracking); font-variant-numeric: tabular-nums; }
 
@@ -599,8 +610,8 @@
 .p-trainrow__sub { color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
 .p-trainrow__status { flex: none; }
 .p-trainrow mark { background: var(--zard-100); color: inherit; }
-[lang="ur"] .p-trainrow__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-trainrow__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-trainrow__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-trainrow__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 15. DepartureRow ---------- */
 .p-departurerow {
@@ -649,8 +660,8 @@
 [lang="ur"] .p-departurerow__caption { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-departurerow__num { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-departurerow__num bdi { font: var(--t-label); letter-spacing: var(--t-label-tracking); }
-[lang="ur"] .p-departurerow__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-departurerow__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-departurerow__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-departurerow__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 16. StopTimeline ---------- */
 .p-stoptimeline {
@@ -936,16 +947,16 @@
 .p-detailgrid__value[lang="ur"] {
   inline-size: fit-content;
   max-inline-size: 100%;
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
 [lang="ur"] .p-detailgrid__label {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
 }
 [lang="ur"] .p-detailgrid__value {
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
@@ -985,12 +996,12 @@
 }
 
 [lang="ur"] .p-linkrow__eyebrow {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
 [lang="ur"] .p-linkrow__label {
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
@@ -1182,8 +1193,8 @@
 .p-maplabel--selected { border-color: var(--sabz-900); background: var(--sabz-900); color: var(--zard-500); }
 .p-maplabel--yourstop .p-maplabel__sub,
 .p-maplabel--selected .p-maplabel__sub { color: var(--ink-on-dark-muted); }
-[lang="ur"] .p-maplabel__title { font: var(--t-urdu-body); letter-spacing: normal; }
-[lang="ur"] .p-maplabel__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-maplabel__title { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-maplabel__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 23. Button ---------- */
 .p-button {
@@ -1294,4 +1305,6 @@
 .p-pageheader__subtitle { margin: 0; color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); overflow-wrap: anywhere; }
 .p-pageheader__actions { display: flex; align-items: center; }
 [lang="ur"] .p-pageheader__title { font: var(--t-urdu-title); letter-spacing: var(--t-urdu-title-tracking); }
-[lang="ur"] .p-pageheader__subtitle { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-pageheader__subtitle { font: var(--t-urdu-caption); letter-spacing: normal; }
+/* The Urdu name under an English title: Nastaliq sizing, so its tall letters are not clipped. */
+.p-pageheader__alt [lang="ur"] { font: var(--t-urdu-body); letter-spacing: normal; }

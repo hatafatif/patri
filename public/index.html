@@ -11,21 +11,16 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@600;700&display=swap">
-<!-- In English only the اردو button needs Nastaliq: a tiny subset of just those glyphs. The full face loads
-     when the language is Urdu (below, and app.js loadUrduFont()). -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@600&text=%D8%A7%D8%B1%D8%AF%D9%88&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<!-- The full Nastaliq face, always declared. Browsers download a font file only when Urdu glyphs actually render,
+     so English-only pages pay nothing for it. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
 <script>
-  // Set the language before the first paint, so an Urdu reader never sees the page flip, and start the font early.
+  // Set the language before the first paint, so an Urdu reader never sees the page flip.
   try {
     if (localStorage.getItem('lang') === 'ur') {
       document.documentElement.lang = 'ur';
       document.documentElement.dir = 'rtl';
-      var l = document.createElement('link');
-      l.id = 'font-ur';
-      l.rel = 'stylesheet';
-      l.href = 'https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap';
-      document.head.appendChild(l);
     }
   } catch (e) {}
 </script>

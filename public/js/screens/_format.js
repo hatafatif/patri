@@ -30,8 +30,8 @@ export const place = s => (s ? stationName(s.name, s.nameUr) : '');
 export const placeEn = s => (s ? cleanPlace(s.name) : '');
 /** A station's Urdu name, whatever the language (PageHeader titleUr); '' when there is none. */
 export const placeUr = s => clean(s?.nameUr).replace(/[\s,،.]+$/, '');
-/** A station's city in the current language, falling back to the station name. */
-export const cityOf = s => (isUrdu() && s?.cityUr ? s.cityUr : s?.city ? stationName(s.city, '') : place(s));
+/** A station's city in the current language, falling back to the station name (in Urdu, never to an English city). */
+export const cityOf = s => (isUrdu() ? s?.cityUr || place(s) : s?.city ? stationName(s.city, '') : place(s));
 /** A train's name in the current language. */
 export const trainTitle = train => trainName(train);
 /** "28 DN" / "28 ڈاؤن". */
@@ -41,12 +41,39 @@ export const badgeOf = (train, size) => ({ number: train.label ?? String(train.n
 /** "Lahore Jn ➜ Karachi Cantt". */
 export const route = (a, b) => t('passesFromTo', { a: place(a), b: place(b) });
 
-// In Urdu a time sits inside right-to-left text: isolate the whole of it, so "~" and "+1" stay put.
+// In Urdu a time sits inside right-to-left text: isolate the whole of it, so "~" stays put.
 const ltr = s => (isUrdu() ? `\u2066${s}\u2069` : s);
-/** Minutes after midnight (PKT, service day) -> "2:50 AM +1". 1440 and over is the next day. */
-export const time = min => ltr(`${clockMin(min)}${min >= 1440 ? ` +${Math.floor(min / 1440)}` : ''}`);
-/** An estimated time: "~1:20 PM". */
-export const approx = min => ltr(`~${time(min)}`);
+const DAY_MS = 864e5;
+
+/** "Yesterday", "Today", "Tomorrow", or the weekday for a day further away. diff is in days from today (PKT). */
+function dayWord(diff) {
+  if (diff === -1) return t('yesterday');
+  if (diff === 0) return t('today');
+  if (diff === 1) return t('tomorrow');
+  const wd = new Date(Date.now() + 5 * 3600e3 + diff * DAY_MS).getUTCDay();
+  return t(`wd${wd}`);
+}
+
+// One clock time with its day. With `now` (minutes after the same midnight as min: the run's first day on the
+// Train page, today on a station board) the day is relative to the rider's today; "Today" only shows when
+// `always`. Without `now`, min counts from the train's first day and a later day reads "next day" / "day 3".
+function at(min, now, mark, always) {
+  const clock = ltr(`${mark}${clockMin(min)}`);
+  if (now == null) {
+    const n = Math.floor(min / 1440);
+    return n <= 0 ? clock : t('timeOnDay', { time: clock, day: n === 1 ? t('nextDay') : t('dayN', { n: n + 1 }) });
+  }
+  const diff = Math.floor(min / 1440) - Math.floor(now / 1440);
+  return diff === 0 && !always ? clock : t('dayTime', { day: dayWord(diff), time: clock });
+}
+/** Minutes after midnight (PKT) -> "2:50 AM", "Tomorrow 2:50 AM" (with now) or "2:50 AM next day" (without). */
+export const time = (min, now) => at(min, now, '', false);
+/** An estimated time: "~1:20 PM", "Tomorrow ~1:20 PM". */
+export const approx = (min, now) => at(min, now, '~', false);
+/** Always with the day, "Today" included: "Today 4:48 PM", "Yesterday 10:00 PM". For the Right now card. */
+export const dayTime = (min, now) => at(min, now, '', true);
+/** dayTime for an estimate: "Today ~4:48 PM". */
+export const dayApprox = (min, now) => at(min, now, '~', true);
 /** 1165.2 -> "1,165". */
 export const kmNum = n => Math.round(n).toLocaleString('en-US');
 /** 1165.2 -> "1,165 km". */
