@@ -2,9 +2,17 @@
 // Web app: npm start, then open http://localhost:8787 (or this PC's IP from another device).
 // Listens on the local network by default; HOST=127.0.0.1 npm start keeps it to this PC.
 // Unlike the Vercel deployment, this keeps one live feed connection open and records history.
+//
+// Recorder mode (deploy/oracle/): run 24/7 on a small VM so the Vercel function can read
+// recorded history from it (live positions still come from the feed). Env, all optional (nothing set = plain local behaviour):
+//   RECORDER_KEY  every /api/* request must send header x-recorder-key; static files are not served
+//   DATA_DIR      where trains.db lives (default ./data)
+//   KEEP_DAYS     how long positions are kept (store.js, default 14)
+// GET /healthz (no key) reports feed state, run count and last update.
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 const path = require('path');
 const { connectLive, requestInstances, onPositions, normalize } = require('./lib');
 const { Timetable } = require('./data');
@@ -13,11 +21,13 @@ const { createRoutes, decorate, sendJson } = require('./routes');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '0.0.0.0';
+const RECORDER_KEY = process.env.RECORDER_KEY || '';
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const PUBLIC = path.join(__dirname, 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
 
 const timetable = new Timetable();
-const store = new Store(path.join(__dirname, 'data', 'trains.db'));
+const store = new Store(path.join(DATA_DIR, 'trains.db'));
 
 async function loadTimetable() {
   try {
@@ -37,6 +47,13 @@ const socket = connectLive();
 const latest = new Map(); // run id -> decorated position
 const known = new Map(); // run id -> train number, from track-train replies
 
+// One log line an hour, so journalctl shows the recorder is alive.
+let recordedThisHour = 0;
+setInterval(() => {
+  console.log(`Recorded ${recordedThisHour} positions in the last hour (${latest.size} runs live)`);
+  recordedThisHour = 0;
+}, 3600e3).unref();
+
 function update(id, pos) {
   const run = decorate(timetable, id, pos, known.get(id));
   if (!run) return null;
@@ -44,6 +61,7 @@ function update(id, pos) {
   if (prev && prev.updatedAt > run.updatedAt) return prev;
   latest.set(id, run);
   store.record(id, run.train, run);
+  recordedThisHour++;
   return run;
 }
 
@@ -107,9 +125,25 @@ function serveStatic(res, pathname) {
   });
 }
 
+function authorized(req) {
+  const given = Buffer.from(String(req.headers['x-recorder-key'] || ''));
+  const want = Buffer.from(RECORDER_KEY);
+  return given.length === want.length && crypto.timingSafeEqual(given, want);
+}
+
+function health() {
+  let lastUpdate = null;
+  for (const r of latest.values()) if (lastUpdate === null || r.updatedAt > lastUpdate) lastUpdate = r.updatedAt;
+  return { ok: true, feed: socket.connected, runs: latest.size, lastUpdate, timetable: !!timetable.loadedAt };
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
-  if (!url.pathname.startsWith('/api/')) return serveStatic(res, url.pathname);
+  if (url.pathname === '/healthz') return sendJson(res, [200, health()]);
+  if (!url.pathname.startsWith('/api/')) {
+    return RECORDER_KEY ? res.writeHead(404).end('Not found') : serveStatic(res, url.pathname);
+  }
+  if (RECORDER_KEY && !authorized(req)) return sendJson(res, [401, { error: 'Unauthorized' }]);
   if (!timetable.loadedAt) return sendJson(res, [503, { error: 'Timetables are still loading' }]);
   try {
     sendJson(res, await route(url.pathname.slice(5), url.searchParams));

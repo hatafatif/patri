@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 
-const KEEP_DAYS = 14;
+const KEEP_DAYS = Number(process.env.KEEP_DAYS) || 14;
 const MIN_GAP_S = 20; // keep at most one position per run every 20 s, plus every stop/start
 
 class Store {
