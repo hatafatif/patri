@@ -247,7 +247,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 ### 22. MapMarkers
 **What it is:** everything drawn on the map. The map is MapLibre in `public/js/map.js`.
 **Exports:**
-- `trainMarker({ label, facing? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
+- `trainMarker({ label, facing?, stale? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. `stale: true` adds `p-trainmarker--stale` (its badge and label at opacity .55): the train is drawn where it was last seen, not where it is. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
 - `mapLabel({ title, sub?, kind: 'next' | 'yourstop' | 'selected' | 'hover' })`: label cards. `next` and `hover` are `surface` with a 1.5px `sabz-700` border; `yourstop` and `selected` are `sabz-900` with yellow text. Every kind uses `shadow-float`.
 - `mapPaint()`: reads the tokens with `getComputedStyle` and returns MapLibre paint values:
   - station dot: `map-station` (sabz-700), radius 2.5;
@@ -262,7 +262,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 - The Train map shows that one train, followed.
 
 ### 23. Button
-**Props:** `label`, `href?`, `variant: 'primary' | 'secondary' | 'link'`, `icon?` (trailing; the chevron flips in right-to-left), `full?`.
+**Props:** `label`, `href?`, `variant: 'primary' | 'secondary' | 'link'`, `icon?` (trailing; any key in the icon set, such as `chevronEnd`, which flips in right-to-left, or `bell`), `full?`.
 **Variants:**
 - `primary`: `sabz-700` fill, white text in label style, 48px tall, `radius-md`.
 - `secondary`: `surface` with a 1.5px `sabz-700` border and `sabz-700` text.
@@ -327,8 +327,8 @@ The app's pages, built from the components above. **Views render their pages thr
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
 | RouteScreen | Search › Plan a trip: trains you can still board | phone |
-| TrainScreen | Train page: map following the train, Current status, Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
-| StopsScreen | Train page › All stops (same data as TrainScreen) | phone |
+| TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with Change stop and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
+| StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey button, then the upcoming stops as links) | phone |
 | StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
 
 - **Library:** each screen has a showcase page in `design-system/components/<Name>Screen[Web]/` (group "Screens").

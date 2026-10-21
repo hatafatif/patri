@@ -24,11 +24,33 @@ class Store {
         run TEXT NOT NULL, train INTEGER NOT NULL, station TEXT NOT NULL, ts INTEGER NOT NULL, late INTEGER NOT NULL,
         PRIMARY KEY (run, station)
       ) WITHOUT ROWID;
+      CREATE INDEX IF NOT EXISTS positions_train_ts ON positions(train, ts);
+      CREATE TABLE IF NOT EXISTS watches (
+        endpoint TEXT NOT NULL, train INTEGER NOT NULL, run TEXT NOT NULL, stop TEXT,
+        p256dh TEXT NOT NULL, auth TEXT NOT NULL, lang TEXT NOT NULL DEFAULT 'en',
+        created INTEGER NOT NULL, expires INTEGER NOT NULL, last_late INTEGER, done INTEGER DEFAULT 0,
+        PRIMARY KEY (endpoint, train)
+      );
+      CREATE INDEX IF NOT EXISTS watches_run ON watches(run);
+      CREATE TABLE IF NOT EXISTS sent (
+        endpoint TEXT NOT NULL, train INTEGER NOT NULL, event TEXT NOT NULL, at INTEGER NOT NULL,
+        PRIMARY KEY (endpoint, train, event)
+      );
     `);
     this.insertPosition = this.db.prepare('INSERT OR IGNORE INTO positions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     this.insertPass = this.db.prepare('INSERT OR IGNORE INTO passes VALUES (?, ?, ?, ?, ?)');
     this.selectPositions = this.db.prepare('SELECT ts, lat, lon, speed FROM positions WHERE run = ? ORDER BY ts');
     this.selectPasses = this.db.prepare('SELECT station, ts, late FROM passes WHERE run = ? ORDER BY ts');
+    this.selectLastSeen = this.db.prepare(`
+      SELECT p.train, p.ts, p.lat, p.lon, p.speed, p.prev, p.next
+      FROM positions p JOIN (SELECT train, MAX(ts) AS ts FROM positions WHERE ts >= ? GROUP BY train) m
+        ON p.train = m.train AND p.ts = m.ts`);
+    this.upsertWatchStmt = this.db.prepare(`
+      INSERT INTO watches (endpoint, train, run, stop, p256dh, auth, lang, created, expires, last_late, done)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      ON CONFLICT(endpoint, train) DO UPDATE SET run = excluded.run, stop = excluded.stop, p256dh = excluded.p256dh,
+        auth = excluded.auth, lang = excluded.lang, created = excluded.created, expires = excluded.expires,
+        last_late = excluded.last_late, done = 0`);
     this.lastSaved = new Map(); // run -> { ts, speed, prev }
     this.cleanup();
     setInterval(() => this.cleanup(), 6 * 3600e3).unref();
@@ -58,9 +80,80 @@ class Store {
     };
   }
 
+  // Each train's most recent recorded position within keepDays, keyed by train number.
+  lastSeen(keepDays = KEEP_DAYS) {
+    const since = Math.floor(Date.now() / 1000) - keepDays * 86400;
+    const out = {};
+    for (const r of this.selectLastSeen.all(since)) {
+      out[r.train] = { at: r.ts * 1000, lat: r.lat, lon: r.lon, speed: r.speed, prev: r.prev, next: r.next };
+    }
+    return out;
+  }
+
+  // Alert watches. Times are epoch ms. A watch lasts 3 days, or 12 h after it is marked done.
+  upsertWatch({ endpoint, train, run, stop, p256dh, auth, lang, lastLate }) {
+    const now = Date.now();
+    this.upsertWatchStmt.run(endpoint, train, run, stop ?? null, p256dh, auth, lang, now, now + 3 * 86400e3, lastLate ?? null);
+    // A fresh watch starts with a clean slate of sent events.
+    this.db.prepare('DELETE FROM sent WHERE endpoint = ? AND train = ?').run(endpoint, train);
+  }
+
+  removeWatch(endpoint, train) {
+    this.db.prepare('DELETE FROM watches WHERE endpoint = ? AND train = ?').run(endpoint, train);
+    this.db.prepare('DELETE FROM sent WHERE endpoint = ? AND train = ?').run(endpoint, train);
+  }
+
+  removeEndpoint(endpoint) {
+    this.db.prepare('DELETE FROM watches WHERE endpoint = ?').run(endpoint);
+    this.db.prepare('DELETE FROM sent WHERE endpoint = ?').run(endpoint);
+  }
+
+  watchesForRun(run) {
+    return this.db.prepare('SELECT * FROM watches WHERE run = ? AND done = 0 AND expires > ?').all(run, Date.now());
+  }
+
+  hasWatches(run) {
+    return !!this.db.prepare('SELECT 1 FROM watches WHERE run = ? AND done = 0 LIMIT 1').get(run);
+  }
+
+  countWatches(endpoint) {
+    const where = endpoint ? ' AND endpoint = ?' : '';
+    const stmt = this.db.prepare('SELECT COUNT(*) AS n FROM watches WHERE expires > ?' + where);
+    return (endpoint ? stmt.get(Date.now(), endpoint) : stmt.get(Date.now())).n;
+  }
+
+  hasWatch(endpoint, train) {
+    return !!this.db.prepare('SELECT 1 FROM watches WHERE endpoint = ? AND train = ?').get(endpoint, train);
+  }
+
+  // Records an event as sent. Returns false if it had been sent already.
+  markSent(endpoint, train, event, at = Date.now()) {
+    return this.db.prepare('INSERT OR IGNORE INTO sent VALUES (?, ?, ?, ?)').run(endpoint, train, event, at).changes > 0;
+  }
+
+  wasSent(endpoint, train, event) {
+    return !!this.db.prepare('SELECT 1 FROM sent WHERE endpoint = ? AND train = ? AND event = ?').get(endpoint, train, event);
+  }
+
+  // Latest time (epoch ms) any delay alert went out for this watch, or 0.
+  lastDelaySent(endpoint, train) {
+    return this.db.prepare("SELECT MAX(at) AS at FROM sent WHERE endpoint = ? AND train = ? AND event LIKE 'delay:%'").get(endpoint, train).at || 0;
+  }
+
+  setLastLate(endpoint, train, late) {
+    this.db.prepare('UPDATE watches SET last_late = ? WHERE endpoint = ? AND train = ?').run(late, endpoint, train);
+  }
+
+  markDone(endpoint, train) {
+    this.db.prepare('UPDATE watches SET done = 1, expires = MIN(expires, ?) WHERE endpoint = ? AND train = ?')
+      .run(Date.now() + 12 * 3600e3, endpoint, train);
+  }
+
   cleanup() {
     const cutoff = Math.floor(Date.now() / 1000) - KEEP_DAYS * 86400;
     this.db.prepare('DELETE FROM positions WHERE ts < ?').run(cutoff);
+    this.db.prepare('DELETE FROM watches WHERE expires < ?').run(Date.now());
+    this.db.prepare('DELETE FROM sent WHERE NOT EXISTS (SELECT 1 FROM watches w WHERE w.endpoint = sent.endpoint AND w.train = sent.train)').run();
   }
 }
 

@@ -3,7 +3,7 @@
 import { t, clock, delayText, isUrdu } from '../i18n.js';
 import { trainName } from '../names.js';
 import {
-  state, api, paint, layout, navigate,
+  state, api, paint, layout, navigate, returnTo,
   isFollowed, setFollowed, addRecentTrain,
 } from '../app.js';
 import { TrainScreen, StopsScreen } from '../screens/index.js';
@@ -11,6 +11,8 @@ import { place, trainNo } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
+import { loadLastSeen, lastSeenOf, lastSeenText, agoText } from '../lastseen.js';
+import { supported, blocked, watching, enable, disable } from '../alerts.js';
 import * as map from '../map.js';
 
 const REPAINT_MS = 1000;   // debounce for repaints caused by live updates
@@ -20,6 +22,8 @@ const SUSPECT_FRESH_MS = 15 * 60e3;
 
 let v = null; // per-mount state
 let renderTimer = 0, tickTimer = 0, noticeTimer = 0, retryTimer = 0;
+let offClick = null;
+let after = null; // what an alerts attempt left for the train page that follows: 'blocked' or 'failed'
 let keep = null; // what the next mount may reuse when the same train's other page follows
 
 const isoDate = ms => new Date(ms + 5 * 3600e3).toISOString().slice(0, 10);
@@ -63,9 +67,19 @@ function compute() {
     live: state.live, train: info, stops, run: null, gps: !!info.live,
     followed: isFollowed(v.number), following: v.following, notice: v.notice,
     photo: trainPhoto(v.number) || undefined,
-    returnTrain: returnTrainOf(info) || undefined, runId: run?.id,
+    returnTrain: returnTrainOf(info) || undefined, runId: run?.id, pick: v.params.pick,
   };
-  const out = { data, run, hist, ests: null, prog: null, st: null };
+  data.alerts = alertsOf(run);
+  const out = { data, run, hist, ests: null, prog: null, st: null, lastSeen: null };
+  if (!run && stops.length) {
+    // No live location: the last place the monitor recorded the train, if any.
+    loadLastSeen(scheduleRender);
+    const rec = lastSeenOf(v.number);
+    if (rec) {
+      data.lastSeen = lastSeenText(rec);
+      out.lastSeen = { lat: rec.lat, lon: rec.lon, label: `${trainNo(v.info)} · ${agoText(rec.at)}` };
+    }
+  }
   if (!run || !stops.length) return out;
 
   const ests = estimates(stops, run, hist.positions, hist.passes);
@@ -103,6 +117,17 @@ function compute() {
   return out;
 }
 
+/** The Alerts card's state: why alerts can't be set, whether they are on, or that they can be turned on. */
+function alertsOf(run) {
+  if (!supported()) return { state: 'unsupported' };
+  if (!run || !state.byNumber.get(v.number)?.live) return { state: 'nolive' };
+  if (v.blocked || blocked()) return { state: 'blocked' };
+  const w = watching(v.number);
+  if (!w) return { state: 'off' };
+  const s = w.stop && v.stops.find(x => x.id === w.stop);
+  return { state: 'on', ...(s ? { stopName: place(s) } : {}) };
+}
+
 /** Puts the train on the map: the route, the train and the next stop. */
 function drawMap(c) {
   const { data, run } = c;
@@ -122,7 +147,7 @@ function drawMap(c) {
       next = { idx: nextIdx, title: place(stops[nextIdx]), sub };
     }
   }
-  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run });
+  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run, lastSeen: c.lastSeen });
 }
 
 function render() {
@@ -193,6 +218,23 @@ async function onShare() {
   else if (result === 'failed') flash(t('copyFailed'));
 }
 
+/** Taps on the alerts controls: a stop or "Whole journey" on the picker turns alerts on, "Turn off" turns them off. */
+async function onAlertsClick(e) {
+  if (!v || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const off = e.target.closest?.('.p-alerts-off');
+  const whole = e.target.closest?.('.p-alerts-whole');
+  const a = e.target.closest?.('.p-stoptimeline a[href*="?stop="]');
+  if (!off && !whole && !a) return;
+  e.preventDefault();
+  const token = v, number = v.number;
+  if (off) { await disable(number); if (v === token) render(); return; }
+  const stop = whole ? null : decodeURIComponent(new URL(a.href).hash.match(/[?&]stop=([^&]+)/)?.[1] || '') || null;
+  const runId = compute().run?.id;
+  // enable() starts inside this click: the browser's permission prompt needs the tap.
+  try { await enable(number, runId, stop); after = null; } catch (err) { after = err === 'blocked' ? 'blocked' : 'failed'; console.error('alerts:', err); }
+  if (v === token) returnTo(`#/train/${number}${v.params.run ? `?run=${encodeURIComponent(v.params.run)}` : ''}`);
+}
+
 async function load() {
   const token = v;
   try {
@@ -220,10 +262,16 @@ export default {
       number: params.number, info, params, stops: same?.stops || [], fetched: same?.fetched || [], hist: same?.hist || EMPTY,
       loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '',
     };
+    const app = document.getElementById('app');
+    app.addEventListener('click', onAlertsClick);
+    offClick = () => app.removeEventListener('click', onAlertsClick);
     map.onUserMove(() => { if (v?.following) { v.following = false; map.setFollow(false); render(); } });
     clearInterval(tickTimer);
     tickTimer = setInterval(render, TICK_MS);
+    if (after === 'blocked') v.blocked = true;
     render();
+    if (after === 'failed') flash(t('alertsFailed'));
+    after = null;
     loadPhotos().then(() => { if (v) render(); });
     load();
   },
@@ -243,6 +291,8 @@ export default {
     scheduleRender();
   },
   unmount() {
+    offClick?.();
+    offClick = null;
     clearTimeout(renderTimer); clearInterval(tickTimer); clearTimeout(noticeTimer); clearTimeout(retryTimer);
     renderTimer = tickTimer = noticeTimer = retryTimer = 0;
     // Moving between this train's Train and All stops pages keeps the map and the data as they are; anywhere else clears the map.

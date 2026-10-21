@@ -130,6 +130,15 @@ or from another database: `ATTACH 'file:2026-10-20.db?mode=ro' AS day;`. The fil
 - `ARCHIVE_CAP_BYTES` (default 8 GiB) is checked against the total uploaded so far before every upload. If the next file would pass it, the job stops with an error and exits 1, so the bucket never exceeds the 10 GiB free tier. Raise it or clean the bucket by hand to continue.
 - Optional: set `ARCHIVE_HEARTBEAT_URL` in `/etc/patri/recorder.env` to a Healthchecks.io-style ping URL. It is pinged after a fully successful run, and at `<url>/fail` after an error, so a silent failure gets noticed.
 
+## Alerts
+
+The recorder also sends push notifications (a train left, is about to reach your stop, its delay changed, it arrived) and serves "last seen" positions. The Vercel API proxies `GET /api/lastseen`, `GET /api/push-key`, `POST /api/watch` and `POST /api/unwatch` to it, so no Vercel setting is needed beyond `RECORDER_URL` and `RECORDER_KEY`.
+
+- **Keys.** `deploy.sh` generates a VAPID key pair on the VM (with the installed `web-push`) if `/etc/patri/recorder.env` has none, as `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`, then restarts the service. The private key is never printed. Back the file up: if the keys change, every phone has to turn alerts on again.
+- **Check.** `curl -H "x-recorder-key: $KEY" https://patri-monitor.hataf.dev/api/push-key` returns `{"publicKey":"..."}`; it is 503 when the keys are missing. `journalctl -u patri-recorder` shows "Alerts disabled" at start in that case, and one `Push <event> train <n> …<last 8 chars>: <status>` line per message otherwise.
+- **Data.** Watches and sent messages live in `trains.db` (tables `watches` and `sent`). A watch expires 3 days after it is created, or 12 hours after the train arrives, and is removed when the push service answers 404 or 410. Limits: 10 watches per device, 5000 in total.
+- **Local testing.** Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (for example from `node -e "console.log(require('web-push').generateVAPIDKeys())"`) before `npm start`.
+
 ## Automatic deploys (GitHub Actions)
 
 `.github/workflows/deploy-monitor.yml` runs `deploy.sh` for you whenever server files change on `main` (server.js, lib.js, data.js, store.js, routes.js, archive.js, alerts.js, push.js, package.json, package-lock.json, `deploy/oracle/**`, or the workflow itself). It can also be started by hand from the Actions tab on any branch. It has no pull request trigger, so forks never see the secrets. The repository is public and so are the logs: nothing secret is printed, and in CI the script never prints `RECORDER_KEY`.

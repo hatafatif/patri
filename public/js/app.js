@@ -5,6 +5,7 @@ import { trainInfo, stationName } from './names.js';
 import { bindScreen } from './screens/index.js';
 import { paint as paintInto } from './render.js';
 import * as map from './map.js';
+import { registerWorker } from './alerts.js';
 import { trainNo, trainTitle } from './screens/_format.js';
 import home from './views/home.js';
 import search from './views/search.js';
@@ -183,7 +184,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---- Routing.
 //   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=]
-//   #/train/<n>/stops  #/station/<id>.  Old links keep working: #27 is #/train/27.
+//   #/train/<n>/stops[?pick=1]  #/station/<id>.  Old links keep working: #27 is #/train/27.
 export function parse(hash = location.hash) {
   const h = hash.replace(/^#/, '');
   if (/^\d+$/.test(h)) return { view: 'train', params: { number: Number(h) }, legacy: `#/train/${h}` };
@@ -195,7 +196,7 @@ export function parse(hash = location.hash) {
   const id = x => (x && x !== '-' ? x : null);
   if (parts[0] === 'trip') return { view: 'trip', params: { from: id(parts[1]), to: id(parts[2]), day: q.get('day') === 'tomorrow' ? 'tomorrow' : 'today' } };
   if (parts[0] === 'train' && parts[1]) {
-    return { view: 'train', params: { number: Number(parts[1]), stops: parts[2] === 'stops', run: q.get('run') } };
+    return { view: 'train', params: { number: Number(parts[1]), stops: parts[2] === 'stops', pick: q.get('pick') === '1', run: q.get('run') } };
   }
   if (parts[0] === 'station') return { view: 'station', params: { id: parts[1] || null } };
   return { view: 'home', params: {} };
@@ -281,6 +282,8 @@ async function start() {
 }
 
 addEventListener('hashchange', route);
+// The service worker (push alerts) registers after the first paint and never blocks it.
+addEventListener('load', () => setTimeout(() => registerWorker().catch(() => {}), 0));
 wide.addEventListener('change', () => { freshNext = true; current?.view.render?.(); });
 start().catch(e => {
   console.error(e);

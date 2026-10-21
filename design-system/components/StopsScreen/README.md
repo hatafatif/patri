@@ -7,6 +7,7 @@ The Train page's All stops list: every stop of a train in order, with the distan
 
 ## Layout
 - Panel at the full snap: PageHeader ("All 16 stops", "28 DN Shalimar Express · Lahore Jn → Karachi Cantt", a back link to the train page), the delay chip, then the full StopTimeline.
+- With `pick: true` (the choose-a-stop-for-alerts page) the title is "Choose your stop for alerts", a hint and a secondary "Whole journey, no stop" Button come first, and every stop ahead is a link (the whole row is the tap target); stops already passed show but can't be chosen.
 - One row per stop plus the train row:
   - up to the last stop passed: kind `passed`, scheduled time, no strike; the first says "Start · 0 km", the last passed "165 km · Last stop";
   - "Train here · 105 km/h · 305 km" right after it;

@@ -8,6 +8,10 @@
 //   RECORDER_KEY  every /api/* request must send header x-recorder-key; static files are not served
 //   DATA_DIR      where trains.db lives (default ./data)
 //   KEEP_DAYS     how long positions are kept (store.js, default 14)
+//   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  enable push alerts (push.js); without them /api/push-key is 503
+// Besides history, this serves GET /api/lastseen (each train's last recorded position), GET /api/push-key,
+// and POST /api/watch and /api/unwatch (push alerts for one train, checked in alerts.js after every
+// recorded position). POST bodies are JSON up to 8 KB.
 // GET /healthz (no key) reports feed state, run count and last update.
 const http = require('http');
 const fs = require('fs');
@@ -17,7 +21,9 @@ const path = require('path');
 const { connectLive, requestInstances, onPositions, normalize } = require('./lib');
 const { Timetable } = require('./data');
 const { Store } = require('./store');
-const { createRoutes, decorate, sendJson } = require('./routes');
+const { createRoutes, decorate, sendJson, readJson } = require('./routes');
+const { Alerts } = require('./alerts');
+const { Pusher } = require('./push');
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -28,6 +34,9 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=
 
 const timetable = new Timetable();
 const store = new Store(path.join(DATA_DIR, 'trains.db'));
+const pusher = new Pusher(store);
+const alerts = new Alerts({ store, timetable, send: (...a) => pusher.send(...a) });
+const MAX_WATCHES_PER_ENDPOINT = 10, MAX_WATCHES = 5000;
 
 async function loadTimetable() {
   try {
@@ -62,6 +71,7 @@ function update(id, pos) {
   latest.set(id, run);
   store.record(id, run.train, run);
   recordedThisHour++;
+  if (pusher.enabled) alerts.check(run);
   return run;
 }
 
@@ -114,6 +124,22 @@ const route = createRoutes(timetable, {
   snapshot: () => [...latest.values()],
   runsFor,
   history: run => store.history(run),
+  lastSeen: () => store.lastSeen(),
+  pushKey: () => pusher.enabled ? [200, { publicKey: pusher.publicKey }] : [503, { error: 'Alerts are not configured' }],
+  watch(w) {
+    if (!pusher.enabled) return [503, { error: 'Alerts are not configured' }];
+    if (!store.hasWatch(w.endpoint, w.train)) {
+      if (store.countWatches(w.endpoint) >= MAX_WATCHES_PER_ENDPOINT) return [429, { error: 'Too many watches on this device' }];
+      if (store.countWatches() >= MAX_WATCHES) return [429, { error: 'Too many watches' }];
+    }
+    store.upsertWatch(w);
+    alerts.begin(w.endpoint, w.train, latest.get(w.run));
+    return [200, { ok: true }];
+  },
+  unwatch(endpoint, train) {
+    store.removeWatch(endpoint, train);
+    return [200, { ok: true }];
+  },
 });
 
 function serveStatic(res, pathname) {
@@ -146,9 +172,11 @@ const server = http.createServer(async (req, res) => {
   if (RECORDER_KEY && !authorized(req)) return sendJson(res, [401, { error: 'Unauthorized' }]);
   if (!timetable.loadedAt) return sendJson(res, [503, { error: 'Timetables are still loading' }]);
   try {
-    sendJson(res, await route(url.pathname.slice(5), url.searchParams));
+    const name = url.pathname.slice(5);
+    if (req.method === 'POST') return sendJson(res, await route.post(name, await readJson(req)));
+    sendJson(res, await route(name, url.searchParams));
   } catch (e) {
-    sendJson(res, [502, { error: e.message }]);
+    sendJson(res, [e.status || 502, { error: e.message }]);
   }
 });
 

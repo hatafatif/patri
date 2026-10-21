@@ -19,7 +19,7 @@ The text button: `primary` for the screen's main action, `secondary` next to it,
 | `label` | `string` | none | Already localised. |
 | `href` | `string` | none | Renders an `<a>` instead of a `<button>`. |
 | `variant` | `'primary' \| 'secondary' \| 'link'` | `'primary'` | `primary` is a `sabz-700` fill with white label-style text, 48px tall. `secondary` is `surface` with a 1.5px `sabz-700` border and `sabz-700` text. `link` is underlined inline text with a 44px hit area that doesn't change the layout. |
-| `icon` | `string` | none | A trailing icon key, usually `chevronEnd`, which flips in right-to-left. |
+| `icon` | `string` | none | A trailing icon key, usually `chevronEnd` (flips in right-to-left) or `bell`. |
 | `full` | `boolean` | `false` | Stretches the button to the full width of its container. |
 | `className` | `string` | none | Extra classes, so a composing component can hook its own styles and behaviour. |
 

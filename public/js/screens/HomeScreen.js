@@ -23,6 +23,7 @@ import { countryMap } from './_map-standin.js';
  * @property {import('./_format.js').ScreenTrain} train
  * @property {import('./_format.js').ScreenWhere | null} where - Where it is: between two stations, stopped at one, or not departed yet. null when the train has no live run: the row says "Not running now".
  * @property {number | null} late - run.lateBy in minutes; null when unknown.
+ * @property {string} [lastSeen] - Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line.
  * @property {boolean} [gps] - false when the train has no GPS.
  * @property {string} [runId] - Adds ?run= to the train link.
  * @property {{ station: import('./_format.js').ScreenStation, est: number, scheduled?: boolean }} [yourStop] - The rider's stop and the expected time there, in minutes after midnight. scheduled: true shows the timetable time without the "~" (no live run to estimate from).
@@ -37,7 +38,7 @@ export function HomeScreen(data, options = {}) {
   const lang = getLang();
   const appBar = AppBar({ live: data.live, lang });
   const href = h => `#/train/${h.train.number}${h.runId ? `?run=${h.runId}` : ''}`;
-  const where = h => (h.where ? whereText(h.where) : t('notRunningNow'));
+  const where = h => (h.where ? whereText(h.where) : t('notRunningNow')) + (h.lastSeen && !h.where ? ` · ${h.lastSeen}` : '');
   const status = h => delayStatus(h.late, { gps: h.gps });
 
   const mine = data.myTrains.map(h => TrainCard({
