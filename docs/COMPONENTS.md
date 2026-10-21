@@ -247,7 +247,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 ### 22. MapMarkers
 **What it is:** everything drawn on the map. The map is MapLibre in `public/js/map.js`.
 **Exports:**
-- `trainMarker({ label, facing? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
+- `trainMarker({ label, facing?, stale? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. `stale: true` adds `p-trainmarker--stale` (its badge and label at opacity .55): the train is drawn where it was last seen, not where it is. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
 - `mapLabel({ title, sub?, kind: 'next' | 'yourstop' | 'selected' | 'hover' })`: label cards. `next` and `hover` are `surface` with a 1.5px `sabz-700` border; `yourstop` and `selected` are `sabz-900` with yellow text. Every kind uses `shadow-float`.
 - `mapPaint()`: reads the tokens with `getComputedStyle` and returns MapLibre paint values:
   - station dot: `map-station` (sabz-700), radius 2.5;

@@ -37,6 +37,7 @@ import { trainMap } from './_map-standin.js';
  * @property {{ id: string, date: string }[]} [runs] - The runs worth choosing between, newest first (two or three). More than one shows a SegmentedControl of links ("Left Sun 18 Oct"), each to #/train/N?run=id.
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
  * @property {{ count: number, href: string }} [hiddenRuns] - Suspect runs that are not shown: a note and a "Show anyway" link to href.
+ * @property {string} [lastSeen] - Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip.
  * @property {boolean} [following=true] - The MapToggle's state.
  * @property {string} [notice] - Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives.
  */
@@ -161,7 +162,7 @@ function statusCard(data, d) {
     const gps = data.gps !== false;
     return Card({
       tone: 'key', header: t('rightNow'),
-      body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? 'noLiveRun' : 'noGpsTrain'))),
+      body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? 'noLiveRun' : 'noGpsTrain')), data.lastSeen ? note(data.lastSeen) : ''),
     });
   }
   const st = run.status;

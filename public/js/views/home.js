@@ -2,6 +2,7 @@
 import { HomeScreen } from '../screens/index.js';
 import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
+import { loadLastSeen, lastSeenOf, lastSeenText } from '../lastseen.js';
 import {
   state, FRESH_MS, mapTrains, paint, layout, navigate, followedTrains, recentTrains, stationLabel,
 } from '../app.js';
@@ -33,9 +34,12 @@ function data() {
   const followed = followedTrains();
   const numbers = [...followed, ...recentTrains().filter(n => !followed.includes(n))]
     .slice(0, Math.max(followed.length, MAX_MINE));
+  if (numbers.some(n => !newest.has(n))) loadLastSeen(render);
   const myTrains = numbers.map(n => {
     const train = state.byNumber.get(n), run = newest.get(n);
+    const rec = run ? null : lastSeenOf(n);
     return {
+      ...(rec ? { lastSeen: lastSeenText(rec, { short: true }) } : {}),
       train, where: run ? whereOf(run, train) : null, late: run ? run.lateBy : null, gps: run ? true : train.live,
       ...(run ? { runId: run.id } : {}),
     };

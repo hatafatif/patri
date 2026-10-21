@@ -11,6 +11,7 @@ import { place, trainNo } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
+import { loadLastSeen, lastSeenOf, lastSeenText, agoText } from '../lastseen.js';
 import * as map from '../map.js';
 
 const REPAINT_MS = 1000;   // debounce for repaints caused by live updates
@@ -65,7 +66,16 @@ function compute() {
     photo: trainPhoto(v.number) || undefined,
     returnTrain: returnTrainOf(info) || undefined, runId: run?.id,
   };
-  const out = { data, run, hist, ests: null, prog: null, st: null };
+  const out = { data, run, hist, ests: null, prog: null, st: null, lastSeen: null };
+  if (!run && stops.length) {
+    // No live location: the last place the monitor recorded the train, if any.
+    loadLastSeen(scheduleRender);
+    const rec = lastSeenOf(v.number);
+    if (rec) {
+      data.lastSeen = lastSeenText(rec);
+      out.lastSeen = { lat: rec.lat, lon: rec.lon, label: `${trainNo(v.info)} · ${agoText(rec.at)}` };
+    }
+  }
   if (!run || !stops.length) return out;
 
   const ests = estimates(stops, run, hist.positions, hist.passes);
@@ -122,7 +132,7 @@ function drawMap(c) {
       next = { idx: nextIdx, title: place(stops[nextIdx]), sub };
     }
   }
-  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run });
+  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run, lastSeen: c.lastSeen });
 }
 
 function render() {

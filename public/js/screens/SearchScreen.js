@@ -35,6 +35,7 @@ import { countryMap } from './_map-standin.js';
  * @property {import('./_format.js').ScreenStation} to - Where it ends.
  * @property {number | null} late - Today's delay in minutes; null when it isn't running or unknown.
  * @property {boolean} [gps] - false when the train has no GPS.
+ * @property {string} [lastSeen] - Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line.
  * @property {boolean} followed - Whether it is in My trains (the star).
  * @property {string} [runId] - Adds ?run= to the train link.
  */
@@ -60,7 +61,7 @@ export function SearchScreen(data, options = {}) {
     href: `#/train/${h.train.number}${h.runId ? `?run=${h.runId}` : ''}`,
     badge: badgeOf(h.train),
     name: trainTitle(h.train),
-    sub: route(h.from, h.to),
+    sub: route(h.from, h.to) + (h.lastSeen && h.late == null ? ` · ${h.lastSeen}` : ''),
     status: delayStatus(h.late, { gps: h.gps }),
     match: data.query,
     follow: { followed: h.followed },
