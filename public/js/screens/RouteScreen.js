@@ -1,4 +1,4 @@
-// RouteScreen: From → To, the trains leaving next and the ones already on the way.
+// RouteScreen: From → To, the direct trains you can still board.
 import { t, dur } from '../i18n.js';
 import { SegmentedControl, StationFields, SectionHeader, DepartureRow } from '../components/index.js';
 import { frame, body, section, list, row, fill, note, mapButton, backButton } from './_layout.js';
@@ -7,8 +7,8 @@ import { countryMap } from './_map-standin.js';
 
 /**
  * Search › From → To: the Panel at full height with a back button and the mode switch, the From and To
- * fields with swap, a Today | Tomorrow switch, then the direct trains leaving From next and those already
- * on the way (views/trip.js, /api/trip).
+ * fields with swap, a Today | Tomorrow switch, then the direct trains still to leave From
+ * (views/trip.js, /api/trip).
  * Either station may be null (the field shows its placeholder; the day switch and the lists are left out and
  * a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note.
  * @typedef {object} RouteScreenData
@@ -20,7 +20,6 @@ import { countryMap } from './_map-standin.js';
  * @property {boolean} [loading] - The trains haven't arrived yet: a loading note instead of the lists.
  * @property {number} now - Minutes after midnight today.
  * @property {RouteTrip[]} leaving - Trains still to leave From, in departure order.
- * @property {RouteTrip[]} onTheWay - Trains that have left From for To, in departure order. Empty on Tomorrow.
  */
 /**
  * One direct train: a /api/trip row with the train resolved.
@@ -57,27 +56,18 @@ export function RouteScreen(data, options = {}) {
         : { tone: 'neutral', text: tomorrow ? t('timetable') : t('inTime', { d: dur(r.dep - now) }) },
     });
   });
-  // Already left From: the time is the scheduled departure ("Left"), the arrival is the estimate when the train is tracked.
-  const onTheWay = data.onTheWay.map(r => DepartureRow({
-    href: link(r),
-    train: trainOf(r),
-    time: { caption: t('leftCaption'), expected: time(r.dep) },
-    sub: t('arrives', { time: r.late != null ? approx(r.arr + r.late) : time(r.arr) }),
-    status: delayStatus(r.late, { gps: r.gps }),
-  }));
 
-  const modeOptions = [{ value: 'search', label: t('trainOrStation'), href: '#/search' }, { value: 'trip', label: t('fromTo'), href: '#/trip' }];
+  const modeOptions = [{ value: 'search', label: t('search'), href: '#/search' }, { value: 'trip', label: t('fromTo'), href: '#/trip' }];
   const mode = SegmentedControl({ label: t('searchBy'), value: 'trip', options: modeOptions });
 
   const both = !!(from && to);
   let content = [];
   if (!both) content = [note(t('pickBoth'))];
   else if (data.loading) content = [note(t('loading'))];
-  else if (!leaving.length && !onTheWay.length) content = [note(t('noTrips'))];
+  else if (!leaving.length) content = [note(t('noTrips'))];
   else {
     if (tomorrow) content.push(note(t('timetableTimes')));
     if (leaving.length) content.push(section(SectionHeader({ label: t('leavingNext', { station: place(from) }), count: leaving.length }), list(...leaving)));
-    if (onTheWay.length) content.push(section(SectionHeader({ label: t('onTheWay'), count: onTheWay.length }), list(...onTheWay)));
   }
 
   const days = both ? SegmentedControl({

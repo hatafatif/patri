@@ -37,7 +37,9 @@ export function frame({ name, options = {}, label = '', body = '', snap = 'half'
   const expanded = !web && options.expanded;
   const sheetSnap = options.snap || (expanded ? 'full' : snap);
   const pill = !web && back;
-  const startHtml = (pill ? IconButton({ icon: 'back', label: back.label, href: back.href, variant: 'float', text: true, className: 'p-screen__back' }) : '') + start;
+  const backPill = pill ? IconButton({ icon: 'back', label: back.label, href: back.href, variant: 'float', text: true, className: 'p-screen__back' }) : '';
+  const searchBtn = pill ? IconButton({ icon: 'search', label: t('search'), href: '#/search', variant: 'float', className: 'p-screen__search' }) : '';
+  const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${searchBtn}</div>` : '') + start;
   const cls = ['p-screen', `p-screen--${web ? 'web' : 'phone'}`, `p-screen--${name}`, expanded && 'p-screen--expanded', !web && top && 'p-screen--top', pill && 'p-screen--back']
     .filter(Boolean).join(' ');
   return `<div class="${cls}" data-screen="${esc(name)}">`

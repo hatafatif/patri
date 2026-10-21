@@ -21,10 +21,10 @@ A `SearchTrain` is `{ train, from, to, late, gps?, followed, runId? }`. A `Searc
 - `snap`, `expanded`, `standin`: the shared screen options.
 
 ## Layout
-The search row and the Train or station | From → To switch sit together; then Trains, Recent (trip → "Trip", station → "Station board") and one hint line.
+The search row and the Search | Plan a trip switch sit together; then Trains, Recent (trip → "Trip", station → "Station board") and one hint line.
 
 ## Behaviour
-`bindScreen(root, { data, onLang })` wires the panel, the search field (typing, clear, Escape) and the follow stars, which toggle in place. Saving the follow and filtering the results are the view's job. The "From → To" option is a link to `#/trip`.
+`bindScreen(root, { data, onLang })` wires the panel, the search field (typing, clear, Escape) and the follow stars, which toggle in place. Saving the follow and filtering the results are the view's job. The "Plan a trip" option is a link to `#/trip`.
 
 ## Product rules
 - Trains stay in the search's order; never sorted or filtered by lateness.

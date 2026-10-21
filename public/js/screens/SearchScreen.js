@@ -53,7 +53,7 @@ export function SearchScreen(data, options = {}) {
   const back = backButton(data.backHref || '#/');
   const mode = pick ? '' : SegmentedControl({
     label: t('searchBy'), value: 'search',
-    options: [{ value: 'search', label: t('trainOrStation'), href: '#/search' }, { value: 'trip', label: t('fromTo'), href: '#/trip' }],
+    options: [{ value: 'search', label: t('search'), href: '#/search' }, { value: 'trip', label: t('fromTo'), href: '#/trip' }],
   });
 
   const rows = data.trains.map(h => TrainRow({

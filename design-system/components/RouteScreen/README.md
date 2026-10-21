@@ -1,6 +1,6 @@
 # RouteScreen
 
-From → To: pick two stations and a day, then see the direct trains leaving next and those already on the way.
+From → To: pick two stations and a day, then see the direct trains you can still board.
 
 ## Components used
 [Panel](../Panel/README.md) (through the screen frame), [IconButton](../IconButton/README.md) (back), [SegmentedControl](../SegmentedControl/README.md) (mode, as links; and Today | Tomorrow, as buttons), [StationFields](../StationFields/README.md), [SectionHeader](../SectionHeader/README.md), [DepartureRow](../DepartureRow/README.md) with its [StatusChip](../StatusChip/README.md).
@@ -15,7 +15,6 @@ From → To: pick two stations and a day, then see the direct trains leaving nex
 | `day` | `'today' \| 'tomorrow'` | The selected day. |
 | `now` | `number` | Minutes after midnight today, for "in 1 h 46 min". |
 | `leaving` | `RouteTrip[]` | Trains still to leave From, in departure order. |
-| `onTheWay` | `RouteTrip[]` | Trains that have left From, in departure order. |
 
 A `RouteTrip` is `{ train, dep, arr, late, gps, stopsBetween, runId? }`. Times are minutes after midnight; `arr` of 1440 or more is the next day ("+1").
 
@@ -25,11 +24,10 @@ A `RouteTrip` is `{ train, dep, arr, late, gps, stopsBetween, runId? }`. Times a
 
 ## Rows
 - Leaving: with a delay, the expected time ("~3:35 PM") over the struck scheduled time, and the delay chip. Without one, the scheduled time and either "in 1 h 46 min" or "No GPS". The sub line is "Arrives … · N stops".
-- Already on the way: the scheduled departure, "Arrives ~…" and the delay chip.
 - Links go to `#/train/<n>?stop=<from id>`, with `&run=` when the run is known.
 
 ## Behaviour
-`bindScreen(root, { data, onLang })` wires the panel, the From and To fields and swap (the view supplies the pickers), the Today | Tomorrow buttons (the view loads the other day), and the language toggle. The Train or station | From → To control is made of links.
+`bindScreen(root, { data, onLang })` wires the panel, the From and To fields and swap (the view supplies the pickers), the Today | Tomorrow buttons (the view loads the other day), and the language toggle. The Search | Plan a trip control is made of links.
 
 ## Product rules
 - Departure order is kept; no sorting or filtering by lateness.
