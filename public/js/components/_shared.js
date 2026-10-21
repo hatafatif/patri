@@ -2,6 +2,9 @@
 import { esc } from '../i18n.js';
 export { esc, bdi } from '../i18n.js';
 
+/** A small side-view locomotive in the Sabz livery, facing the inline end (right). Decorative: aria-hidden. Styled by .p-train in components.css. */
+export const trainIcon = () => '<svg class="p-train" viewBox="0 0 40 22" aria-hidden="true" focusable="false"><rect class="p-train__roof" x="9" y="2.2" width="8" height="2.2" rx="1"/><path class="p-train__body" d="M5 4h20.5c1.4 0 2.8.6 3.8 1.7l5.6 6.1c.7.8 1.1 1.8 1.1 2.8V16.5H3V6a2 2 0 0 1 2-2z"/><path class="p-train__window" d="M25.2 6.4h.6c.9 0 1.7.4 2.3 1l3.4 3.8h-6.3z"/><rect class="p-train__window" x="6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__window" x="13.6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__stripe" x="3" y="12.2" width="33" height="1.8"/><circle class="p-train__lamp" cx="34.3" cy="15" r="0.9"/><rect class="p-train__frame" x="4" y="16.3" width="31" height="1.6" rx=".8"/><circle class="p-train__wheel" cx="8.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="13.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="25.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="30.5" cy="18.8" r="2.1"/></svg>';
+
 // Icons are 24-unit inline SVGs that draw in currentColor. The ones marked p-flip point along the
 // reading direction and are mirrored in right-to-left by components.css.
 export const icon = {

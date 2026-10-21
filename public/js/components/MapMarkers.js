@@ -1,13 +1,14 @@
 // MapMarkers: the train marker, the map label cards and the MapLibre paint values drawn on the map.
-import { bdi, cx } from './_shared.js';
+import { bdi, cx, trainIcon } from './_shared.js';
 
 /**
- * The followed train's marker: a yellow dot with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the dot.
+ * The followed train's marker: a 40px yellow badge holding the little green locomotive, with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the badge.
  * @typedef {object} TrainMarkerProps
- * @property {string} label - The text beside the dot, such as "28 DN · 105 km/h". Already localised.
+ * @property {string} label - The text beside the badge, such as "28 DN · 105 km/h". Already localised.
+ * @property {'left' | 'right'} [facing='right'] - Which way the locomotive points, so it can face the way the train travels on the map.
  */
-export function trainMarker({ label = '' } = {}) {
-  return `<div class="p-trainmarker"><span class="p-trainmarker__dot"></span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+export function trainMarker({ label = '', facing = 'right' } = {}) {
+  return `<div class="${cx('p-trainmarker', facing === 'left' && 'p-trainmarker--left')}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
 }
 
 /**
