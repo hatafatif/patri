@@ -31,7 +31,7 @@ echo "==> Copying files"
 # Minimal Ubuntu images (the usual Arm choice on Oracle) don't ship rsync.
 run 'command -v rsync >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq rsync; }'
 run 'sudo mkdir -p /opt/patri /etc/patri && sudo chown "$USER" /opt/patri'
-FILES=(server.js lib.js data.js store.js routes.js archive.js package.json package-lock.json)
+FILES=(server.js lib.js data.js store.js routes.js archive.js alerts.js push.js package.json package-lock.json)
 rsync -az -e "ssh ${SSH_OPTS[*]}" "${FILES[@]}" deploy/oracle/setup.sh "$TARGET:/opt/patri/"
 
 echo "==> Creating /etc/patri/recorder.env (first run only)"
@@ -51,6 +51,22 @@ run "sudo bash /opt/patri/setup.sh $HOSTNAME_PUBLIC $PORT"
 
 echo "==> Installing dependencies"
 run 'sudo chown -R patri:patri /opt/patri && cd /opt/patri && sudo -u patri npm ci --omit=dev'
+
+echo "==> Checking the push alert (VAPID) keys"
+# Generated on the VM with the installed web-push, only if missing. They never leave the VM and are
+# not printed. Changing them later invalidates every phone's subscription.
+run 'sudo bash -s' <<'VAPID'
+set -e
+f=/etc/patri/recorder.env
+if grep -q '^VAPID_PUBLIC_KEY=.' "$f" && grep -q '^VAPID_PRIVATE_KEY=.' "$f"; then
+  echo "VAPID keys already set."
+else
+  sed -i '/^VAPID_/d' "$f"
+  [ -z "$(tail -c1 "$f")" ] || echo >> "$f"
+  node -e "const w=require('/opt/patri/node_modules/web-push');const k=w.generateVAPIDKeys();console.log('VAPID_PUBLIC_KEY='+k.publicKey);console.log('VAPID_PRIVATE_KEY='+k.privateKey)" >> "$f"
+  echo "Generated VAPID keys."
+fi
+VAPID
 
 echo "==> Restarting the recorder"
 run 'sudo systemctl restart patri-recorder'

@@ -7,9 +7,12 @@
 // passing times) comes from the always-on recorder (server.js in recorder mode, see deploy/oracle/).
 // Live positions are always read from the upstream feed directly, so the recorder is only asked when a
 // Train page opens. If it is down or slow, history() returns nothing, exactly as without a recorder.
+// The recorder also owns push alerts and "last seen": /api/lastseen, /api/push-key, /api/watch and
+// /api/unwatch are proxied to it (4 s timeout, status and body forwarded). Without a recorder,
+// lastseen is {} and the other three answer 503.
 const { fetchLiveRuns, normalize } = require('../lib');
 const { Timetable } = require('../data');
-const { createRoutes, decorate, sendJson } = require('../routes');
+const { createRoutes, decorate, sendJson, readJson } = require('../routes');
 
 const timetable = Timetable.fromRaw(require('../build/timetable.json'));
 const liveTrains = timetable.trains.filter(t => t.IsLive).map(t => t.TrainNumber);
@@ -25,6 +28,22 @@ async function recorderGet(path, timeoutMs) {
   });
   if (!res.ok) throw new Error(`recorder answered ${res.status}`);
   return res.json();
+}
+
+// Forwards a request to the recorder and returns its [status, body], whatever the status.
+async function recorderForward(method, path, body) {
+  try {
+    const res = await fetch(RECORDER_URL + path, {
+      method,
+      headers: { 'x-recorder-key': RECORDER_KEY, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(4000),
+    });
+    return [res.status, await res.json().catch(() => ({ error: `recorder answered ${res.status}` }))];
+  } catch (e) {
+    console.error('Recorder request failed:', path, e.message);
+    return [502, { error: 'Alerts are not reachable right now' }];
+  }
 }
 
 async function recorderHistory(run) {
@@ -65,18 +84,43 @@ function snapshot() {
   return pending;
 }
 
+const alertsSource = useRecorder ? {
+  lastSeen: async () => {
+    const [status, body] = await recorderForward('GET', '/api/lastseen');
+    if (status !== 200) throw new Error(body.error || `recorder answered ${status}`);
+    return body;
+  },
+  pushKey: () => recorderForward('GET', '/api/push-key'),
+  watch: clean => recorderForward('POST', '/api/watch', {
+    subscription: { endpoint: clean.endpoint, keys: { p256dh: clean.p256dh, auth: clean.auth } },
+    train: clean.train, run: clean.run, stop: clean.stop, lang: clean.lang,
+  }),
+  unwatch: (endpoint, train) => recorderForward('POST', '/api/unwatch', { endpoint, train }),
+} : {};
+
 const route = createRoutes(timetable, {
   snapshot,
   runsFor: async train => (await snapshot()).filter(r => r.train === train),
   history: run => useRecorder ? recorderHistory(run) : { positions: [], passes: [] },
+  ...alertsSource,
 });
+
+// Vercel may already have parsed the body into req.body; otherwise read the stream. At most 8 KB.
+async function bodyOf(req) {
+  if (Number(req.headers['content-length']) > 8 * 1024) throw Object.assign(new Error('Body too large'), { status: 413 });
+  if (req.body === undefined) return readJson(req);
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || 'null') : req.body;
+  if (JSON.stringify(body ?? null).length > 8 * 1024) throw Object.assign(new Error('Body too large'), { status: 413 });
+  return body;
+}
 
 module.exports = async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const name = url.searchParams.get('path') || url.pathname.replace(/^\/api\/?/, '');
   try {
+    if (req.method === 'POST') return sendJson(res, await route.post(name, await bodyOf(req)));
     sendJson(res, await route(name, url.searchParams));
   } catch (e) {
-    sendJson(res, [502, { error: e.message }]);
+    sendJson(res, [e.status || (e instanceof SyntaxError ? 400 : 502), { error: e.message }]);
   }
 };
