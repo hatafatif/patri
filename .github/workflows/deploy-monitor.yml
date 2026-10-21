@@ -1,0 +1,61 @@
+name: Deploy monitor
+
+# No pull_request triggers on purpose: forks must never get the secrets.
+on:
+  push:
+    branches: [main]
+    paths:
+      - server.js
+      - lib.js
+      - data.js
+      - store.js
+      - routes.js
+      - archive.js
+      - alerts.js
+      - push.js
+      - package.json
+      - package-lock.json
+      - deploy/oracle/**
+      - .github/workflows/deploy-monitor.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-monitor
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up SSH
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_KNOWN_HOSTS: ${{ secrets.VM_KNOWN_HOSTS }}
+          VM_HOST: ${{ vars.VM_HOST }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$VM_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CONF
+          Host vm
+            HostName $VM_HOST
+            User ubuntu
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          CONF
+
+      - name: Deploy
+        run: bash deploy/oracle/deploy.sh vm "${{ vars.MONITOR_HOSTNAME || 'patri-monitor.hataf.dev' }}"
+
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
