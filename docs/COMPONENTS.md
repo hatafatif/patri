@@ -77,6 +77,7 @@ The registry of every frontend component. **Build UI only from these.** If none 
 | 23 | Button | input | See all stops, Choose your stop, Change |
 | 24 | Card | shell | Right now, About this train |
 | 25 | PageHeader | shell | Train page, Station page, All stops |
+| 26 | Photo | data | Train page: About this train; Station page |
 
 ## Specs
 
@@ -287,6 +288,14 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
   - `follow` and `share` render at the end, in the order given. A follow action's optional `label: { off, on }` is passed to FollowButton as its aria-label (such as `{ off: 'Save Multan Cantt', on: 'Saved' }` on a station).
 **Markup:** a `<header>` with the leading element, a text block whose `<h1>` is the title, and the actions at the end. Use `bindPageHeader(root, { onFollow, onShare })` to wire the actions.
 **Urdu:** when the whole interface is in Urdu, the Urdu name becomes the `<h1>` in `urdu-title` and the English name moves to the second line (`lang="en" dir="ltr"`, in a Latin style, start-aligned).
+
+### 26. Photo
+**What it is:** a photo with its credit underneath: the train in About this train, the city on the Station page. Approved on 2026-10-21.
+**Props:** `src`, `alt`, `credit` (already localised, such as "Photo: A. Khan · CC BY-SA 4.0"), `href?` (the photo's source page), `className?`.
+**Look:** a 16:9 image at `radius-md` on a `line-soft` placeholder, the full width of its parent. The credit sits under it in caption style, `ink-muted`; in Urdu it uses `urdu-caption`.
+**Behaviour:** the image loads lazily and its 16:9 box is reserved, so nothing shifts. With an `href`, the credit is an underlined link that opens in a new tab (`rel="noopener"`).
+**Markup:** a `<figure>` with an `<img>` and a `<figcaption>`. The caption is left out when there is no credit.
+**Rules:** only freely licensed photos (CC BY, CC BY-SA, CC0, public domain), always credited. No photo is better than a wrong one.
 
 ## Screens
 

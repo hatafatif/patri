@@ -1,0 +1,15 @@
+<!-- @dsCard group="Train & station" height=420 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
+<div id="root" style="padding:16px;background:var(--ground)"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    const src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23e3ede6'/%3E%3Cpath d='M0 270H800' stroke='%2301411c' stroke-width='4'/%3E%3C/svg%3E";
+    root.innerHTML = '<div style="max-width:360px;display:grid;gap:16px">' +
+      P.Photo({ src: src, alt: 'A sample landscape', credit: 'Photo: Example Author · CC BY-SA 4.0', href: 'https://example.org/photo' }) +
+      P.Photo({ src: src, alt: 'A sample landscape', credit: 'Photo: Example Author · CC BY-SA 4.0' }) +
+      '</div>';
+  })();
+</script>
