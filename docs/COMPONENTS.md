@@ -199,8 +199,8 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Markup:** a 76px time column with the expected time in time style and, when it differs, the scheduled time struck through in time-sm `ink-muted`. `caption` adds a small label above the time, such as "Left" over "7:10 AM" for trains already on their way on From → To: label style (condensed, uppercase in English) in `ink-muted`, `urdu-label` in Urdu. Then the name with the number in muted label style, the sub line, and the status chip.
 
 ### 16. StopTimeline
-**What it is:** the stops timeline. The Right now card shows the compact form; the All stops page shows the full form.
-**Props:** `rows: [{ kind, name, sub?, time?: { expected, scheduled? }, countdown?, href?, change? }]`, `mode: 'compact' | 'full'`, `legend?: boolean` (an "expected · scheduled" key above the rows, at the end edge over the time column: "expected" in the expected-time look, then "scheduled" struck through in `ink-muted`; decorative, `aria-hidden`; used on All stops).
+**What it is:** the stops timeline. The Right now card shows the card form; the All stops page shows the full form; compact is the tight form without sub lines.
+**Props:** `rows: [{ kind, name, label?, sub?, time?: { expected, scheduled? }, countdown?, href?, change? }]`, `mode: 'compact' | 'full' | 'card'` (card is the Right now form: a label over each name, heading-size names, sub lines shown; `label` is a short already-localised label above the name such as "Next stop", shown whenever given, in muted uppercase label style, `urdu-caption` in Urdu), `legend?: boolean` (an "expected · scheduled" key above the rows, at the end edge over the time column: "expected" in the expected-time look, then "scheduled" struck through in `ink-muted`; decorative, `aria-hidden`; used on All stops).
 **Row kinds:**
 - `passed`: `ink-passed` text with a filled `ink-passed` dot.
 - `train`: "TRAIN HERE · 27 KM TO MULTAN CANTT" in label style, `sabz-700`, with the yellow train marker dot (a `zard-500` fill and a `sabz-900` ring).
@@ -209,7 +209,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 - `stop`: a plain upcoming stop.
 - `more`: a collapsed "8 more stops" link.
 - `final`: a square end marker.
-**Look:** rows are at least 46px high, divided by `line-soft`. Times are tabular.
+**Look:** rows are at least 46px high (64px in card mode, with more padding), divided by `line-soft`. Times are tabular.
 **Behaviour:** `bindStopTimeline(root, { onChangeStop })`.
 
 ### 17. JourneyProgress

@@ -5,7 +5,7 @@ import {
   MapToggle, SegmentedControl, statusTone,
 } from '../components/index.js';
 import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton } from './_layout.js';
-import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dateLabel, delayStatus } from './_format.js';
+import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dayTime, dayApprox, dateLabel, delayStatus } from './_format.js';
 import { trainMap } from './_map-standin.js';
 
 /**
@@ -151,37 +151,64 @@ function speedCard(data) {
   });
 }
 
-/** The Right now rows: the last stop passed, the train, the next stop, your stop, a collapsed middle and the final stop. */
+/** The Right now rows: where it started, the stop just passed, the next stop, your stop, a collapsed middle and the last stop. */
 function timelineRows(data, d) {
-  const { train } = data;
-  const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress } = d;
+  const { train, run } = data;
+  const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d;
   const stopsHref = `#/train/${train.number}/stops`;
+  const join = (...p) => p.filter(Boolean).join(' · ');
+  // A stop behind the train: when it passed (recorded, else the timetable), with its day.
+  const passedAt = i => data.ests?.[i]?.at ?? d.schedOf(stops[i]);
+  const behind = i => (passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {});
+  // A stop ahead: the expected time with its day, and the countdown.
+  const ahead = i => {
+    const e = d.est(i), s = d.schedOf(stops[i]);
+    const expected = e != null ? dayApprox(e, ref) : s != null ? dayTime(s, ref) : null;
+    return { ...(expected ? { time: { expected } } : {}), ...(d.inTime(i) ? { countdown: d.inTime(i) } : {}) };
+  };
+  const planned = i => {
+    const e = d.est(i), s = d.schedOf(stops[i]);
+    return e != null && s != null && Math.round(e) !== s ? t('plannedAt', { time: time(s, ref) }) : '';
+  };
+  const moving = run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind);
+  const away = moving ? t('kmAwayNow', { km: kmNum(progress.kmToNext), speed: run.speed }) : t('kmAway', { km: kmNum(progress.kmToNext) });
   const rows = [];
-  let tail = passedIdx; // the furthest stop shown so far
-  if (passedIdx >= 0) {
-    rows.push({ kind: 'passed', name: place(d.prev), sub: t('lastPassed'), ...(d.schedOf(d.prev) != null ? { time: { expected: time(d.schedOf(d.prev), d.ref) } } : {}) });
+
+  if (run.status?.kind === 'done' || passedIdx >= lastIdx) {
+    rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
+    rows.push({ kind: 'final', label: t('lastStop'), name: place(d.last), ...behind(lastIdx) });
+    return rows;
   }
-  rows.push({ kind: 'train', name: d.trainText(false) });
-  if (nextIdx >= 0) {
+  if (passedIdx >= 0) rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
+  else rows.push({ kind: 'next', label: t('startsFrom'), name: place(d.first), ...ahead(0) });
+  let tail = 0; // the furthest stop shown so far
+  if (passedIdx > 0) {
+    rows.push({ kind: 'passed', label: t('lastPassed'), name: place(d.prev), ...behind(passedIdx) });
+    tail = passedIdx;
+  }
+  if (nextIdx > 0 && nextIdx < lastIdx) {
     const mineNext = nextIdx === mineIdx;
-    const lastNext = nextIdx === lastIdx;
-    const sub = mineNext ? t('yourStop') : lastNext ? t('finalStop') : d.nextHalt ? `${t('nextStop')} · ${t('halt', { d: dur(d.nextHalt) })}` : t('nextStop');
     rows.push({
-      kind: mineNext ? 'yourstop' : lastNext ? 'final' : 'next', name: place(d.next), sub,
-      time: lastNext && !mineNext ? d.both(nextIdx) : d.exp(nextIdx), countdown: d.inTime(nextIdx) || undefined,
-      ...(mineNext ? { change: true } : {}),
+      kind: mineNext ? 'yourstop' : 'next', label: t(mineNext ? 'yourStop' : 'nextStop'), name: place(d.next),
+      sub: join(away, d.nextHalt ? t('halt', { d: dur(d.nextHalt) }) : ''),
+      ...ahead(nextIdx), ...(mineNext ? { change: true } : {}),
     });
     tail = nextIdx;
   }
-  if (mineIdx > tail) {
-    rows.push({ kind: 'yourstop', name: place(d.mine), sub: t('yourStop'), time: d.exp(mineIdx), countdown: d.inTime(mineIdx) || undefined, change: true });
+  if (mineIdx > tail && mineIdx < lastIdx) {
+    rows.push({ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), ...ahead(mineIdx), change: true });
     tail = mineIdx;
   }
-  if (lastIdx > tail) {
-    const more = lastIdx - tail - 1;
-    if (more > 0) rows.push({ kind: 'more', name: t('moreStops', { n: more }), href: stopsHref });
-    rows.push({ kind: 'final', name: place(d.last), sub: t('finalStop'), time: d.both(lastIdx) });
-  }
+  const more = lastIdx - tail - 1;
+  if (more > 0) rows.push({ kind: 'more', name: t('moreStops', { n: more }), href: stopsHref });
+  const mineLast = mineIdx === lastIdx;
+  rows.push({
+    kind: mineLast ? 'yourstop' : 'final',
+    label: mineLast ? `${t('yourStop')} · ${t('lastStop')}` : t('lastStop'),
+    name: place(d.last),
+    sub: join(nextIdx === lastIdx ? away : '', planned(lastIdx)),
+    ...ahead(lastIdx), ...(mineLast ? { change: true } : {}),
+  });
   return rows;
 }
 
@@ -228,7 +255,7 @@ function rightNow(data, d) {
     // Timetable mode: no live run, so no position, estimates or progress.
     const gps = data.gps !== false;
     const mineRow = d.mine
-      ? StopTimeline({ mode: 'compact', rows: [{ kind: 'yourstop', name: place(d.mine), sub: t('yourStop'), time: d.exp(d.mineIdx), change: true }] })
+      ? StopTimeline({ mode: 'card', rows: [{ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), time: d.exp(d.mineIdx), change: true }] })
       : '';
     return Card({
       tone: 'key', header: t('rightNow'),
@@ -252,10 +279,10 @@ function rightNow(data, d) {
         delay: { tone: statusTone(run.late), text: delayText(run.late) },
         updated: t('updated', { ago: ago < 1 ? t('justNow') : t('ago', { d: dur(ago) }) }),
       }),
-      StopTimeline({ mode: 'compact', rows: timelineRows(data, d) }),
+      StopTimeline({ mode: 'card', rows: timelineRows(data, d) }),
       JourneyProgress({
         fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, d.progress.kmDone / d.totalKm)) : 0,
-        start: d.passedIdx >= 0 && first.dep != null && run.status?.kind !== 'wait' ? t('leftAt', { station: place(first), time: time(first.dep, d.ref) }) : place(first),
+        start: '',
         end: t('kmOf', { done: kmNum(done ? d.totalKm : d.progress.kmDone), total: kmNum(d.totalKm) }),
       }),
       yourStopPrompt(data, d),
