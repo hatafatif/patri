@@ -107,7 +107,8 @@ function padding() {
   const rtl = document.documentElement.dir === 'rtl';
   const side = 16, controls = 60; // the zoom, layers and locate buttons sit on the inline-end side
   const w = r.width, h = r.height;
-  let top = 24, bottom = covered + 24, left = rtl ? controls : side, right = rtl ? side : controls;
+  // Phone pages with the floating Home/Back pill and search button (frame() adds p-screen--back) keep content below them.
+  let top = el.closest('.p-screen--back') ? 68 : 24, bottom = covered + 24, left = rtl ? controls : side, right = rtl ? side : controls;
   // Never ask for more padding than the box can give.
   bottom = Math.min(bottom, h * 0.65);
   top = Math.min(top, h * 0.15);

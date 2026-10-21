@@ -1,5 +1,5 @@
 // From → To: the direct trains between two stations. /api/trip gives the timetable and today's live delay;
-// this view splits it into "leaving From next" and "already on the way" (Today), or lists the timetable (Tomorrow).
+// this view keeps the trains you can still board at From (Today), or lists the timetable (Tomorrow).
 import { RouteScreen } from '../screens/index.js';
 import { trainInfo } from '../names.js';
 import { pktMidnight } from '../i18n.js';
@@ -9,7 +9,6 @@ import * as map from '../map.js';
 const REFRESH_MS = 60e3;
 const LIVE_DEBOUNCE_MS = 5e3;
 const GRACE_MIN = 5; // a train with no GPS still counts as "leaving" for this long after its scheduled time
-const GONE_MIN = 30; // drop a train that should have reached To more than this long ago
 
 let v = null;
 
@@ -24,23 +23,20 @@ const asTrip = r => ({
   dep: r.dep, arr: r.arr, late: r.late, gps: r.gps, stopsBetween: r.stopsBetween, runId: r.runId ?? undefined,
 });
 
-/** Today: not yet gone from From vs already on the way. Tomorrow: everything, from the timetable. Never ordered by lateness. */
+/** Today: only trains that haven't left From yet. Tomorrow: everything, from the timetable. Never ordered by lateness. */
 function split(rows, now, day) {
   const byDep = (a, b) => a.dep - b.dep;
   if (day === 'tomorrow') {
-    return { leaving: rows.map(r => asTrip({ ...r, late: null, runId: null })).sort(byDep), onTheWay: [] };
+    return { leaving: rows.map(r => asTrip({ ...r, late: null, runId: null })).sort(byDep) };
   }
   const leaving = rows.filter(r => (r.runId ? !r.passedFrom : r.dep >= now - GRACE_MIN));
-  const onTheWay = rows.filter(r => !leaving.includes(r)
-    && (r.passedFrom || (!r.runId && r.dep < now && now < r.arr))
-    && r.arr + (r.late ?? 0) >= now - GONE_MIN);
-  return { leaving: leaving.map(asTrip).sort(byDep), onTheWay: onTheWay.map(asTrip).sort(byDep) };
+  return { leaving: leaving.map(asTrip).sort(byDep) };
 }
 
 function data() {
   const { from, to, day, trip } = v;
   const now = trip?.now ?? 0;
-  const { leaving, onTheWay } = trip ? split(trip.rows, now, day) : { leaving: [], onTheWay: [] };
+  const { leaving } = trip ? split(trip.rows, now, day) : { leaving: [] };
   return {
     from: from ? state.stationById.get(from) || null : null,
     to: to ? state.stationById.get(to) || null : null,
@@ -50,7 +46,6 @@ function data() {
     loading: !!(from && to && !trip),
     now,
     leaving,
-    onTheWay,
   };
 }
 

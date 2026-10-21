@@ -57,7 +57,7 @@ The registry of every frontend component. **Build UI only from these.** If none 
 | 3 | LiveIndicator | shell | AppBar |
 | 4 | Panel | shell | every screen: phone sheet, web sidebar |
 | 5 | SearchField | input | Home, Search |
-| 6 | SegmentedControl | input | Search (Train or station / From → To) |
+| 6 | SegmentedControl | input | Search (Search / Plan a trip) |
 | 7 | StationFields | input | Search From → To |
 | 8 | IconButton | input | everywhere |
 | 9 | FollowButton | input | Train page, search results |
@@ -326,7 +326,7 @@ The app's pages, built from the components above. **Views render their pages thr
 |---|---|---|
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
-| RouteScreen | Search › From → To: trains leaving next and already on the way | phone |
+| RouteScreen | Search › Plan a trip: trains you can still board | phone |
 | TrainScreen | Train page: map following the train, Current status, Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen) | phone |
 | StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
