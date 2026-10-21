@@ -66,8 +66,7 @@ export function StopsScreen(data, options = {}) {
   const header = PageHeader({
     title,
     subtitle: d.first ? `${trainNo(train)} ${trainTitle(train)} · ${route(d.first, d.last)}` : `${trainNo(train)} ${trainTitle(train)}`,
-    // On the web the AppBar's back link goes to the train, so the header has no back of its own.
-    actions: web ? [] : [{ kind: 'back', href: `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, label: t('back') }],
+    // No back of its own: the Panel's top bar (phone) or the AppBar (web) links back to the train.
   });
   const content = body(
     header,

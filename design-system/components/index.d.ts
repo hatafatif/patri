@@ -103,6 +103,10 @@ export interface JourneyProgressProps {
   start: string;
   /** Already localised, such as "305 of 1,165 km". Also the progressbar's aria-valuetext. */
   end: string;
+  /** Draw the little locomotive riding the bar, nose at the progress point. Default false. */
+  train?: boolean;
+  /** Only with train: a gentle chug while the train is running. Both animations stop under prefers-reduced-motion. Default false. */
+  moving?: boolean;
   /** Extra classes, so a composing component can hook its own styles. */
   className?: string;
 }
@@ -137,10 +141,12 @@ export interface LiveIndicatorProps {
   state?: 'on' | 'reconnecting' | 'off';
 }
 
-/** The followed train's marker: a yellow dot with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the dot. (MapMarkers.js) */
+/** The followed train's marker: a 40px yellow badge holding the little green locomotive, with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the badge. (MapMarkers.js) */
 export interface TrainMarkerProps {
-  /** The text beside the dot, such as "28 DN · 105 km/h". Already localised. */
+  /** The text beside the badge, such as "28 DN · 105 km/h". Already localised. */
   label: string;
+  /** Which way the locomotive points, so it can face the way the train travels on the map. Default 'right'. */
+  facing?: 'left' | 'right';
 }
 
 /** A label card on the map: the next stop, your stop, the selected station or the one under the pointer. (MapMarkers.js) */
@@ -241,6 +247,8 @@ export interface PanelProps {
   snap?: 'down' | 'half' | 'full';
   /** The accessible name of the panel. Already localised. */
   label: string;
+  /** A back link at the inline-start of the sheet's top bar (beside the handle), which never scrolls, so the way back stays visible at every snap and scroll. Phone sheet only; the sidebar's AppBar carries the web back link. The label is already localised. */
+  back?: { href: string, label: string };
 }
 
 /** Panel.js */

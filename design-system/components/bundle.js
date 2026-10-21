@@ -602,6 +602,7 @@
   }
 
   // public/js/components/_shared.js
+  var trainIcon = () => '<svg class="p-train" viewBox="0 0 40 22" aria-hidden="true" focusable="false"><rect class="p-train__roof" x="9" y="2.2" width="8" height="2.2" rx="1"/><path class="p-train__body" d="M5 4h20.5c1.4 0 2.8.6 3.8 1.7l5.6 6.1c.7.8 1.1 1.8 1.1 2.8V16.5H3V6a2 2 0 0 1 2-2z"/><path class="p-train__window" d="M25.2 6.4h.6c.9 0 1.7.4 2.3 1l3.4 3.8h-6.3z"/><rect class="p-train__window" x="6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__window" x="13.6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__stripe" x="3" y="12.2" width="33" height="1.8"/><circle class="p-train__lamp" cx="34.3" cy="15" r="0.9"/><rect class="p-train__frame" x="4" y="16.3" width="31" height="1.6" rx=".8"/><circle class="p-train__wheel" cx="8.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="13.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="25.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="30.5" cy="18.8" r="2.1"/></svg>';
   var icon = {
     train: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 10h14M9 13.5h.01M15 13.5h.01M8 21l2-4M16 21l-2-4"/></svg>',
     station: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
@@ -682,8 +683,9 @@
   }
 
   // public/js/components/Panel.js
-  function Panel({ body: body2 = "", snap = "half", label = "" } = {}) {
-    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button><div class="p-panel__body">${body2}</div></section>`;
+  function Panel({ body: body2 = "", snap = "half", label = "", back } = {}) {
+    const link = back ? `<a class="p-panel__back" href="${esc(back.href)}">${icon.back}<span class="p-panel__backlabel">${esc(back.label)}</span></a>` : "";
+    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><div class="p-panel__top">${link}<button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button></div><div class="p-panel__body">${body2}</div></section>`;
   }
   var SNAPS = ["down", "half", "full"];
   var DOWN_PX = 150;
@@ -1012,10 +1014,12 @@
   }
 
   // public/js/components/JourneyProgress.js
-  function JourneyProgress({ fraction = 0, start = "", end = "", className } = {}) {
+  function JourneyProgress({ fraction = 0, start = "", end = "", train: train2 = false, moving = false, className } = {}) {
     const f = Math.min(1, Math.max(0, Number(fraction) || 0));
     const pct2 = Math.round(f * 100);
-    return `<div class="${cx("p-journeyprogress", className)}"><div class="p-journeyprogress__track" role="progressbar" aria-label="${esc(t("journeyProgress"))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct2}" aria-valuetext="${esc(end)}"><span class="p-journeyprogress__fill" style="--p:${+(f * 100).toFixed(2)}%"></span></div><div class="p-journeyprogress__labels"><span class="p-journeyprogress__start">${bdi(start)}</span><span class="p-journeyprogress__end">${bdi(end)}</span></div></div>`;
+    const pp = +(f * 100).toFixed(2);
+    const rider = train2 ? `<span class="p-journeyprogress__train" style="--p:${pp}%">${trainIcon()}</span>` : "";
+    return `<div class="${cx("p-journeyprogress", train2 && "p-journeyprogress--train", train2 && moving && "p-journeyprogress--moving", className)}"><div class="p-journeyprogress__track" role="progressbar" aria-label="${esc(t("journeyProgress"))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct2}" aria-valuetext="${esc(end)}"><span class="p-journeyprogress__fill" style="--p:${pp}%"></span>${rider}</div><div class="p-journeyprogress__labels"><span class="p-journeyprogress__start">${bdi(start)}</span><span class="p-journeyprogress__end">${bdi(end)}</span></div></div>`;
   }
 
   // public/js/components/SectionHeader.js
@@ -1135,8 +1139,8 @@
   }
 
   // public/js/components/MapMarkers.js
-  function trainMarker({ label = "" } = {}) {
-    return `<div class="p-trainmarker"><span class="p-trainmarker__dot"></span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+  function trainMarker({ label = "", facing = "right" } = {}) {
+    return `<div class="${cx("p-trainmarker", facing === "left" && "p-trainmarker--left")}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
   }
   function mapLabel({ title = "", sub, kind = "next" } = {}) {
     const k = ["next", "yourstop", "selected", "hover"].includes(kind) ? kind : "next";
@@ -1241,12 +1245,12 @@
   });
 
   // public/js/screens/_layout.js
-  function frame({ name, options = {}, label = "", body: body2 = "", snap = "half", top = "", map = "", start = "", end = "", dock = "" }) {
+  function frame({ name, options = {}, label = "", body: body2 = "", snap = "half", top = "", map = "", start = "", end = "", dock = "", back }) {
     const web = options.layout === "web";
     const expanded = !web && options.expanded;
     const sheetSnap = options.snap || (expanded ? "full" : snap);
     const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top"].filter(Boolean).join(" ");
-    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label })}</div></div>`;
+    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label, ...!web && back ? { back } : {} })}</div></div>`;
   }
   var join = (parts) => parts.filter(Boolean).join("");
   var body = (...parts) => `<div class="p-screen__body">${join(parts)}</div>`;
@@ -1926,7 +1930,9 @@
         JourneyProgress({
           fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, d2.progress.kmDone / d2.totalKm)) : 0,
           start: "",
-          end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) })
+          end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) }),
+          train: true,
+          moving: run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind)
         }),
         yourStopPrompt(data, d2),
         seeAll
@@ -1995,7 +2001,7 @@
         label,
         snap: "half",
         map,
-        start: backButton("#/", "float"),
+        back: { href: "#/", label: t("home") },
         end: following + wholeRoute,
         body: body(...content, d2.first ? speedCard(data) : "", d2.first ? about(data, d2) : "")
       });
@@ -2056,9 +2062,8 @@
     const title = pick ? t("chooseStop") : t("allStopsN", { n: stops.length });
     const header2 = PageHeader({
       title,
-      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`,
-      // On the web the AppBar's back link goes to the train, so the header has no back of its own.
-      actions: web ? [] : [{ kind: "back", href: `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, label: t("back") }]
+      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
+      // No back of its own: the Panel's top bar (phone) or the AppBar (web) links back to the train.
     });
     const content = body(
       header2,
@@ -2072,7 +2077,15 @@
     );
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     if (!web) {
-      return frame({ name: "stops", options, snap: "full", label: title, map, body: content });
+      return frame({
+        name: "stops",
+        options,
+        snap: "full",
+        label: title,
+        map,
+        body: content,
+        back: { href: `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, label: t("back") }
+      });
     }
     return frame({
       name: "stops",
@@ -2116,7 +2129,7 @@
       label: name,
       snap: "half",
       map: stationMap({ layout: web ? "web" : "phone", selected, ...hover ? { hover } : {} }),
-      start: web ? "" : backButton("#/", "float"),
+      back: { href: "#/", label: t("home") },
       end: web ? mapButton("zoomIn") + mapButton("zoomOut") + mapButton("layers") : "",
       body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + panel : panel
     });
