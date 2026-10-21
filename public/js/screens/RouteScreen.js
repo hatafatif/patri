@@ -42,14 +42,13 @@ export function RouteScreen(data, options = {}) {
   const web = options.layout === 'web';
   const { from, to, now } = data;
   const tomorrow = data.day === 'tomorrow';
-  // Leaving trains link with From as your stop; trains already on the way with To (you meet or ride to it).
-  const link = (r, stop) => `#/train/${r.train.number}${stop?.id ? `?stop=${encodeURIComponent(stop.id)}${r.runId ? `&run=${r.runId}` : ''}` : r.runId ? `?run=${r.runId}` : ''}`;
+  const link = r => `#/train/${r.train.number}${r.runId ? `?run=${r.runId}` : ''}`;
   const trainOf = r => ({ number: r.train.label, direction: r.train.up ? 'up' : 'dn', name: trainTitle(r.train) });
 
   const leaving = data.leaving.map(r => {
     const known = r.late != null;
     return DepartureRow({
-      href: link(r, from),
+      href: link(r),
       train: trainOf(r),
       time: known ? { expected: approx(r.dep + r.late), scheduled: time(r.dep) } : { expected: time(r.dep) },
       sub: `${t('arrives', { time: known ? approx(r.arr + r.late) : time(r.arr) })} · ${t('stopsBetween', { n: r.stopsBetween })}`,
@@ -60,7 +59,7 @@ export function RouteScreen(data, options = {}) {
   });
   // Already left From: the time is the scheduled departure ("Left"), the arrival is the estimate when the train is tracked.
   const onTheWay = data.onTheWay.map(r => DepartureRow({
-    href: link(r, to),
+    href: link(r),
     train: trainOf(r),
     time: { caption: t('leftCaption'), expected: time(r.dep) },
     sub: t('arrives', { time: r.late != null ? approx(r.arr + r.late) : time(r.arr) }),

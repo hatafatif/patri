@@ -1,6 +1,6 @@
 # StopsScreen
 
-The Train page's All stops list: every stop of a train in order, with the distance, halts, expected and scheduled times, where the train is and the rider's stop. `P.screens.StopsScreen(P.samples.train, { layout: 'phone' })` returns the whole screen as an HTML string; it takes the same data as [TrainScreen](../TrainScreen/README.md).
+The Train page's All stops list: every stop of a train in order, with the distance, halts, expected and scheduled times, and where the train is. `P.screens.StopsScreen(P.samples.train, { layout: 'phone' })` returns the whole screen as an HTML string; it takes the same data as [TrainScreen](../TrainScreen/README.md).
 
 ## Components it uses
 [PageHeader](../PageHeader/README.md), [StatusChip](../StatusChip/README.md), [StopTimeline](../StopTimeline/README.md) (full mode), [MapMarkers](../MapMarkers/README.md) (in the map stand-in, hidden under the sheet), and on the web layout [AppBar](../AppBar/README.md). [LanguageToggle](../LanguageToggle/README.md) is in the preview toolbar.
@@ -10,7 +10,7 @@ The Train page's All stops list: every stop of a train in order, with the distan
 - One row per stop plus the train row:
   - up to the last stop passed: kind `passed`, scheduled time, no strike; the first says "Start · 0 km", the last passed "165 km · Last stop";
   - "Train here · 105 km/h · 305 km" right after it;
-  - the next stop (`next`), your stop (`yourstop`, with Change), other stops (`stop`) and the final stop (`final`, "End · 1,165 km"): expected time with the scheduled time struck through; a halt of 5 minutes or more is added to the sub line.
+  - the next stop (`next`), other stops (`stop`) and the final stop (`final`, "End · 1,165 km"): expected time with the scheduled time struck through; a halt of 5 minutes or more is added to the sub line.
 - Web: the same body in the sidebar, under an AppBar whose back link goes to the train; the PageHeader has no back action. Not showcased.
 - The wireframe's "expected · scheduled" legend has no component and is left out.
 

@@ -1,17 +1,15 @@
 // Home (#/): the station map, the search field (the way into Search), My trains and Running now.
 import { HomeScreen } from '../screens/index.js';
 import { place } from '../screens/_format.js';
-import { t, pktMidnight } from '../i18n.js';
-import { estimates } from '../eta.js';
+import { t } from '../i18n.js';
 import {
-  state, FRESH_MS, mapTrains, paint, layout, api, navigate, getStop, followedTrains, recentTrains, stationLabel,
+  state, FRESH_MS, mapTrains, paint, layout, navigate, followedTrains, recentTrains, stationLabel,
 } from '../app.js';
 import * as map from '../map.js';
 
 const MAX_MINE = 6;
 
 let timer = 0, noticeTimer = 0, notice = '', unfocus = null, mounted = false;
-const routes = new Map(); // train number -> stops, from the cached /api/route
 
 const liveRuns = () => [...state.runs.values()]
   .filter(r => !r.suspect && state.byNumber.has(r.train) && Date.now() - r.updatedAt < FRESH_MS);
@@ -27,22 +25,6 @@ function whereOf(run, info) {
   return at ? { kind: 'stopped', at } : null;
 }
 
-/** The rider's stop on a train, with the time the train reaches it, or nothing once it has passed. */
-function yourStopOf(number, run) {
-  const id = getStop(number), stops = routes.get(number);
-  if (!id || !stops) return null;
-  const i = stops.findIndex(s => s.id === id);
-  if (i < 0) return null;
-  const station = state.stationById.get(id) || stops[i];
-  if (!run) {
-    const sched = stops[i].arr ?? stops[i].dep;
-    return sched == null ? null : { station, est: sched, scheduled: true };
-  }
-  const e = estimates(stops, run)[i];
-  if (!e || e.passed || e.estMs == null) return null;
-  return { station, est: Math.round((e.estMs - pktMidnight()) / 60000) };
-}
-
 function data() {
   const runs = liveRuns();
   const newest = new Map(); // the newest live run of each train
@@ -53,10 +35,9 @@ function data() {
     .slice(0, Math.max(followed.length, MAX_MINE));
   const myTrains = numbers.map(n => {
     const train = state.byNumber.get(n), run = newest.get(n);
-    const yourStop = yourStopOf(n, run);
     return {
       train, where: run ? whereOf(run, train) : null, late: run ? run.lateBy : null, gps: run ? true : train.live,
-      ...(run ? { runId: run.id } : {}), ...(yourStop ? { yourStop } : {}),
+      ...(run ? { runId: run.id } : {}),
     };
   });
   const running = runs.map(r => {
@@ -112,11 +93,6 @@ export default {
     root.addEventListener('focusin', onFocus);
     unfocus = () => root.removeEventListener('focusin', onFocus);
     render();
-    // Your stops need each train's timetable, once (the answers are cached for the session).
-    for (const n of new Set([...followedTrains(), ...recentTrains()])) {
-      if (!getStop(n) || routes.has(n)) continue;
-      api(`/api/route?train=${n}`, { cache: true }).then(stops => { routes.set(n, stops); later(0); }).catch(() => {});
-    }
   },
   render,
   update() { later(); },

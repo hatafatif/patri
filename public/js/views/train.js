@@ -1,13 +1,13 @@
-// The Train page (#/train/<n>) and All stops (#/train/<n>/stops[?pick=1]): both render through the
+// The Train page (#/train/<n>) and All stops (#/train/<n>/stops): both render through the
 // screen templates from the same data, so the map keeps its view when you move between them.
 import { t, clock, delayText, isUrdu } from '../i18n.js';
 import { trainName } from '../names.js';
 import {
-  state, api, paint, layout, navigate, returnTo, replaceHash,
-  getStop, setStop, isFollowed, setFollowed, addRecentTrain,
+  state, api, paint, layout, navigate,
+  isFollowed, setFollowed, addRecentTrain,
 } from '../app.js';
 import { TrainScreen, StopsScreen } from '../screens/index.js';
-import { place, trainNo, time } from '../screens/_format.js';
+import { place, trainNo } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
@@ -20,7 +20,6 @@ const SUSPECT_FRESH_MS = 15 * 60e3;
 
 let v = null; // per-mount state
 let renderTimer = 0, tickTimer = 0, noticeTimer = 0, retryTimer = 0;
-let offClick = null;
 let keep = null; // what the next mount may reuse when the same train's other page follows
 
 const isoDate = ms => new Date(ms + 5 * 3600e3).toISOString().slice(0, 10);
@@ -60,12 +59,11 @@ function compute() {
   const { info, stops } = v;
   const { run, offered, hidden } = pickRun();
   const hist = run && v.hist.id === run.id ? v.hist : EMPTY;
-  const myStop = getStop(v.number) || undefined;
   const data = {
     live: state.live, train: info, stops, run: null, gps: !!info.live,
-    myStop, followed: isFollowed(v.number), following: v.following, notice: v.notice,
+    followed: isFollowed(v.number), following: v.following, notice: v.notice,
     photo: trainPhoto(v.number) || undefined,
-    returnTrain: returnTrainOf(info) || undefined, pick: v.params.pick, runId: run?.id,
+    returnTrain: returnTrainOf(info) || undefined, runId: run?.id,
   };
   const out = { data, run, hist, ests: null, prog: null, st: null };
   if (!run || !stops.length) return out;
@@ -105,15 +103,14 @@ function compute() {
   return out;
 }
 
-/** Puts the train on the map: the route, the train, the next stop and your stop. */
+/** Puts the train on the map: the route, the train and the next stop. */
 function drawMap(c) {
   const { data, run } = c;
   const { stops } = v;
   if (!stops.length) return;
-  const mineIdx = data.myStop ? stops.findIndex(s => s.id === data.myStop) : -1;
   const join = (...p) => p.filter(Boolean).join(' · ');
   const approx = ms => `~${clock(ms)}`;
-  let next, mine, passedIdx = -1, position = null, marker = '';
+  let next, passedIdx = -1, position = null, marker = '';
   if (run) {
     const { passedIdx: pi, nextIdx, kmToNext } = c.prog;
     passedIdx = pi;
@@ -122,17 +119,10 @@ function drawMap(c) {
     const estMs = i => c.ests[i]?.estMs;
     if (nextIdx >= 0) {
       const sub = join(estMs(nextIdx) != null && approx(estMs(nextIdx)), t('km', { n: Math.round(kmToNext) }));
-      next = { idx: nextIdx, title: place(stops[nextIdx]), sub: nextIdx === mineIdx ? join(t('yourStop'), sub) : sub };
+      next = { idx: nextIdx, title: place(stops[nextIdx]), sub };
     }
-    if (mineIdx > passedIdx && mineIdx !== nextIdx && mineIdx >= 0) {
-      mine = { idx: mineIdx, title: place(stops[mineIdx]), sub: join(t('yourStop'), estMs(mineIdx) != null && approx(estMs(mineIdx))) };
-    }
-  } else if (mineIdx >= 0) {
-    const s = stops[mineIdx];
-    const sched = s.arr ?? s.dep;
-    mine = { idx: mineIdx, title: place(s), sub: join(t('yourStop'), sched != null && time(sched)) };
   }
-  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, mine, follow: v.following && !!run });
+  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run });
 }
 
 function render() {
@@ -168,15 +158,11 @@ function ensureHistory(run) {
   });
 }
 
-/** The pick-stop URL part that keeps the run, for links and navigation. */
-const runParam = () => (v.params.run ? `?run=${encodeURIComponent(v.params.run)}` : '');
-
 function handlers(data) {
   return {
     data,
     onFollow: followed => setFollowed(v.number, followed),
     onShare: onShare,
-    onChangeStop: () => navigate(`#/train/${v.number}/stops?pick=1${v.params.run ? `&run=${encodeURIComponent(v.params.run)}` : ''}`),
     onFollowing: on => { v.following = on; map.setFollow(on); },
     onMap: action => {
       if (action === 'zoomIn') map.zoomIn();
@@ -197,31 +183,14 @@ async function onShare() {
   const token = v;
   const c = compute();
   const { run } = c;
-  const mineIdx = c.data.myStop ? v.stops.findIndex(s => s.id === c.data.myStop) : -1;
-  const mine = mineIdx >= 0 ? v.stops[mineIdx] : null;
-  const e = run && mine ? c.ests[mineIdx] : null;
   const name = `${trainName(v.info)} ${v.info.label}${isUrdu() ? '' : v.info.up ? 'UP' : 'DN'}`;
   const delay = run ? delayText(run.lateBy ?? 0) : t('timetable');
-  const url = `${location.origin}/#/train/${v.number}${mine ? `?stop=${mine.id}` : ''}`;
-  const ahead = mine && e && !e.passed && e.estMs != null;
-  const text = ahead
-    ? t('shareMsg', { name, delay, stop: place(mine), time: clock(e.estMs), url })
-    : t('shareMsgNoStop', { name, delay, url });
+  const url = `${location.origin}/#/train/${v.number}`;
+  const text = t('shareMsgNoStop', { name, delay, url });
   const result = await share({ title: t('shareTitle', { name: trainName(v.info) }), text, url });
   if (v !== token) return;
   if (result === 'copied') flash(t('linkCopied'));
   else if (result === 'failed') flash(t('copyFailed'));
-}
-
-/** Taps on a stop in pick mode choose it without leaving a trace in history. */
-function onPick(e) {
-  const a = e.target.closest?.('.p-stoptimeline a[href*="?stop="]');
-  if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  const id = new URL(a.href).hash.match(/[?&]stop=([^&]+)/)?.[1];
-  if (!id || !v) return;
-  e.preventDefault();
-  setStop(v.number, decodeURIComponent(id));
-  returnTo(`#/train/${v.number}${runParam()}`);
 }
 
 async function load() {
@@ -245,21 +214,12 @@ export default {
     const info = state.byNumber.get(params.number);
     if (!info) { navigate(`#/search?q=${params.number}`, { replace: true }); return; }
     addRecentTrain(params.number);
-    // An old shared link (#/train/27?stop=116) sets your stop; the URL then drops it, so coming back
-    // later doesn't override a newer choice.
-    if (params.stop) {
-      setStop(params.number, params.stop);
-      replaceHash(`#/train/${params.number}${params.run ? `?run=${encodeURIComponent(params.run)}` : ''}`);
-    }
     const same = keep?.number === params.number ? keep : null;
     keep = null;
     v = {
       number: params.number, info, params, stops: same?.stops || [], fetched: same?.fetched || [], hist: same?.hist || EMPTY,
       loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '',
     };
-    const app = document.getElementById('app');
-    app.addEventListener('click', onPick);
-    offClick = () => app.removeEventListener('click', onPick);
     map.onUserMove(() => { if (v?.following) { v.following = false; map.setFollow(false); render(); } });
     clearInterval(tickTimer);
     tickTimer = setInterval(render, TICK_MS);
@@ -283,8 +243,6 @@ export default {
     scheduleRender();
   },
   unmount() {
-    offClick?.();
-    offClick = null;
     clearTimeout(renderTimer); clearInterval(tickTimer); clearTimeout(noticeTimer); clearTimeout(retryTimer);
     renderTimer = tickTimer = noticeTimer = retryTimer = 0;
     // Moving between this train's Train and All stops pages keeps the map and the data as they are; anywhere else clears the map.
