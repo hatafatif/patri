@@ -36,9 +36,9 @@ import { stationName } from './names.js';
 import { haversineKm } from './eta.js';
 import { t } from './i18n.js';
 import { styleFor, maskLayers, loadPakistan, STYLES, MAJORS } from './mapstyle.js';
+import { lockToPakistan } from './maplock.js';
 
 const PAKISTAN = [[60.8, 23.6], [77.9, 37.1]];
-const LIMITS = [[35.0, 0.0], [105.0, 60.0]]; // wide enough that a tall phone can still fit all of Pakistan above the sheet
 const EMPTY = { type: 'FeatureCollection', features: [] };
 const TWEEN_MS = 900;
 const hoverable = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -427,13 +427,13 @@ export async function initMap(el) {
     center: [69.3, 30.4],
     zoom: 4.4,
     minZoom: 3,
-    maxBounds: LIMITS,
-    attributionControl: { compact: true },
+    attributionControl: { compact: true, customAttribution: 'Relief: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>' },
     dragRotate: false,
     pitchWithRotate: false,
     touchPitch: false,
   });
   map.touchZoomRotate.disableRotation();
+  lockToPakistan(map, { bounds: PAKISTAN, outline: await loadPakistan(), visible: padding });
   bindEvents();
   // The container can be sized after the map exists (the panel lays out late on phones): refit once it has real size.
   new ResizeObserver(() => { map.resize(); scheduleRefit(); }).observe(el);

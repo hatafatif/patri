@@ -862,6 +862,9 @@
 [lang="ur"] .p-stoptimeline__legend,
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font: var(--t-urdu-label); letter-spacing: normal; }
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font-weight: 700; }
+/* A time can carry an Urdu day word ("آج 4:42 PM"): give Nastaliq's tall marks room above the countdown. */
+[lang="ur"] .p-stoptimeline__expected,
+[lang="ur"] .p-stoptimeline__scheduled { line-height: 32px; }
 
 /* ---------- 17. JourneyProgress ---------- */
 .p-journeyprogress { display: block; }
