@@ -219,7 +219,8 @@ async function addOverlays() {
   }
   const mask = maskLayers(pk, styleInfo.fade, styleInfo.fadeOpacity);
   for (const [id, src] of Object.entries(mask.sources)) map.addSource(id, src);
-  mask.layers.forEach(l => map.addLayer(l, styleInfo.maskBelow));
+  // The fade goes under the sea and the outline over it, so the sea shows through but Pakistan's border stays on top.
+  mask.layers.forEach(l => map.addLayer(l, l.id === 'pk-mask' ? styleInfo.maskBelow : (styleInfo.outlineBelow ?? styleInfo.maskBelow)));
   for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: data[id] });
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const ring = p.station['circle-color'];
@@ -233,7 +234,9 @@ async function addOverlays() {
     id: 'route-stops', type: 'circle', source: 'route-stops',
     paint: { 'circle-radius': 3.5, 'circle-color': ['case', ['get', 'passed'], p.routeDone['line-color'], surface], 'circle-stroke-color': ['case', ['get', 'passed'], surface, ring], 'circle-stroke-width': 1.5 },
   });
-  map.addLayer({ id: 'stations', type: 'circle', source: 'stations', paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1 } });
+  // Small stations show once the map is zoomed in; the major cities show at every zoom.
+  const fadeIn = ['interpolate', ['linear'], ['zoom'], 6.5, 0, 7.5, 1];
+  map.addLayer({ id: 'stations', type: 'circle', source: 'stations', minzoom: 6.5, paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1, 'circle-opacity': fadeIn, 'circle-stroke-opacity': fadeIn } });
   map.addLayer({ id: 'majors', type: 'circle', source: 'majors', paint: { ...p.majorCity, 'circle-radius': grow(4.5, 5.5, 7) } });
   if (styleName === 'sabz') {
     // Latin glyphs only; MapLibre can't shape Urdu here, so city labels are English in both languages.
@@ -248,7 +251,8 @@ async function addOverlays() {
   }
   map.addLayer({ id: 'stations-selected', type: 'circle', source: 'stations-selected', paint: p.selectedStation });
   // Invisible and wide, so a finger hits a station.
-  map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
+  map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', minzoom: 7, paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
+  map.addLayer({ id: 'majors-hit', type: 'circle', source: 'majors', paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
 }
 
 // ---- Drawing the two modes ----------------------------------------------------------------------------------
@@ -375,7 +379,7 @@ function hideHover() {
 }
 
 function nearestAt(point) {
-  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['stations-hit'] });
+  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['stations-hit', 'majors-hit'] });
   let best = null, bd = Infinity;
   for (const f of fs) {
     const p = map.project(f.geometry.coordinates);
