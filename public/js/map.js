@@ -434,6 +434,8 @@ export async function initMap(el) {
   });
   map.touchZoomRotate.disableRotation();
   lockToPakistan(map, { bounds: PAKISTAN, outline: await loadPakistan(), visible: padding });
+  // The compact attribution opens expanded and covers the south of the map on a phone; start it closed (the ⓘ opens it).
+  map.once('load', () => map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
   bindEvents();
   // The container can be sized after the map exists (the panel lays out late on phones): refit once it has real size.
   new ResizeObserver(() => { map.resize(); scheduleRefit(); }).observe(el);
