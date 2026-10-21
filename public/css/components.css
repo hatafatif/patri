@@ -1295,3 +1295,25 @@
 .p-pageheader__actions { display: flex; align-items: center; }
 [lang="ur"] .p-pageheader__title { font: var(--t-urdu-title); letter-spacing: var(--t-urdu-title-tracking); }
 [lang="ur"] .p-pageheader__subtitle { font: var(--t-urdu-label); letter-spacing: normal; }
+
+/* ---------- 26. Photo ---------- */
+.p-photo { margin: 0; }
+.p-photo__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--line-soft);
+}
+.p-photo__credit {
+  margin-block-start: var(--space-1);
+  color: var(--ink-muted);
+  font: var(--t-caption);
+  letter-spacing: var(--t-caption-tracking);
+}
+.p-photo__link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.p-photo__link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+[lang="ur"] .p-photo__credit { font: var(--t-urdu-caption); letter-spacing: normal; }

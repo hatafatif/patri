@@ -5,7 +5,7 @@ import {
   SegmentedControl, bindSegmentedControl, StationFields, bindStationFields, IconButton, FollowButton, bindFollowButton,
   MapToggle, bindMapToggle, TrainBadge, StatusChip, StatusStrip, TrainCard, TrainRow, DepartureRow, StopTimeline,
   bindStopTimeline, JourneyProgress, SectionHeader, DetailGrid, LinkRow, SpeedChart, bindSpeedChart, MapMarkers,
-  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, bindPageHeader, statusTone,
+  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, Photo, bindPageHeader, statusTone,
 } from './components/index.js';
 import { t, setLang, getLang, applyLang, clockMin, dur, delayText, pktMidnight, esc } from './i18n.js';
 
@@ -102,6 +102,7 @@ const SPEED_POINTS = speedPoints();
 const speedStops = () => SPEED_STOPS.map(s => ({ ms: midnight + s.min * 60000, name: st(s.key) }));
 
 // ---------- Specimens ----------
+const PHOTO_SRC = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23e3ede6'/%3E%3Cpath d='M0 270H800' stroke='%2301411c' stroke-width='4'/%3E%3C/svg%3E";
 const spec = (name, variant, stage, { cls = '' } = {}) =>
   `<section class="g-spec"><p class="g-cap" dir="ltr"><b>${name}</b>${variant ? ` · ${variant}` : ''}</p><div class="g-stage ${cls}">${stage}</div></section>`;
 const wrap = (...items) => `<div class="g-wrap">${items.join('')}</div>`;
@@ -207,6 +208,10 @@ function specimens(col) {
     spec('Card', 'key, no header · key "Right now"', stack(
       Card({ tone: 'key', body: stack(StatusStrip(strip()), progress(), 'loose') }),
       Card({ tone: 'key', header: t('rightNow'), body: rightNowBody() }),
+    )),
+    spec('Photo', 'with source link · without', stack(
+      Photo({ src: PHOTO_SRC, alt: 'A sample landscape', credit: 'Photo: Example Author · CC BY-SA 4.0', href: 'https://example.org/photo' }),
+      Photo({ src: PHOTO_SRC, alt: 'A sample landscape', credit: 'Photo: Example Author · CC BY-SA 4.0' }),
     )),
     spec('PageHeader', 'train: badge · Urdu name · follow · share', PageHeader({
       leading: { badge: badge(28, 'dn') }, title: TR.shalimar.en, titleUr: TR.shalimar.ur,
