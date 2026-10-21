@@ -7,7 +7,7 @@
     var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
     var map = 'display:flex;flex-wrap:wrap;gap:16px 12px;align-items:center;padding:16px;background:var(--map-land);border-radius:var(--radius-md)';
     root.innerHTML =
-      '<div style="' + map + '"><div style="padding-inline-end:160px">' + window.Patri.MapMarkers({ type: 'train', label: '28 DN · 105 km/h' }) + '</div></div>'
+      '<div style="' + map + '"><div style="padding-inline-end:160px">' + window.Patri.MapMarkers({ type: 'train', label: '28 DN · 105 km/h' }) + '</div><div style="padding-inline-end:160px">' + window.Patri.MapMarkers({ type: 'train', label: '28 UP · 98 km/h', facing: 'left' }) + '</div></div>'
       + '<div style="' + map + '">'
       + window.Patri.MapMarkers({ type: 'label', title: 'Khanewal Jn', sub: '~12:40 PM', kind: 'next' })
       + window.Patri.MapMarkers({ type: 'label', title: 'Multan Cantt', sub: '~1:20 PM', kind: 'yourstop' })

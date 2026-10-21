@@ -215,7 +215,8 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 
 ### 17. JourneyProgress
 **What it is:** how far along the route the train is.
-**Props:** `fraction` (0 to 1), `start` ("Left Lahore Jn 7:10 AM"), `end` ("305 of 1,165 km").
+**Props:** `fraction` (0 to 1), `start` ("Left Lahore Jn 7:10 AM"), `end` ("305 of 1,165 km"), `train?` (draw the little locomotive on the bar), `moving?` (a gentle chug while the train runs).
+**Train:** with `train`, the locomotive (`trainIcon` in `_shared.js`, styled by `.p-train`) rides the bar with its nose at the progress point, clamped so it stays inside the card. The fill and the train ease to a new position over 900ms and both animate in once when the page opens. With `moving` the train bobs 1.5px every 650ms. In Urdu the train is mirrored to face left. Both animations are off under `prefers-reduced-motion`.
 **Markup:** `role="progressbar"` with `aria-valuenow`. An 8px `sabz-100` track with a `sabz-700` fill. The labels below are in time-sm style, `ink-muted`.
 
 ### 18. SectionHeader
@@ -246,7 +247,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 ### 22. MapMarkers
 **What it is:** everything drawn on the map. The map is MapLibre in `public/js/map.js`.
 **Exports:**
-- `trainMarker({ label })`: a DOM-marker HTML string. A 22px `zard-500` dot with a 3px `sabz-900` ring and a halo, plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
+- `trainMarker({ label, facing? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
 - `mapLabel({ title, sub?, kind: 'next' | 'yourstop' | 'selected' | 'hover' })`: label cards. `next` and `hover` are `surface` with a 1.5px `sabz-700` border; `yourstop` and `selected` are `sabz-900` with yellow text. Every kind uses `shadow-float`.
 - `mapPaint()`: reads the tokens with `getComputedStyle` and returns MapLibre paint values:
   - station dot: `map-station` (sabz-700), radius 2.5;

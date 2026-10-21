@@ -285,6 +285,8 @@ function rightNow(data, d) {
         fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, d.progress.kmDone / d.totalKm)) : 0,
         start: '',
         end: t('kmOf', { done: kmNum(done ? d.totalKm : d.progress.kmDone), total: kmNum(d.totalKm) }),
+        train: true,
+        moving: run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind),
       }),
       yourStopPrompt(data, d),
       seeAll,
