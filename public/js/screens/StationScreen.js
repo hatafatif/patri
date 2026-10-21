@@ -9,7 +9,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * The Station page, opened from a station on the map or in search: the map zoomed to the station, and the
  * Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board).
  * Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows
- * stations, not trains.
+ * stations and the running trains.
  * Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons.
  * @typedef {object} StationScreenData
  * @property {'on' | 'reconnecting' | 'off'} live - The feed state, for the web sidebar's AppBar.

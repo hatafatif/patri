@@ -46,8 +46,8 @@
   --map-relief-shade: #3a4a3b; /* The colour of slopes facing away from the sun in the relief. */
 
   /* Type families */
-  --font-body: Barlow, system-ui, sans-serif;
-  --font-label: "Barlow Condensed", Barlow, system-ui, sans-serif;
+  --font-body: Barlow, "Noto Nastaliq Urdu", system-ui, sans-serif;
+  --font-label: "Barlow Condensed", Barlow, "Noto Nastaliq Urdu", system-ui, sans-serif;
   --font-urdu: Barlow, "Noto Nastaliq Urdu", serif;
 
   /* Type styles, for component CSS: font: var(--t-label); letter-spacing: var(--t-label-tracking); */

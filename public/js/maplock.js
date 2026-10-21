@@ -3,9 +3,9 @@
 // buttons leave uncovered), through MapLibre's transformCameraUpdate hook, which every camera change goes
 // through: drags, pinches, scrolls, easeTo, flyTo and fitBounds.
 //
-// Per axis, in the visible area: while Pakistan's bounding box fits, all of it stays in view; zoomed in past
-// that, the view stays inside the box and its middle stays on Pakistani ground (the box's corners are India,
-// Iran and Afghanistan). The map can't zoom out much past the whole country.
+// Per axis, in the visible area: while Pakistan's bounding box fits, it stays centred and can't be dragged
+// aside; zoomed in past that, the view stays inside the box and its middle stays on Pakistani ground (the
+// box's corners are India, Iran and Afghanistan). The map can't zoom out much past the whole country.
 /* global maplibregl */
 
 const SLACK = 0.5; // how far, in zoom levels, the map may zoom out past the whole country
@@ -15,7 +15,9 @@ const mx = lng => (lng + 180) / 360;
 const my = lat => (1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2;
 const lngOf = x => x * 360 - 180;
 const latOf = y => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
-const clamp = (v, a, b) => Math.min(Math.max(v, Math.min(a, b)), Math.max(a, b));
+// One axis: the box [lo, hi] centred when it fits in the visible span (before + after around the centre v),
+// otherwise v kept so the span stays inside the box.
+const axis = (v, lo, hi, before, after) => (hi - lo <= before + after ? (lo + hi + before - after) / 2 : Math.min(Math.max(v, lo + before), hi - after));
 
 function inside([x, y], rings) {
   let hit = false;
@@ -77,8 +79,8 @@ export function lockToPakistan(map, { bounds, outline, visible }) {
         y += (q[1] - mid[1]) * ws;
       }
     }
-    x = clamp(x, a.x0 + left, a.x1 - right);
-    y = clamp(y, a.y0 + up, a.y1 - down);
+    x = axis(x, a.x0, a.x1, left, right);
+    y = axis(y, a.y0, a.y1, up, down);
 
     const center = new maplibregl.LngLat(lngOf(x / ws), latOf(y / ws));
     if (zoom === tr.zoom && Math.abs(center.lng - tr.center.lng) < 1e-9 && Math.abs(center.lat - tr.center.lat) < 1e-9) return {};

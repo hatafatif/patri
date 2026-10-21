@@ -235,8 +235,8 @@ async function addOverlays() {
     paint: { 'circle-radius': 3.5, 'circle-color': ['case', ['get', 'passed'], p.routeDone['line-color'], surface], 'circle-stroke-color': ['case', ['get', 'passed'], surface, ring], 'circle-stroke-width': 1.5 },
   });
   // Small stations show once the map is zoomed in; the major cities show at every zoom.
-  const fadeIn = ['interpolate', ['linear'], ['zoom'], 6.5, 0, 7.5, 1];
-  map.addLayer({ id: 'stations', type: 'circle', source: 'stations', minzoom: 6.5, paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1, 'circle-opacity': fadeIn, 'circle-stroke-opacity': fadeIn } });
+  const fadeIn = ['interpolate', ['linear'], ['zoom'], 7.5, 0, 8.5, 1];
+  map.addLayer({ id: 'stations', type: 'circle', source: 'stations', minzoom: 7.5, paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1, 'circle-opacity': fadeIn, 'circle-stroke-opacity': fadeIn } });
   map.addLayer({ id: 'majors', type: 'circle', source: 'majors', paint: { ...p.majorCity, 'circle-radius': grow(4.5, 5.5, 7) } });
   if (styleName === 'sabz') {
     // Latin glyphs only; MapLibre can't shape Urdu here, so city labels are English in both languages.
@@ -251,7 +251,7 @@ async function addOverlays() {
   }
   map.addLayer({ id: 'stations-selected', type: 'circle', source: 'stations-selected', paint: p.selectedStation });
   // Invisible and wide, so a finger hits a station.
-  map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', minzoom: 7, paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
+  map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', minzoom: 8, paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
   map.addLayer({ id: 'majors-hit', type: 'circle', source: 'majors', paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
 }
 

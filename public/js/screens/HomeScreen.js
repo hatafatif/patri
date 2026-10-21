@@ -6,7 +6,7 @@ import { place, trainTitle, badgeOf, whereText, approx, time, delayStatus } from
 import { countryMap } from './_map-standin.js';
 
 /**
- * Home: the station map (stations, not trains) under the AppBar, and the Panel with the search field and
+ * Home: the station map (stations and the running trains) under the AppBar, and the Panel with the search field and
  * its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the
  * sidebar with the AppBar as its header; the map gets zoom buttons.
  * @typedef {object} HomeScreenData

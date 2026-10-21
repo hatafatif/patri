@@ -32,5 +32,5 @@ A `HomeTrain` is `{ train, where, late, gps?, runId?, yourStop?: { station, est 
 
 ## Product rules
 - No lateness filters or sorting. Running now is sorted by train number (a copy; the data is frozen).
-- The map shows stations, not trains.
+- The map shows stations and a small marker for every running train.
 - The map in the preview is the preview-only stand-in; the app draws it with MapLibre.

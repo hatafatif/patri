@@ -161,6 +161,8 @@ export interface MapPaintResult {
   majorCity: Record<string, unknown>;
   /** A zard-500 fill inside a sabz-700 ring. */
   selectedStation: Record<string, unknown>;
+  /** A running train on the Home and Station maps: a zard-500 dot with a sabz-900 ring, radius 5. */
+  trainDot: Record<string, unknown>;
   /** Rail lines with no train selected, map-rail. */
   rail: Record<string, unknown>;
   /** The white casing under the route done, width 8. */
@@ -429,7 +431,7 @@ export interface TrainRowProps {
   follow?: { followed: boolean };
 }
 
-/** Home: the station map (stations, not trains) under the AppBar, and the Panel with the search field and its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the sidebar with the AppBar as its header; the map gets zoom buttons. (screens/HomeScreen.js) */
+/** Home: the station map (stations and the running trains) under the AppBar, and the Panel with the search field and its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the sidebar with the AppBar as its header; the map gets zoom buttons. (screens/HomeScreen.js) */
 export interface HomeScreenData {
   /** The feed state, for the AppBar's LiveIndicator. */
   live: 'on' | 'reconnecting' | 'off';
@@ -550,7 +552,7 @@ export interface SearchTrain {
 
 export type SearchRecent = { kind: 'trip', from: ScreenStation, to: ScreenStation } | { kind: 'station', station: ScreenStation };
 
-/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations, not trains. Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
+/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations and the running trains. Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
 export interface StationScreenData {
   /** The feed state, for the web sidebar's AppBar. */
   live: 'on' | 'reconnecting' | 'off';

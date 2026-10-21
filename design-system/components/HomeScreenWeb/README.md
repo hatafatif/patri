@@ -20,4 +20,4 @@ The same `data` as HomeScreen (`Patri.samples.home`), plus `map.hover`: `{ key, 
 
 ## Product rules
 - No lateness filters or sorting; Running now is in train-number order.
-- The map shows stations, not trains. In the preview it is the stand-in; the app uses MapLibre.
+- The map shows stations and a small marker for every running train. In the preview it is the stand-in; the app uses MapLibre.
