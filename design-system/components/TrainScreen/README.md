@@ -10,6 +10,7 @@ The Train page on a phone: the map following one train, with a bottom sheet that
 - Panel, half snap by default:
   1. PageHeader: train badge, name with its Urdu twin, route, follow star, share.
   2. Current status card (key tone): DetailGrid (large) with Speed, Delay, Next stop and Arrival, and when it last reported.
+  2a. Alerts card (only with `data.alerts`): `off` shows a short explanation and a secondary "Notify me" Button with a bell, linking to the stop picker; `on` shows "Alerts on · For Lahore Jn" (or "For the whole journey") with Change stop and Turn off link Buttons; `blocked`, `unsupported` and `nolive` show one note saying why alerts can't be turned on.
   2b. Journey card: the StopTimeline (first stop, "N more stops", next stop, "N more stops", last stop), JourneyProgress, and "See all 16 stops".
   3. Speed card: the SpeedChart, which carries its own "Speed today" title, so there is no SectionHeader above it (the wireframe says "Speed so far"; a `title` prop on SpeedChart would let the screen use that wording).
   4. About this train card (DetailGrid) and, 12px below it, the Return train LinkRow.
