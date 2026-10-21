@@ -78,6 +78,14 @@ const STRINGS = {
     yesterday: 'Yesterday', dayTime: '{day} {time}', timeOnDay: '{time} {day}', nextDay: 'next day', dayN: 'day {n}',
     photoBy: 'Photo: {author} · {licence}',
     journey: 'Journey', firstStop: 'First stop', currentStop: 'Current stop', speedLabel: 'Speed', delayLabel: 'Delay', arrivalLabel: 'Arrival',
+    // Alerts (push notifications) and last seen
+    alertsHeader: 'Alerts', notifyMe: 'Notify me', alertsOn: 'Alerts on', alertsFor: 'For {station}', alertsWholeTrip: 'For the whole journey',
+    alertsWhat: 'You’ll hear when it leaves, 15 min before your stop, if the delay changes a lot, and when it arrives.',
+    alertsChooseStop: 'Choose your stop for alerts', alertsSkipStop: 'Whole journey, no stop', alertsOff: 'Turn off', alertsChange: 'Change stop',
+    alertsBlocked: 'Notifications are blocked for Patri in your browser settings.',
+    alertsUnsupported: 'This browser can’t show notifications. On iPhone, add Patri to your Home Screen first.',
+    alertsNoLive: 'Alerts need live location, and this train has none right now.', alertsFailed: 'Couldn’t turn on alerts. Try again.',
+    lastSeen: 'Last seen near {station} · {ago}', lastSeenShort: 'Last seen {ago}',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -156,6 +164,14 @@ const STRINGS = {
     yesterday: 'گزشتہ روز', dayTime: '{day} {time}', timeOnDay: '{day} {time}', nextDay: 'اگلے دن', dayN: 'دن {n}',
     photoBy: 'تصویر: {author} · {licence}',
     journey: 'سفر', firstStop: 'پہلا اسٹیشن', currentStop: 'موجودہ اسٹیشن', speedLabel: 'رفتار', delayLabel: 'تاخیر', arrivalLabel: 'آمد',
+    // Alerts (push notifications) and last seen
+    alertsHeader: 'اطلاعات', notifyMe: 'مجھے اطلاع دیں', alertsOn: 'اطلاعات آن ہیں', alertsFor: '{station} کے لیے', alertsWholeTrip: 'پورے سفر کے لیے',
+    alertsWhat: 'ٹرین کی روانگی، آپ کے اسٹیشن سے 15 منٹ پہلے، تاخیر میں بڑی تبدیلی اور پہنچنے پر آپ کو اطلاع ملے گی۔',
+    alertsChooseStop: 'اطلاعات کے لیے اپنا اسٹیشن چنیں', alertsSkipStop: 'پورا سفر، کوئی اسٹیشن نہیں', alertsOff: 'بند کریں', alertsChange: 'اسٹیشن بدلیں',
+    alertsBlocked: 'آپ کے براؤزر کی سیٹنگز میں پٹڑی کی اطلاعات بند ہیں۔',
+    alertsUnsupported: 'یہ براؤزر اطلاعات نہیں دکھا سکتا۔ آئی فون پر پہلے پٹڑی کو ہوم اسکرین پر شامل کریں۔',
+    alertsNoLive: 'اطلاعات کے لیے لائیو مقام ضروری ہے، جو اس وقت اس ٹرین کا دستیاب نہیں۔', alertsFailed: 'اطلاعات آن نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
+    lastSeen: '{station} کے قریب آخری بار دیکھی گئی · {ago}', lastSeenShort: 'آخری بار {ago} دیکھی گئی',
   },
 };
 
