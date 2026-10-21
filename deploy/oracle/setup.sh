@@ -11,6 +11,17 @@ PORT="${2:-8787}"
 [[ "$PORT" =~ ^[0-9]+$ ]] || { echo "Port must be a number: $PORT" >&2; exit 1; }
 export DEBIAN_FRONTEND=noninteractive
 
+echo "==> Swap (small machines only)"
+# An E2.1.Micro has 1 GB of memory; apt and npm can briefly need more. Add a 2 GB swap file once.
+mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+if [ "$mem_kb" -lt 2000000 ] && ! swapon --show=NAME --noheadings | grep -q .; then
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+  grep -q '^/swapfile ' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo "    added a 2 GB swap file"
+else
+  echo "    not needed"
+fi
+
 echo "==> Installing base packages"
 apt-get update -y
 apt-get install -y curl ca-certificates gnupg debian-keyring debian-archive-keyring apt-transport-https iptables-persistent
