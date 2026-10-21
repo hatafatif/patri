@@ -6,9 +6,10 @@ import { bdi, cx, trainIcon } from './_shared.js';
  * @typedef {object} TrainMarkerProps
  * @property {string} label - The text beside the badge, such as "28 DN · 105 km/h". Already localised.
  * @property {'left' | 'right'} [facing='right'] - Which way the locomotive points, so it can face the way the train travels on the map.
+ * @property {boolean} [stale=false] - true fades the marker (class p-trainmarker--stale): the train is shown where it was last seen, not where it is.
  */
-export function trainMarker({ label = '', facing = 'right' } = {}) {
-  return `<div class="${cx('p-trainmarker', facing === 'left' && 'p-trainmarker--left')}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+export function trainMarker({ label = '', facing = 'right', stale = false } = {}) {
+  return `<div class="${cx('p-trainmarker', facing === 'left' && 'p-trainmarker--left', stale && 'p-trainmarker--stale')}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
 }
 
 /**

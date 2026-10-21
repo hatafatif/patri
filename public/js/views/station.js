@@ -3,6 +3,7 @@ import { StationScreen } from '../screens/index.js';
 import { trainInfo } from '../names.js';
 import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
+import { loadLastSeen, lastSeenOf, lastSeenText } from '../lastseen.js';
 import { share } from '../share.js';
 import { loadPhotos, cityPhoto } from '../photos.js';
 import { state, api, paint, layout, navigate, mapTrains, addRecentSearch, isSaved, setSaved } from '../app.js';
@@ -20,6 +21,7 @@ function data() {
   const { id, board } = v;
   const station = state.stationById.get(id);
   // The board's clock moves on between fetches, so "Updated … ago" keeps counting.
+  if (board?.rows.some(r => r.late == null || r.gps === false)) loadLastSeen(render);
   const now = board ? board.now + (Date.now() - v.fetchedAt) / 60000 : 0;
   return {
     live: state.live,
@@ -31,14 +33,18 @@ function data() {
     notice: v.notice,
     photo: cityPhoto(station) || undefined,
     // The board's order (expected time); never sorted or filtered by lateness.
-    rows: (board?.rows || []).map(r => ({
-      train: state.byNumber.get(r.number) || trainInfo(r),
-      kind: r.kind,
-      origin: { name: r.origin, nameUr: r.originUr },
-      dest: { name: r.dest, nameUr: r.destUr },
-      sched: r.sched, est: r.est, late: r.late, gps: r.gps,
-      runId: r.runId, kmAway: r.kmAway, atPlatform: r.atPlatform,
-    })),
+    rows: (board?.rows || []).map(r => {
+      const rec = r.late == null || r.gps === false ? lastSeenOf(r.number) : null;
+      return {
+        train: state.byNumber.get(r.number) || trainInfo(r),
+        kind: r.kind,
+        origin: { name: r.origin, nameUr: r.originUr },
+        dest: { name: r.dest, nameUr: r.destUr },
+        sched: r.sched, est: r.est, late: r.late, gps: r.gps,
+        runId: r.runId, kmAway: r.kmAway, atPlatform: r.atPlatform,
+        ...(rec ? { lastSeen: lastSeenText(rec, { short: true }) } : {}),
+      };
+    }),
   };
 }
 

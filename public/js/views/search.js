@@ -3,6 +3,7 @@
 import { SearchScreen } from '../screens/index.js';
 import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
+import { loadLastSeen, lastSeenOf, lastSeenText } from '../lastseen.js';
 import {
   state, mapTrains, paint, layout, navigate, replaceHash, returnTo, store, setFollowed, isFollowed,
   recentSearches, addRecentSearch, savedStations,
@@ -51,7 +52,10 @@ function liveRunOf(number) {
 
 function trainRow(info) {
   const run = liveRunOf(info.number);
+  if (!run) loadLastSeen(render);
+  const rec = run ? null : lastSeenOf(info.number);
   return {
+    ...(rec ? { lastSeen: lastSeenText(rec, { short: true }) } : {}),
     train: info,
     from: state.stationById.get(info.fromId) || { name: info.from },
     to: state.stationById.get(info.toId) || { name: info.to },

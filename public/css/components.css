@@ -1227,6 +1227,9 @@
 }
 .p-trainmarker__dot .p-train { inline-size: 28px; block-size: 15px; }
 .p-trainmarker--left .p-train { scale: -1 1; }
+/* MapLibre sets opacity on the marker element itself, so fade its two parts. */
+.p-trainmarker--stale .p-trainmarker__dot,
+.p-trainmarker--stale .p-trainmarker__label { opacity: .55; }
 .p-trainmarker__label {
   flex: none;
   margin-inline-start: var(--space-3);

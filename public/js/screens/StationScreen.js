@@ -37,6 +37,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * @property {string | null} [runId] - The live run, if any.
  * @property {number | null} [kmAway] - How far away it is.
  * @property {boolean} [atPlatform] - Standing at the platform now.
+ * @property {string} [lastSeen] - Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line.
  */
 /**
  * @param {StationScreenData} data
@@ -87,7 +88,7 @@ export function StationScreen(data, options = {}) {
 
 /** One train on the board, linking to its page with this station as the stop. */
 function boardRow(r, station, now) {
-  const { train, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
+  const { train, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform, lastSeen } = r;
   const moved = est !== sched;
   let when;
   if (atPlatform) when = { expected: time(est, now) };
@@ -99,6 +100,7 @@ function boardRow(r, station, now) {
   if (kind === 'starts') sub = t('startsHereTo', { x: place(dest) });
   else if (kind === 'ends') sub = t('arrivesFrom', { x: place(origin) });
   else sub = t('toStation', { x: place(dest) }) + (kmAway != null ? ` · ${t('kmAway', { km: kmAway })}` : '');
+  if (lastSeen && (late == null || gps === false)) sub += ` · ${lastSeen}`;
 
   let status;
   if (atPlatform) status = { tone: late == null ? 'ontime' : statusTone(late), text: t('atPlatform') };

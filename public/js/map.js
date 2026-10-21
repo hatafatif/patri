@@ -22,10 +22,11 @@
 //                               stations mode (Home, Search, From → To, Station): every station a small dot, the major
 //                               cities bigger and labelled, running trains as small dots, selected ids drawn as selected with a mapLabel 'selected'.
 //                               fit: 'country' | 'selected' | 'keep'; applied only when key changes.
-//   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow })
+//   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow, lastSeen? })
 //                               train mode (Train page, All stops): the route from the stop coordinates, done solid and
 //                               ahead dashed, the trainMarker at position, mapLabel 'next' and 'yourstop'. A new key fits
-//                               the train (follow) or the whole route; later calls update in place.
+//                               the train (follow) or the whole route; later calls update in place. With no position,
+//                               lastSeen { lat, lon, label } puts a faded (stale) trainMarker there; it is never followed.
 //   setFollow(on)               keep the train centred in the visible area
 //   showWholeRoute()            fit every stop into the visible area and stop following
 //   clear()                     remove every overlay
@@ -78,7 +79,7 @@ const put = (id, value) => { data[id] = value; map?.getSource(id)?.setData(value
 // overlay lost to a style change) is not lost.
 let mode = null; // 'stations' | 'train' | null
 let sIntent = null; // { key, stations, selected, fit }
-let tIntent = null; // { key, stops, passedIdx, position, marker, next, mine, follow }
+let tIntent = null; // { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen }
 let located_ = null; // station id picked by locate(), kept until the stations key changes
 let stationSig = '', byId = new Map(), allStations = [];
 let fitPending = false; // a fit is waiting for the container to have a size
@@ -311,16 +312,19 @@ function moveTrain(to, jump) {
 }
 
 function drawTrain(keyChanged) {
-  const { stops, passedIdx = -1, position, marker, next, mine, follow } = tIntent;
+  const { stops, passedIdx = -1, position, next, mine, follow, lastSeen } = tIntent;
   const all = stops.map(sane);
   const pts = all.filter(Boolean);
   const cut = pts.filter(s => all.indexOf(s) <= passedIdx);
   const after = pts.filter(s => all.indexOf(s) > passedIdx);
-  const pos = located(position) ? { lat: position.lat, lon: position.lon } : null;
+  const live = located(position) ? { lat: position.lat, lon: position.lon } : null;
+  const stale = !live && located(lastSeen);
+  const pos = live || (stale ? { lat: lastSeen.lat, lon: lastSeen.lon } : null);
+  const marker = stale ? lastSeen.label : tIntent.marker;
   const nextStop = next && Number.isInteger(next.idx) ? all[next.idx] : null;
   const facing = pos && nextStop && nextStop.lon < pos.lon ? 'left' : 'right';
-  const done = pos ? [...cut, pos] : passedIdx >= 0 ? cut : [];
-  const rest = pos ? [pos, ...after] : passedIdx >= 0 ? [...cut.slice(-1), ...after] : pts;
+  const done = live ? [...cut, live] : passedIdx >= 0 ? cut : [];
+  const rest = live ? [live, ...after] : passedIdx >= 0 ? [...cut.slice(-1), ...after] : pts;
   put('route-done', done.length > 1 ? line(done) : EMPTY);
   put('route-ahead', rest.length > 1 ? line(rest) : EMPTY);
   put('route-stops', points(pts.map(s => ({ ...s, props: { passed: all.indexOf(s) <= passedIdx } }))));
@@ -339,10 +343,11 @@ function drawTrain(keyChanged) {
   if (pos) {
     const to = [pos.lon, pos.lat];
     const m = markers.get('train');
-    if (!m) { place('train', to, trainMarker({ label: marker || '', facing }), { anchor: 'center', offset: [0, 0], z: 4, root: true }); trainAt = to; markers.get('train').label = marker || ''; markers.get('train').facing = facing; }
+    if (!m) { place('train', to, trainMarker({ label: marker || '', facing, stale }), { anchor: 'center', offset: [0, 0], z: 4, root: true }); trainAt = to; markers.get('train').label = marker || ''; markers.get('train').facing = facing; markers.get('train').stale = stale; }
     else {
       if (m.label !== (marker || '')) { m.label = marker || ''; const b = m.marker.getElement().querySelector('.p-trainmarker__label bdi'); if (b) b.textContent = m.label; }
       if (m.facing !== facing) { m.facing = facing; m.marker.getElement().classList.toggle('p-trainmarker--left', facing === 'left'); }
+      if (m.stale !== stale) { m.stale = stale; m.marker.getElement().classList.toggle('p-trainmarker--stale', stale); }
       moveTrain(to, keyChanged);
     }
   } else dropMarkers(slot => slot !== 'train');
@@ -350,12 +355,12 @@ function drawTrain(keyChanged) {
   if (keyChanged) {
     followBroken = false;
     userMoved = false;
-    camera = follow && pos ? { type: 'train', zoom: 9 } : { type: 'route' };
+    camera = follow && live ? { type: 'train', zoom: 9 } : { type: 'route' };
     applyCamera(600);
-  } else if (follow && pos && !followBroken && camera?.type === 'train') {
+  } else if (follow && live && !followBroken && camera?.type === 'train') {
     // Ease along with the marker's tween so the train stays centred while it moves.
     if (sized()) map.easeTo({ center: [pos.lon, pos.lat], padding: padding(), duration: TWEEN_MS, easing: x => x, essential: true });
-  } else if (follow && pos && !followBroken) {
+  } else if (follow && live && !followBroken) {
     camera = { type: 'train', zoom: Math.max(map.getZoom(), 8) };
     userMoved = false;
     applyCamera(600);
@@ -546,10 +551,10 @@ export function showStations({ key, stations = [], selected = [], fit = 'keep' }
   sync();
 }
 
-export function showTrain({ key, stops = [], passedIdx = -1, position = null, marker = '', next, mine, follow = false } = {}) {
+export function showTrain({ key, stops = [], passedIdx = -1, position = null, marker = '', next, mine, follow = false, lastSeen = null } = {}) {
   const changed = !(mode === 'train' && tIntent && tIntent.key === key);
   mode = 'train';
-  tIntent = { key, stops, passedIdx, position, marker, next, mine, follow };
+  tIntent = { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen };
   if (changed) keyDirty = true;
   sync();
 }
