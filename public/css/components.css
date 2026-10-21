@@ -149,27 +149,8 @@
 }
 .p-panel[data-snap="down"] { block-size: 150px; }
 .p-panel[data-snap="half"] { block-size: 55%; }
-.p-panel[data-snap="full"] { block-size: calc(100% - 8px); }
+.p-panel[data-snap="full"] { block-size: calc(100% - var(--panel-top-gap, 8px)); }
 .p-panel--dragging { transition: none; }
-.p-panel__top { position: relative; flex: none; }
-/* Over the handle's row, at the inline-start, so the bar stays centred. A sibling of the handle, so a tap never starts a drag. */
-.p-panel__back {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-block-size: var(--tap);
-  padding-inline: var(--space-4);
-  color: var(--sabz-700);
-  font: var(--t-label);
-  letter-spacing: var(--t-label-tracking);
-  text-transform: uppercase;
-  text-decoration: none;
-}
-[lang="ur"] .p-panel__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 .p-panel__handle {
   display: flex;
   align-items: center;
@@ -209,7 +190,6 @@
     box-shadow: none;
     transition: none;
   }
-  .p-panel__top,
   .p-panel__handle { display: none; }
   .p-panel .p-appbar { min-block-size: 64px; padding-inline: var(--space-5); }
 }
@@ -411,6 +391,10 @@
 .p-iconbutton--outline:hover,
 .p-iconbutton--float:hover { background: var(--sabz-100); }
 .p-iconbutton[aria-pressed="true"] { color: var(--sabz-700); }
+/* With text: a pill, the icon followed by the label. */
+.p-iconbutton--text { display: inline-flex; align-items: center; inline-size: auto; gap: var(--space-1); padding-inline: var(--space-3) var(--space-4); }
+.p-iconbutton__text { font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
+[lang="ur"] .p-iconbutton__text { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 
 /* ---------- 9. FollowButton ---------- */
 .p-followbutton { color: var(--ink-muted); }

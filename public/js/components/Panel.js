@@ -1,5 +1,5 @@
 // Panel: the single container for screen content: a bottom sheet on phones, a left sidebar on the web.
-import { esc, icon as icons } from './_shared.js';
+import { esc } from './_shared.js';
 import { t } from '../i18n.js';
 
 /**
@@ -8,20 +8,18 @@ import { t } from '../i18n.js';
  * wide the panel is a bottom sheet with three snap heights; from 940px it is a 440px sidebar.
  * @typedef {object} PanelProps
  * @property {string} body - An HTML string, inserted as-is.
- * @property {'down' | 'half' | 'full'} [snap='half'] - The sheet's starting height: 150px, 55% of the host, or the host minus 8px. Ignored in the sidebar.
+ * @property {'down' | 'half' | 'full'} [snap='half'] - The sheet's starting height: 150px, 55% of the host, or the host minus 8px (or minus the CSS variable `--panel-top-gap`, when a screen sets one, to stay clear of a floating control). Ignored in the sidebar.
  * @property {string} label - The accessible name of the panel. Already localised.
- * @property {{ href: string, label: string }} [back] - A back link at the inline-start of the sheet's top bar (beside the handle), which never scrolls, so the way back stays visible at every snap and scroll. Phone sheet only; the sidebar's AppBar carries the web back link. The label is already localised.
  */
-export function Panel({ body = '', snap = 'half', label = '', back } = {}) {
-  const link = back ? `<a class="p-panel__back" href="${esc(back.href)}">${icons.back}<span class="p-panel__backlabel">${esc(back.label)}</span></a>` : '';
+export function Panel({ body = '', snap = 'half', label = '' } = {}) {
   return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}">`
-    + `<div class="p-panel__top">${link}<button type="button" class="p-panel__handle" aria-label="${t('panelHandle')}"><span class="p-panel__bar"></span></button></div>`
+    + `<button type="button" class="p-panel__handle" aria-label="${t('panelHandle')}"><span class="p-panel__bar"></span></button>`
     + `<div class="p-panel__body">${body}</div></section>`;
 }
 
 const SNAPS = ['down', 'half', 'full'];
 const DOWN_PX = 150;
-const TOP_GAP = 8;
+const DEFAULT_TOP_GAP = 8;
 const DRAG_SLOP = 4;
 
 /**
@@ -38,9 +36,11 @@ function bindOne(panel, handlers) {
   const handle = panel.querySelector('.p-panel__handle');
   const host = () => panel.offsetParent || panel.parentElement;
   const hostH = () => host()?.clientHeight || 0;
+  // The gap kept above the full sheet; a screen can raise it with --panel-top-gap (a floating Home/Back pill).
+  const TOP_GAP = () => parseFloat(getComputedStyle(panel).getPropertyValue('--panel-top-gap')) || DEFAULT_TOP_GAP;
   const isSidebar = () => getComputedStyle(handle).display === 'none';
   const current = () => (SNAPS.includes(panel.dataset.snap) ? panel.dataset.snap : 'half');
-  const heightOf = (snap, H = hostH()) => Math.min(H, snap === 'down' ? DOWN_PX : snap === 'half' ? Math.round(H * 0.55) : H - TOP_GAP);
+  const heightOf = (snap, H = hostH()) => Math.min(H, snap === 'down' ? DOWN_PX : snap === 'half' ? Math.round(H * 0.55) : H - TOP_GAP());
 
   let dragging = false;
   let moved = false;
@@ -83,7 +83,7 @@ function bindOne(panel, handlers) {
     const dy = startY - e.clientY;
     if (!moved && Math.abs(dy) < DRAG_SLOP) return;
     if (!moved) { moved = true; panel.classList.add('p-panel--dragging'); }
-    dragH = Math.max(DOWN_PX, Math.min(hostH() - TOP_GAP, startH + dy));
+    dragH = Math.max(DOWN_PX, Math.min(hostH() - TOP_GAP(), startH + dy));
     panel.style.blockSize = `${dragH}px`;
     publish();
   }

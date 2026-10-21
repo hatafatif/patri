@@ -27,7 +27,7 @@ import { t } from '../i18n.js';
  * @param {'down' | 'half' | 'full'} [f.snap] - The screen's default snap; options.snap wins.
  * @param {string} [f.top] - Phone only: a band across the top (the Home AppBar); the map starts below it.
  * @param {string} [f.map] - The backdrop content: the map stand-in, or nothing.
- * @param {{ href: string, label: string }} [f.back] - Phone only: the Panel's back link in its top bar (always visible).
+ * @param {{ href: string, label: string }} [f.back] - Phone only: a labelled float pill ("← Home") at the map's top start, always above the panel.
  * @param {string} [f.start] - Controls floating at the map's top start (the back button).
  * @param {string} [f.end] - Controls floating at the map's top end (zoom, layers, Following).
  * @param {string} [f.dock] - Web only: content docked along the bottom of the map.
@@ -36,17 +36,19 @@ export function frame({ name, options = {}, label = '', body = '', snap = 'half'
   const web = options.layout === 'web';
   const expanded = !web && options.expanded;
   const sheetSnap = options.snap || (expanded ? 'full' : snap);
-  const cls = ['p-screen', `p-screen--${web ? 'web' : 'phone'}`, `p-screen--${name}`, expanded && 'p-screen--expanded', !web && top && 'p-screen--top']
+  const pill = !web && back;
+  const startHtml = (pill ? IconButton({ icon: 'back', label: back.label, href: back.href, variant: 'float', text: true, className: 'p-screen__back' }) : '') + start;
+  const cls = ['p-screen', `p-screen--${web ? 'web' : 'phone'}`, `p-screen--${name}`, expanded && 'p-screen--expanded', !web && top && 'p-screen--top', pill && 'p-screen--back']
     .filter(Boolean).join(' ');
   return `<div class="${cls}" data-screen="${esc(name)}">`
     + (!web && top ? `<div class="p-screen__top">${top}</div>` : '')
     + '<div class="p-screen__map">'
     + `<div class="p-screen__backdrop">${options.standin === false ? '' : map}</div>`
-    + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : '')
+    + (startHtml ? `<div class="p-screen__controls p-screen__controls--start">${startHtml}</div>` : '')
     + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : '')
     + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : '')
     + '</div>'
-    + `<div class="p-screen__sheet">${Panel({ body, snap: sheetSnap, label, ...(!web && back ? { back } : {}) })}</div>`
+    + `<div class="p-screen__sheet">${Panel({ body, snap: sheetSnap, label })}</div>`
     + '</div>';
 }
 

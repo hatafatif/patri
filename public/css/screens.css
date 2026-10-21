@@ -50,6 +50,9 @@
 }
 .p-screen__controls--start { inset-inline-start: var(--space-3); align-items: flex-start; }
 .p-screen__controls--end { inset-inline-end: var(--space-3); align-items: flex-end; }
+/* Phone: the Home/Back pill floats above the panel; at full snap the panel stops below it (12px + 44px pill + 12px). */
+.p-screen--phone .p-screen__controls--start { z-index: 3; }
+.p-screen--back .p-panel { --panel-top-gap: 68px; }
 
 /* The Panel's host. It covers the screen but lets clicks through to the map; only the Panel takes them. */
 .p-screen__sheet {

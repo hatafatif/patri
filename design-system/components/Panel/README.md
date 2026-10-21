@@ -22,7 +22,6 @@ In the app that host is the app root. The layout switches on the **host's** widt
 | `body` | `string` | `''` | An HTML string, inserted as-is. |
 | `snap` | `'down' \| 'half' \| 'full'` | `'half'` | The sheet's starting height. Ignored in the sidebar. |
 | `label` | `string` | `''` | The accessible name of the panel. Already localised. |
-| `back` | `{ href, label }` | none | A back link at the inline-start of the sheet's top bar, beside the handle. The bar never scrolls, so the link stays visible at every snap and scroll. Phone sheet only. |
 
 ## Layout
 - **Sheet (host under 940px):**
