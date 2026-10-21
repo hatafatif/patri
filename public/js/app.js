@@ -141,18 +141,8 @@ function watchDock() {
 }
 
 // ---- Language: the AppBar's LanguageToggle switches the whole app, remembered in localStorage lang.
-const URDU_FONT = 'https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Noto+Nastaliq+Urdu:wght@600;700&display=swap';
-export function loadUrduFont() {
-  if (getLang() !== 'ur' || document.getElementById('font-ur')) return;
-  const link = document.createElement('link');
-  link.id = 'font-ur';
-  link.rel = 'stylesheet';
-  link.href = URDU_FONT;
-  document.head.appendChild(link);
-}
 function switchLang(lang) {
   setLang(lang); // sets <html lang dir>
-  loadUrduFont();
   map.setLang();
   current?.view.render?.();
 }
@@ -284,7 +274,6 @@ async function start() {
   route();
 }
 
-loadUrduFont();
 addEventListener('hashchange', route);
 wide.addEventListener('change', () => { freshNext = true; current?.view.render?.(); });
 start().catch(e => {
