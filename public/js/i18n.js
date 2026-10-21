@@ -77,7 +77,7 @@ const STRINGS = {
     startedFrom: 'Started from', startsFrom: 'Starts from', kmAwayNow: '{km} km away · {speed} km/h now', plannedAt: 'Planned {time}',
     yesterday: 'Yesterday', dayTime: '{day} {time}', timeOnDay: '{time} {day}', nextDay: 'next day', dayN: 'day {n}',
     photoBy: 'Photo: {author} · {licence}',
-    journey: 'Journey', firstStop: 'First stop', currentStop: 'Current stop', speedLabel: 'Speed', delayLabel: 'Delay',
+    journey: 'Journey', firstStop: 'First stop', currentStop: 'Current stop', speedLabel: 'Speed', delayLabel: 'Delay', arrivalLabel: 'Arrival',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -155,7 +155,7 @@ const STRINGS = {
     startedFrom: 'روانگی کا اسٹیشن', startsFrom: 'روانگی کا اسٹیشن', kmAwayNow: '{km} کلومیٹر دور · ابھی {speed} کلومیٹر فی گھنٹہ', plannedAt: 'مقررہ وقت {time}',
     yesterday: 'گزشتہ روز', dayTime: '{day} {time}', timeOnDay: '{day} {time}', nextDay: 'اگلے دن', dayN: 'دن {n}',
     photoBy: 'تصویر: {author} · {licence}',
-    journey: 'سفر', firstStop: 'پہلا اسٹیشن', currentStop: 'موجودہ اسٹیشن', speedLabel: 'رفتار', delayLabel: 'تاخیر',
+    journey: 'سفر', firstStop: 'پہلا اسٹیشن', currentStop: 'موجودہ اسٹیشن', speedLabel: 'رفتار', delayLabel: 'تاخیر', arrivalLabel: 'آمد',
   },
 };
 
