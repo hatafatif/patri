@@ -1,5 +1,5 @@
-// Base map styles. "Sabz" is our own vector style on OpenFreeMap data: quiet land, water, province borders and
-// the rail network, all coloured from the design tokens. Satellite and Streets are alternatives. Every style
+// Base map styles. "Sabz" is our own style on OpenFreeMap data: terrain relief, land, water, province borders and
+// the rail network, coloured from the design tokens. Satellite and Streets are alternatives. Every style
 // gets a mask that fades out everything beyond Pakistan's border (outline from Natural Earth, de facto boundaries).
 import { mapPaint } from './components/index.js';
 
@@ -10,6 +10,12 @@ const ESRI = layer => ({
   type: 'raster', tileSize: 256, maxzoom: 18, attribution: 'Tiles © Esri',
   tiles: [`https://server.arcgisonline.com/ArcGIS/rest/services/${layer}/MapServer/tile/{z}/{y}/{x}`],
 });
+
+export const RELIEF = {
+  url: '/data/relief.webp',
+  // The zoom 7 tile edges the image was made for (scripts/build-relief.py): top left, top right, bottom right, bottom left.
+  coordinates: [[59.0625, 38.822591], [78.75, 38.822591], [78.75, 21.943046], [59.0625, 21.943046]],
+};
 
 export const STYLES = ['sabz', 'satellite', 'streets'];
 
@@ -74,10 +80,16 @@ function sabz(pk) {
   return {
     version: 8,
     glyphs: GLYPHS,
-    sources: { omt: OMT },
+    sources: { omt: OMT, relief: { type: 'image', ...RELIEF } },
     layers: [
       { id: 'map-land', type: 'background', paint: { 'background-color': p.land['fill-color'] } },
-      { id: 'urban', type: 'fill', source: 'omt', 'source-layer': 'landuse', minzoom: 7, filter: ['in', ['get', 'class'], ['literal', ['residential', 'suburb', 'neighbourhood', 'commercial', 'industrial', 'retail']]], paint: { 'fill-color': token('line-soft'), 'fill-opacity': 0.9 } },
+      // Landcover is empty over Pakistan below about zoom 7 and patchy above it, so it sits under the relief and shows as the relief fades.
+      { id: 'landcover-green', type: 'fill', source: 'omt', 'source-layer': 'landcover', minzoom: 7, filter: ['in', ['get', 'class'], ['literal', ['farmland', 'grass']]], paint: { 'fill-color': token('map-green') } },
+      { id: 'landcover-wood', type: 'fill', source: 'omt', 'source-layer': 'landcover', minzoom: 7, filter: ['==', ['get', 'class'], 'wood'], paint: { 'fill-color': token('map-wood') } },
+      { id: 'landcover-ice', type: 'fill', source: 'omt', 'source-layer': 'landcover', filter: ['==', ['get', 'class'], 'ice'], paint: { 'fill-color': token('map-ice') } },
+      // Terrain relief, clipped to Pakistan: full strength for the country view, fading as OSM detail takes over.
+      { id: 'relief', type: 'raster', source: 'relief', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 8, 1, 11, 0.3], 'raster-fade-duration': 0 } },
+      { id: 'urban', type: 'fill', source: 'omt', 'source-layer': 'landuse', minzoom: 7, filter: ['in', ['get', 'class'], ['literal', ['residential', 'suburb', 'neighbourhood', 'commercial', 'industrial', 'retail']]], paint: { 'fill-color': token('map-urban'), 'fill-opacity': 0.9 } },
       { id: 'map-water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: p.water },
       { id: 'map-river', type: 'line', source: 'omt', 'source-layer': 'waterway', filter: ['==', ['get', 'class'], 'river'], paint: { 'line-color': p.water['fill-color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 10, 2.4, 14, 6] }, layout: roundLine },
       { id: 'map-canal', type: 'line', source: 'omt', 'source-layer': 'waterway', minzoom: 9, filter: ['in', ['get', 'class'], ['literal', ['canal', 'stream']]], paint: { 'line-color': p.water['fill-color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 14, 2] } },
@@ -86,6 +98,8 @@ function sabz(pk) {
       { id: 'map-rail', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'rail'], paint: { ...p.rail, 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.7, 8, 1.4, 12, 2.2] } },
       { id: 'map-rail-ties', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 10, filter: ['==', ['get', 'class'], 'rail'], paint: { 'line-color': p.rail['line-color'], 'line-width': 5, 'line-dasharray': [0.15, 2.5] } },
       { id: 'map-border', type: 'line', source: 'omt', 'source-layer': 'boundary', minzoom: 4, filter: ['all', ['==', ['get', 'admin_level'], 4], ['!=', ['get', 'maritime'], 1]], paint: p.border },
+      // The Arabian Sea, drawn above the fade over the neighbours (map.js puts the fade under this layer).
+      { id: 'sea', type: 'fill', source: 'omt', 'source-layer': 'water', filter: ['==', ['get', 'class'], 'ocean'], paint: p.water },
       { id: 'sea-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', filter: ['in', ['get', 'class'], ['literal', ['ocean', 'sea', 'bay']]], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Italic'], 'text-size': 13, 'text-letter-spacing': 0.15 }, paint: { 'text-color': muted, ...halo } },
       { id: 'province-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 5, maxzoom: 9, filter: ['all', ['==', ['get', 'class'], 'state'], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Bold'], 'text-size': 11, 'text-transform': 'uppercase', 'text-letter-spacing': 0.25 }, paint: { 'text-color': token('map-border'), ...halo } },
       { id: 'village-label', type: 'symbol', source: 'omt', 'source-layer': 'place', minzoom: 10, filter: ['all', ['in', ['get', 'class'], ['literal', ['village', 'suburb']]], inPk], layout: { 'text-field': NAME, 'text-font': ['Noto Sans Regular'], 'text-size': 11 }, paint: { 'text-color': muted, ...halo } },
@@ -120,5 +134,5 @@ export async function styleFor(name) {
     liberty ||= fetch('https://tiles.openfreemap.org/styles/liberty').then(r => r.json()).catch(e => { liberty = null; throw e; });
     return { style: structuredClone(await liberty), fade: token('map-land'), fadeOpacity: 0.92, englishLabels: true };
   }
-  return { style: sabz(pk), fade: token('ground'), fadeOpacity: 0.92, englishLabels: false, maskBelow: 'sea-label' }; // labels are already Pakistan-only
+  return { style: sabz(pk), fade: token('map-outside'), fadeOpacity: 0.9, englishLabels: false, maskBelow: 'sea', outlineBelow: 'sea-label' }; // labels are already Pakistan-only
 }

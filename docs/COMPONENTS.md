@@ -247,14 +247,15 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 - `trainMarker({ label })`: a DOM-marker HTML string. A 22px `zard-500` dot with a 3px `sabz-900` ring and a halo, plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
 - `mapLabel({ title, sub?, kind: 'next' | 'yourstop' | 'selected' | 'hover' })`: label cards. `next` and `hover` are `surface` with a 1.5px `sabz-700` border; `yourstop` and `selected` are `sabz-900` with yellow text. Every kind uses `shadow-float`.
 - `mapPaint()`: reads the tokens with `getComputedStyle` and returns MapLibre paint values:
-  - station dot: `map-station`, radius 2.5;
+  - station dot: `map-station` (sabz-700), radius 2.5;
   - major city: `surface` fill, `ink` stroke 2, radius 5.5, labelled;
   - selected station: a `zard-500` fill inside a `sabz-700` ring;
   - rail: `map-rail`;
   - route done: `sabz-700`, width 5, with a white casing;
   - route ahead: `sabz-700`, dashed.
 **Rules:**
-- Home and Station maps show **stations, not trains**. Every station is a dot, major cities are bigger and labelled, and tapping a station opens its Station page.
+- Home and Station maps show **stations, not trains**. Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 6.5 to 7.5). Tapping a station opens its Station page.
+- The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
 - The Train map shows that one train, followed.
 
 ### 23. Button

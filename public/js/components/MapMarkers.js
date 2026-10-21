@@ -25,7 +25,7 @@ export function mapLabel({ title = '', sub, kind = 'next' } = {}) {
 /**
  * MapLibre paint values read from the design tokens when called, so a token change reaches the map. Pass them as the paint of a layer: station and majorCity to circle layers, rail, routeDone, routeDoneCasing, routeAhead and border to line layers, land and water to fill layers, cityLabel to a symbol layer.
  * @typedef {object} MapPaintResult
- * @property {Record<string, unknown>} station - Small station dot, map-station, radius 2.5.
+ * @property {Record<string, unknown>} station - Small station dot, map-station, radius 2.5; shown when the map is zoomed in.
  * @property {Record<string, unknown>} majorCity - Surface fill, ink stroke 2, radius 5.5.
  * @property {Record<string, unknown>} selectedStation - A zard-500 fill inside a sabz-700 ring.
  * @property {Record<string, unknown>} rail - Rail lines with no train selected, map-rail.

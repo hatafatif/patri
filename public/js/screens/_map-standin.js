@@ -146,21 +146,17 @@ function shell(mode, w, h, label, body) {
 
 // ---------- 1. Home map ----------
 /**
- * The Home map: Pakistan, its rails, every station a dot, major cities bigger and named.
+ * The Home map: Pakistan, its rails, major cities as dots and named (small stations only show once zoomed in).
  * @param {{ layout?: 'phone' | 'web', hover?: { key: string, title: string, sub?: string } }} [props]
  *   hover: a card beside a city's dot; key is one of peshawar, rawalpindi, lahore, faisalabad, multan, quetta, sukkur, hyderabad, karachi.
  */
 export function countryMap({ layout = 'phone', hover } = {}) {
   const { w, h } = COUNTRY;
-  const majors = COUNTRY.places.map(p => [p[1], p[2]]);
-  const named = [...COUNTRY.stations, ...majors];
-  const extra = along(COUNTRY.rails, COUNTRY.step, named, 7);
   const hov = hover && COUNTRY.places.find(p => p[0] === hover.key);
   const svg = `<path class="p-mapstandin__sea" d="${COUNTRY.sea}"/>`
     + `<path class="p-mapstandin__border" d="${COUNTRY.border}"/>`
     + COUNTRY.rails.map(r => `<path class="p-mapstandin__rail" d="${d(r)}"/>`).join('');
-  const layer = [...COUNTRY.stations, ...extra].map(p => dotEl('p-mapstandin__dot--station', p, w, h)).join('')
-    + COUNTRY.places.map(([k, x, y]) => dotEl('p-mapstandin__dot--city', [x, y], w, h)).join('')
+  const layer = COUNTRY.places.map(([k, x, y]) => dotEl('p-mapstandin__dot--city', [x, y], w, h)).join('')
     + COUNTRY.places.filter(p => p !== hov).map(([k, x, y, side]) => nameEl(k, [x, y], side, true, w, h)).join('');
   const cards = hov ? pin('hover', hover, [hov[1], hov[2]], hov[5], w, h) : '';
   return shell('country', w, h, t('mapStations'), { svg, layer, cards });
