@@ -1,5 +1,5 @@
 // Panel: the single container for screen content: a bottom sheet on phones, a left sidebar on the web.
-import { esc } from './_shared.js';
+import { esc, icon as icons } from './_shared.js';
 import { t } from '../i18n.js';
 
 /**
@@ -10,10 +10,12 @@ import { t } from '../i18n.js';
  * @property {string} body - An HTML string, inserted as-is.
  * @property {'down' | 'half' | 'full'} [snap='half'] - The sheet's starting height: 150px, 55% of the host, or the host minus 8px. Ignored in the sidebar.
  * @property {string} label - The accessible name of the panel. Already localised.
+ * @property {{ href: string, label: string }} [back] - A back link at the inline-start of the sheet's top bar (beside the handle), which never scrolls, so the way back stays visible at every snap and scroll. Phone sheet only; the sidebar's AppBar carries the web back link. The label is already localised.
  */
-export function Panel({ body = '', snap = 'half', label = '' } = {}) {
+export function Panel({ body = '', snap = 'half', label = '', back } = {}) {
+  const link = back ? `<a class="p-panel__back" href="${esc(back.href)}">${icons.back}<span class="p-panel__backlabel">${esc(back.label)}</span></a>` : '';
   return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}">`
-    + `<button type="button" class="p-panel__handle" aria-label="${t('panelHandle')}"><span class="p-panel__bar"></span></button>`
+    + `<div class="p-panel__top">${link}<button type="button" class="p-panel__handle" aria-label="${t('panelHandle')}"><span class="p-panel__bar"></span></button></div>`
     + `<div class="p-panel__body">${body}</div></section>`;
 }
 

@@ -27,7 +27,7 @@ All frontend UI is built from the registered component library, in the Sabz look
 - **Views render their pages through the screen templates in `public/js/screens/`** (`docs/COMPONENTS.md`, "Screens"). These are built only from components, and the map stand-in there is for previews only.
 - **Product rules:**
   - Never filter or sort trains by lateness.
-  - The Home and Station maps show stations, not trains.
+  - The Home and Station maps show stations, plus a small marker for every running train (the owner's call, 2026-10-21). The Train page map follows its one train.
   - Urdu uses Noto Nastaliq Urdu everywhere.
 
 ## Pipeline for changes to the app

@@ -4,6 +4,7 @@ import { trainInfo } from '../names.js';
 import { place } from '../screens/_format.js';
 import { t } from '../i18n.js';
 import { share } from '../share.js';
+import { loadPhotos, cityPhoto } from '../photos.js';
 import { state, api, paint, layout, navigate, addRecentSearch, isSaved, setSaved } from '../app.js';
 import * as map from '../map.js';
 
@@ -28,6 +29,7 @@ function data() {
     updatedAt: board ? board.now : 0,
     loading: !board,
     notice: v.notice,
+    photo: cityPhoto(station) || undefined,
     // The board's order (expected time); never sorted or filtered by lateness.
     rows: (board?.rows || []).map(r => ({
       train: state.byNumber.get(r.number) || trainInfo(r),
@@ -96,6 +98,7 @@ export default {
     map.showStations({ key: `station:${id}`, stations: state.stations, selected: [id], fit: 'selected' });
     map.onStationClick(other => { if (v && other !== v.id) navigate(`#/station/${other}`); });
     render();
+    loadPhotos().then(() => { if (v) render(); });
     load();
   },
   render,

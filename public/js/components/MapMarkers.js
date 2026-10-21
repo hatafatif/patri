@@ -1,13 +1,14 @@
 // MapMarkers: the train marker, the map label cards and the MapLibre paint values drawn on the map.
-import { bdi, cx } from './_shared.js';
+import { bdi, cx, trainIcon } from './_shared.js';
 
 /**
- * The followed train's marker: a yellow dot with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the dot.
+ * The followed train's marker: a 40px yellow badge holding the little green locomotive, with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the badge.
  * @typedef {object} TrainMarkerProps
- * @property {string} label - The text beside the dot, such as "28 DN · 105 km/h". Already localised.
+ * @property {string} label - The text beside the badge, such as "28 DN · 105 km/h". Already localised.
+ * @property {'left' | 'right'} [facing='right'] - Which way the locomotive points, so it can face the way the train travels on the map.
  */
-export function trainMarker({ label = '' } = {}) {
-  return `<div class="p-trainmarker"><span class="p-trainmarker__dot"></span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+export function trainMarker({ label = '', facing = 'right' } = {}) {
+  return `<div class="${cx('p-trainmarker', facing === 'left' && 'p-trainmarker--left')}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
 }
 
 /**
@@ -25,9 +26,10 @@ export function mapLabel({ title = '', sub, kind = 'next' } = {}) {
 /**
  * MapLibre paint values read from the design tokens when called, so a token change reaches the map. Pass them as the paint of a layer: station and majorCity to circle layers, rail, routeDone, routeDoneCasing, routeAhead and border to line layers, land and water to fill layers, cityLabel to a symbol layer.
  * @typedef {object} MapPaintResult
- * @property {Record<string, unknown>} station - Small station dot, map-station, radius 2.5.
+ * @property {Record<string, unknown>} station - Small station dot, map-station, radius 2.5; shown when the map is zoomed in.
  * @property {Record<string, unknown>} majorCity - Surface fill, ink stroke 2, radius 5.5.
  * @property {Record<string, unknown>} selectedStation - A zard-500 fill inside a sabz-700 ring.
+ * @property {Record<string, unknown>} trainDot - A running train on the Home and Station maps: a zard-500 dot with a sabz-900 ring, radius 5.
  * @property {Record<string, unknown>} rail - Rail lines with no train selected, map-rail.
  * @property {Record<string, unknown>} routeDoneCasing - The white casing under the route done, width 8.
  * @property {Record<string, unknown>} routeDone - The route the train has covered: sabz-700, width 5.
@@ -44,6 +46,7 @@ export function mapPaint() {
     station: { 'circle-color': v('map-station'), 'circle-radius': 2.5 },
     majorCity: { 'circle-color': v('surface'), 'circle-stroke-color': v('ink'), 'circle-stroke-width': 2, 'circle-radius': 5.5 },
     selectedStation: { 'circle-color': v('zard-500'), 'circle-stroke-color': v('sabz-700'), 'circle-stroke-width': 3, 'circle-radius': 7 },
+    trainDot: { 'circle-color': v('zard-500'), 'circle-stroke-color': v('sabz-900'), 'circle-stroke-width': 2, 'circle-radius': 5 },
     rail: { 'line-color': v('map-rail'), 'line-width': 1.5 },
     routeDoneCasing: { 'line-color': v('surface'), 'line-width': 8 },
     routeDone: { 'line-color': v('sabz-700'), 'line-width': 5 },

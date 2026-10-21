@@ -13,8 +13,19 @@
 :where([class^="p-"], [class*=" p-"])::before,
 :where([class^="p-"], [class*=" p-"])::after { box-sizing: border-box; }
 
+/* The little locomotive (trainIcon in _shared.js): JourneyProgress and the map's train marker. */
+.p-train { display: block; inline-size: 40px; block-size: 22px; overflow: visible; }
+.p-train__body { fill: var(--sabz-700); }
+.p-train__roof, .p-train__frame, .p-train__wheel { fill: var(--sabz-900); }
+.p-train__stripe, .p-train__lamp { fill: var(--zard-500); }
+.p-train__window { fill: var(--sabz-100); }
+
 /* Urdu is Nastaliq everywhere. Zero specificity, so a component's own font (times, numbers) wins. */
 :where([lang="ur"]) :where([class^="p-"], [class*=" p-"]) { font-family: var(--font-urdu); }
+/* An element marked Urdu is Nastaliq on an English page too (a train's Urdu name under its English title). */
+:where([lang="ur"]) { font-family: var(--font-urdu); }
+/* English inside an Urdu page (a train's English name) stays Barlow. */
+:where([lang="ur"]) :where([lang="en"]) { font-family: var(--font-body); }
 
 [class^="p-"]:focus-visible,
 [class*=" p-"]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -66,6 +77,7 @@
 .p-appbar__logo { display: block; block-size: 44px; inline-size: auto; max-inline-size: 140px; }
 .p-appbar__back { gap: var(--space-1); font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
 .p-appbar__back:hover { color: var(--sabz-700); }
+.p-panel .p-appbar { position: sticky; inset-block-start: 0; z-index: 2; }
 .p-appbar__end { display: flex; align-items: center; gap: var(--space-3); min-inline-size: 0; margin-inline-start: auto; }
 [lang="ur"] .p-appbar__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 /* On narrow phones the live word gives way first, so the language toggle never leaves the bar. */
@@ -139,6 +151,25 @@
 .p-panel[data-snap="half"] { block-size: 55%; }
 .p-panel[data-snap="full"] { block-size: calc(100% - 8px); }
 .p-panel--dragging { transition: none; }
+.p-panel__top { position: relative; flex: none; }
+/* Over the handle's row, at the inline-start, so the bar stays centred. A sibling of the handle, so a tap never starts a drag. */
+.p-panel__back {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: var(--tap);
+  padding-inline: var(--space-4);
+  color: var(--sabz-700);
+  font: var(--t-label);
+  letter-spacing: var(--t-label-tracking);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+[lang="ur"] .p-panel__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 .p-panel__handle {
   display: flex;
   align-items: center;
@@ -178,6 +209,7 @@
     box-shadow: none;
     transition: none;
   }
+  .p-panel__top,
   .p-panel__handle { display: none; }
   .p-panel .p-appbar { min-block-size: 64px; padding-inline: var(--space-5); }
 }
@@ -342,11 +374,14 @@
 /* Nastaliq's tall marks need air between the label and the name. */
 [lang="ur"] .p-stationfields__field { gap: var(--space-1); padding-block: var(--space-2); }
 [lang="ur"] .p-stationfields__label {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
-[lang="ur"] .p-stationfields__name,
+[lang="ur"] .p-stationfields__name {
+  font: var(--t-urdu-strong);
+  letter-spacing: normal;
+}
 [lang="ur"] .p-stationfields__name--empty {
   font: var(--t-urdu-body);
   letter-spacing: normal;
@@ -533,9 +568,13 @@
   text-transform: uppercase;
 }
 [lang="ur"] .p-statusstrip__running,
-[lang="ur"] .p-statusstrip__delay,
-[lang="ur"] .p-statusstrip__updated {
+[lang="ur"] .p-statusstrip__delay {
   font: var(--t-urdu-label);
+  letter-spacing: normal;
+  text-transform: none;
+}
+[lang="ur"] .p-statusstrip__updated {
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
@@ -572,8 +611,8 @@
 .p-traincard__stoplabel { color: var(--ink-muted); }
 .p-traincard__stop bdi { white-space: nowrap; }
 .p-traincard__status { flex: none; align-self: flex-start; }
-[lang="ur"] .p-traincard__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-traincard__position { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-traincard__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-traincard__position { font: var(--t-urdu-caption); letter-spacing: normal; }
 [lang="ur"] .p-traincard__stop { font: var(--t-urdu-label); letter-spacing: normal; }
 [lang="ur"] .p-traincard__stop bdi { font: var(--t-time-sm); letter-spacing: var(--t-time-sm-tracking); font-variant-numeric: tabular-nums; }
 
@@ -599,8 +638,8 @@
 .p-trainrow__sub { color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
 .p-trainrow__status { flex: none; }
 .p-trainrow mark { background: var(--zard-100); color: inherit; }
-[lang="ur"] .p-trainrow__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-trainrow__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-trainrow__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-trainrow__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 15. DepartureRow ---------- */
 .p-departurerow {
@@ -649,8 +688,8 @@
 [lang="ur"] .p-departurerow__caption { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-departurerow__num { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-departurerow__num bdi { font: var(--t-label); letter-spacing: var(--t-label-tracking); }
-[lang="ur"] .p-departurerow__name { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
-[lang="ur"] .p-departurerow__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-departurerow__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-departurerow__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 16. StopTimeline ---------- */
 .p-stoptimeline {
@@ -837,14 +876,34 @@
   background: var(--ink);
 }
 
-/* Urdu: names in urdu-body, the train label and sub lines in urdu-label; times stay condensed Latin. */
-[lang="ur"] .p-stoptimeline__name { font: var(--t-urdu-body); letter-spacing: normal; }
+/* Card mode (Right now): a label over each name, bigger names, the sub line under them. */
+.p-stoptimeline__label {
+  color: var(--ink-muted);
+  font: var(--t-label);
+  letter-spacing: var(--t-label-tracking);
+  text-transform: uppercase;
+}
+.p-stoptimeline--card .p-stoptimeline__row { min-block-size: 64px; }
+.p-stoptimeline--card .p-stoptimeline__main,
+.p-stoptimeline--card .p-stoptimeline__time { padding-block: var(--space-3); }
+.p-stoptimeline--card .p-stoptimeline__row:not(.p-stoptimeline__row--more) .p-stoptimeline__name { font: var(--t-heading); letter-spacing: var(--t-heading-tracking); }
+.p-stoptimeline__row--passed .p-stoptimeline__label { color: var(--ink-passed); }
+.p-stoptimeline__row--yourstop .p-stoptimeline__label { color: var(--ink-on-dark-muted); }
+
+/* Urdu: names bold (urdu-strong), labels and sub lines light and small (urdu-caption), so it keeps the English hierarchy. The more and train rows keep their own sizes; times stay condensed Latin. */
+[lang="ur"] .p-stoptimeline__name,
+[lang="ur"] .p-stoptimeline--card .p-stoptimeline__row:not(.p-stoptimeline__row--more) .p-stoptimeline__name { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-stoptimeline__row--more .p-stoptimeline__name { font: var(--t-urdu-body); letter-spacing: normal; }
 [lang="ur"] .p-stoptimeline__row--train .p-stoptimeline__name { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 [lang="ur"] .p-stoptimeline__sub,
+[lang="ur"] .p-stoptimeline__countdown { font: var(--t-urdu-caption); letter-spacing: normal; }
+[lang="ur"] .p-stoptimeline__label { font: var(--t-urdu-caption); letter-spacing: normal; text-transform: none; }
+[lang="ur"] .p-stoptimeline__legend,
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font: var(--t-urdu-label); letter-spacing: normal; }
-[lang="ur"] .p-stoptimeline__countdown,
-[lang="ur"] .p-stoptimeline__legend { font: var(--t-urdu-label); letter-spacing: normal; }
 [lang="ur"] .p-stoptimeline .p-stoptimeline__change { font-weight: 700; }
+/* A time can carry an Urdu day word ("آج 4:42 PM"): give Nastaliq's tall marks room above the countdown. */
+[lang="ur"] .p-stoptimeline__expected,
+[lang="ur"] .p-stoptimeline__scheduled { line-height: 32px; }
 
 /* ---------- 17. JourneyProgress ---------- */
 .p-journeyprogress { display: block; }
@@ -853,6 +912,7 @@
   border-radius: var(--radius-round);
   background: var(--sabz-100);
   overflow: hidden;
+  position: relative;
 }
 /* Grows from inline-start, so it runs right to left in Urdu without any extra rule. */
 .p-journeyprogress__fill {
@@ -861,6 +921,26 @@
   block-size: 100%;
   border-radius: var(--radius-round);
   background: var(--sabz-700);
+}
+.p-journeyprogress--train { padding-block-start: 24px; }  /* room for the train above the track */
+.p-journeyprogress--train .p-journeyprogress__track { overflow: visible; }
+.p-journeyprogress__fill { transition: inline-size 900ms ease-out; animation: p-journey-grow 900ms ease-out; }
+/* Nose (x=36 of 40) at the progress point; clamped so the train stays inside the card at 0%. */
+.p-journeyprogress__train {
+  position: absolute;
+  inset-block-end: 6px;
+  inset-inline-start: max(36px, var(--p));
+  margin-inline-start: -36px;
+  transition: inset-inline-start 900ms ease-out;
+  animation: p-journey-in 900ms ease-out;
+}
+@keyframes p-journey-grow { from { inline-size: 0; } }
+@keyframes p-journey-in { from { inset-inline-start: 36px; } }
+.p-journeyprogress--moving .p-train { animation: p-train-chug 650ms ease-in-out infinite alternate; }
+@keyframes p-train-chug { to { translate: 0 -1.5px; } }
+[dir="rtl"] .p-journeyprogress__train .p-train { scale: -1 1; }  /* face the way it travels */
+@media (prefers-reduced-motion: reduce) {
+  .p-journeyprogress__fill, .p-journeyprogress__train, .p-journeyprogress--moving .p-train { transition: none; animation: none; }
 }
 .p-journeyprogress__labels {
   display: flex;
@@ -936,16 +1016,16 @@
 .p-detailgrid__value[lang="ur"] {
   inline-size: fit-content;
   max-inline-size: 100%;
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
 [lang="ur"] .p-detailgrid__label {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
 }
 [lang="ur"] .p-detailgrid__value {
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
@@ -985,12 +1065,12 @@
 }
 
 [lang="ur"] .p-linkrow__eyebrow {
-  font: var(--t-urdu-label);
+  font: var(--t-urdu-caption);
   letter-spacing: normal;
   text-transform: none;
 }
 [lang="ur"] .p-linkrow__label {
-  font: var(--t-urdu-body);
+  font: var(--t-urdu-strong);
   letter-spacing: normal;
 }
 
@@ -1129,22 +1209,26 @@
 [lang="ur"] .p-speedchart__tip { inset-block-start: -34px; }
 
 /* ---------- 22. MapMarkers ---------- */
-/* The root is the 22px dot, so a map marker anchored at its centre sits on the train; the label overflows to the side. */
+/* The root is the 40px badge, so a map marker anchored at its centre sits on the train; the label overflows to the side. */
 .p-trainmarker {
   display: flex;
   align-items: center;
-  inline-size: 22px;
-  block-size: 22px;
+  inline-size: 40px;
+  block-size: 40px;
 }
 .p-trainmarker__dot {
   flex: none;
-  inline-size: 22px;
-  block-size: 22px;
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
   border: 3px solid var(--sabz-900);
   border-radius: var(--radius-round);
   background: var(--zard-500);
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--zard-500) 40%, transparent);
 }
+.p-trainmarker__dot .p-train { inline-size: 28px; block-size: 15px; }
+.p-trainmarker--left .p-train { scale: -1 1; }
 .p-trainmarker__label {
   flex: none;
   margin-inline-start: var(--space-3);
@@ -1182,8 +1266,8 @@
 .p-maplabel--selected { border-color: var(--sabz-900); background: var(--sabz-900); color: var(--zard-500); }
 .p-maplabel--yourstop .p-maplabel__sub,
 .p-maplabel--selected .p-maplabel__sub { color: var(--ink-on-dark-muted); }
-[lang="ur"] .p-maplabel__title { font: var(--t-urdu-body); letter-spacing: normal; }
-[lang="ur"] .p-maplabel__sub { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-maplabel__title { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-maplabel__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- 23. Button ---------- */
 .p-button {
@@ -1294,7 +1378,31 @@
 .p-pageheader__subtitle { margin: 0; color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); overflow-wrap: anywhere; }
 .p-pageheader__actions { display: flex; align-items: center; }
 [lang="ur"] .p-pageheader__title { font: var(--t-urdu-title); letter-spacing: var(--t-urdu-title-tracking); }
-[lang="ur"] .p-pageheader__subtitle { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-pageheader__subtitle { font: var(--t-urdu-caption); letter-spacing: normal; }
+/* The Urdu name under an English title: Nastaliq sizing, so its tall letters are not clipped. */
+.p-pageheader__alt [lang="ur"] { font: var(--t-urdu-body); letter-spacing: normal; }
+
+/* ---------- 26. Photo ---------- */
+.p-photo { margin: 0; }
+.p-photo__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--line-soft);
+}
+.p-photo__credit {
+  margin-block-start: var(--space-1);
+  color: var(--ink-muted);
+  font: var(--t-caption);
+  letter-spacing: var(--t-caption-tracking);
+}
+.p-photo__link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.p-photo__link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+[lang="ur"] .p-photo__credit { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* Patri screens: layout for the templates in public/js/screens/.
  * Layout only: wrappers, flex and grid, and spacing from the tokens. Every visual piece is a registered
@@ -1418,7 +1526,7 @@
   font: var(--t-caption);
   letter-spacing: var(--t-caption-tracking);
 }
-[lang="ur"] .p-screen__note { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-screen__note { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- The live app ---------- */
 /* MapLibre's container, moved into the backdrop of whichever screen is showing (public/js/app.js). */

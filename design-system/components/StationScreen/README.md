@@ -36,5 +36,5 @@ A `StationRow` is `{ train, kind: 'starts' \| 'passes' \| 'ends', origin, dest, 
 
 ## Rules
 - Rows stay in the board's order. Never sort or filter them by lateness.
-- The map shows stations, not trains. In previews it is the stand-in; the app uses MapLibre.
+- The map shows stations and a small marker for every running train. In previews it is the stand-in; the app uses MapLibre.
 - Urdu uses Noto Nastaliq Urdu; the header shows the Urdu name as the title and the English name under it.

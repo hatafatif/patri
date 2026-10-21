@@ -10,6 +10,7 @@ import { TrainScreen, StopsScreen } from '../screens/index.js';
 import { place, trainNo, time } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
+import { loadPhotos, trainPhoto } from '../photos.js';
 import * as map from '../map.js';
 
 const REPAINT_MS = 1000;   // debounce for repaints caused by live updates
@@ -63,6 +64,7 @@ function compute() {
   const data = {
     live: state.live, train: info, stops, run: null, gps: !!info.live,
     myStop, followed: isFollowed(v.number), following: v.following, notice: v.notice,
+    photo: trainPhoto(v.number) || undefined,
     returnTrain: returnTrainOf(info) || undefined, pick: v.params.pick, runId: run?.id,
   };
   const out = { data, run, hist, ests: null, prog: null, st: null };
@@ -262,6 +264,7 @@ export default {
     clearInterval(tickTimer);
     tickTimer = setInterval(render, TICK_MS);
     render();
+    loadPhotos().then(() => { if (v) render(); });
     load();
   },
   render,

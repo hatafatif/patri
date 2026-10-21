@@ -24,7 +24,8 @@ export { SpeedChart, bindSpeedChart } from './SpeedChart.js';                   
 export { MapMarkers, trainMarker, mapLabel, mapPaint } from './MapMarkers.js';   // 22
 export { Button } from './Button.js';                                            // 23
 export { Card } from './Card.js';                                                // 24
-export { PageHeader, bindPageHeader } from './PageHeader.js';  // 25
+export { PageHeader, bindPageHeader } from './PageHeader.js';                  // 25
+export { Photo } from './Photo.js';                                              // 26
 
 // The one rule for a train's status.
 export { statusTone } from './_shared.js';

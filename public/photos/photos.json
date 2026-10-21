@@ -1,0 +1,153 @@
+{
+  "cities": {
+    "karachi": {
+      "file": "city-karachi.webp",
+      "alt": "Karachi Cantonment railway station, front facade",
+      "author": "Saqib Qayyum",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Karachi_cantt._station_full_facade.JPG",
+      "lat": 24.843,
+      "lon": 67.0404
+    },
+    "lahore": {
+      "file": "city-lahore.webp",
+      "alt": "Lahore Junction railway station and its clock towers",
+      "author": "Nadeem Abbas Mushtaq",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Lahore_Railway_Station_14.jpg",
+      "lat": 31.5777,
+      "lon": 74.3376
+    },
+    "islamabad": {
+      "file": "city-islamabad.webp",
+      "alt": "Faisal Mosque in Islamabad lit up at night",
+      "author": "Fawad4real",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Faisal_Mosque_islamabad_17.jpg",
+      "lat": 33.6639,
+      "lon": 73.0468
+    },
+    "rawalpindi": {
+      "file": "city-rawalpindi.webp",
+      "alt": "Rawalpindi railway station building",
+      "author": "Miiqbal",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Rawalpindi_railway_station_4.JPG",
+      "lat": 33.6043,
+      "lon": 73.0473
+    },
+    "peshawar": {
+      "file": "city-peshawar.webp",
+      "alt": "Islamia College Peshawar and its fountain",
+      "author": "Adnanyousafkhalil",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Islamia_College_Peshawar_fountain.jpg",
+      "lat": 34.0021,
+      "lon": 71.5504
+    },
+    "quetta": {
+      "file": "city-quetta.webp",
+      "alt": "Platform and canopy at Quetta railway station",
+      "author": "M.irfan44",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Quetta_Railway_Station.jpg",
+      "lat": 30.1875,
+      "lon": 67.0067
+    },
+    "multan": {
+      "file": "city-multan.webp",
+      "alt": "Multan Cantonment railway station",
+      "author": "Yameen152",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Cantt_Railway_Station_Multan.jpg",
+      "lat": 30.1807,
+      "lon": 71.4467
+    },
+    "faisalabad": {
+      "file": "city-faisalabad.webp",
+      "alt": "Faisalabad railway station building",
+      "author": "Hussain kevin",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Railway_station_of_Faisalabad.JPG",
+      "lat": 31.4173,
+      "lon": 73.097
+    },
+    "hyderabad": {
+      "file": "city-hyderabad.webp",
+      "alt": "Hyderabad Junction railway station, outside view",
+      "author": "Saqib Qayyum",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Hyderabad_railway_station_outside.JPG",
+      "lat": 25.3819,
+      "lon": 68.3736
+    },
+    "sukkur": {
+      "file": "city-sukkur.webp",
+      "alt": "Sukkur railway station entrance",
+      "author": "Fahads1982",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:%D8%B3%DA%A9%DA%BE%D8%B1_%D8%B1%DB%8C%D9%84%D9%88%DB%92_%D8%A7%D8%B3%D9%B9%DB%8C%D8%B4%D9%86_Sukkur_Railway_Station.jpg",
+      "lat": 27.7011,
+      "lon": 68.8665
+    },
+    "bahawalpur": {
+      "file": "city-bahawalpur.webp",
+      "alt": "Noor Mahal palace in Bahawalpur",
+      "author": "Muhammad Ashar",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Front_Elevation_of_Noor_Mahal.jpg",
+      "lat": 29.4029,
+      "lon": 71.6516
+    },
+    "sialkot": {
+      "file": "city-sialkot.webp",
+      "alt": "Sialkot Junction railway station platform",
+      "author": "ASAD ALI CHEEMA",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Sialkot_Junction_railway_station_3.jpg",
+      "lat": 32.4985,
+      "lon": 74.542
+    },
+    "gujranwala": {
+      "file": "city-gujranwala.webp",
+      "alt": "Gujranwala railway station arcade",
+      "author": "Rana Usman Saeed",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Gujranwala_Railway_Station.jpg",
+      "lat": 32.1778,
+      "lon": 74.1868
+    }
+  },
+  "trains": {
+    "41": {
+      "file": "train-karakoram.webp",
+      "alt": "Karakoram Express carriages at Karachi Cantt station",
+      "author": "Karachiexp",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Karakoram_Express_01.jpg"
+    },
+    "42": {
+      "file": "train-karakoram.webp",
+      "alt": "Karakoram Express carriages at Karachi Cantt station",
+      "author": "Karachiexp",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Karakoram_Express_01.jpg"
+    }
+  },
+  "general": [
+    {
+      "file": "general-1.webp",
+      "alt": "Steam-hauled charter train at Shahgai on the Khyber Railway",
+      "author": "MaltaGC",
+      "licence": "CC BY-SA 3.0",
+      "href": "https://commons.wikimedia.org/wiki/File:KhyberRailway_02.jpg"
+    },
+    {
+      "file": "general-2.webp",
+      "alt": "Pakistan Railways diesel locomotive 5206 at Hassan Abdal station",
+      "author": "Syeda Nazish",
+      "licence": "CC BY-SA 4.0",
+      "href": "https://commons.wikimedia.org/wiki/File:Pakistan_locomotive_RGE-24.jpg"
+    }
+  ]
+}

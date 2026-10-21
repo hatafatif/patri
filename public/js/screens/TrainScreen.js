@@ -2,10 +2,10 @@
 import { t, getLang, dur, delayText } from '../i18n.js';
 import {
   AppBar, PageHeader, Card, StatusChip, StatusStrip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
-  MapToggle, SegmentedControl, statusTone,
+  MapToggle, SegmentedControl, Photo, statusTone,
 } from '../components/index.js';
 import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton } from './_layout.js';
-import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dateLabel, delayStatus } from './_format.js';
+import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dayTime, dayApprox, dateLabel, delayStatus } from './_format.js';
 import { trainMap } from './_map-standin.js';
 
 /**
@@ -30,6 +30,7 @@ import { trainMap } from './_map-standin.js';
  * @property {boolean} followed - Whether the train is in My trains.
  * @property {{ points: [number, number][], stops: { ms: number, id: string }[], now: number, illustrative?: boolean }} [speed] - SpeedChart input: [ms, km/h] samples, the stations passed (by stop id) and now in ms. Needed with a run.
  * @property {{ locomotive?: string }} [details] - Extra facts for About this train.
+ * @property {import('../components/Photo.js').PhotoProps} [photo] - A photo of this train (or a general one) for About this train.
  * @property {import('./_format.js').ScreenTrain} [returnTrain] - The train running the other way.
  * @property {{ id: string, date: string }[]} [runs] - The runs worth choosing between, newest first (two or three). More than one shows a SegmentedControl of links ("Left Sun 18 Oct"), each to #/train/N?run=id.
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
@@ -76,18 +77,20 @@ export function derive(data) {
   const ests = data.ests || [];
   const progress = run && data.progress ? data.progress : { passedIdx: -1, nextIdx: -1, kmDone: 0, kmToNext: 0 };
   const now = data.now ?? 0;
+  // The rider's now, for days on times ("Tomorrow 2:50 AM"); without a run, times count from the first day.
+  const ref = run && data.now != null ? data.now : undefined;
   const first = stops[0], last = stops.at(-1);
   const { nextIdx, passedIdx } = progress;
   const mineIdx = data.myStop ? stops.findIndex(s => s.id === data.myStop) : -1;
   const est = i => (ests[i]?.est != null && !ests[i].passed ? ests[i].est : null);
   const inTime = i => (est(i) != null ? t('inTime', { d: dur(est(i) - now) }) : '');
   /** The expected time alone ("~1:20 PM"), or the scheduled time when there is no estimate. */
-  const exp = i => (est(i) != null ? { expected: approx(est(i)) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i])) } : undefined);
+  const exp = i => (est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : undefined);
   /** Expected and scheduled, the scheduled one struck through when it differs. */
   const both = i => {
     const sched = schedOf(stops[i]);
     if (est(i) == null) return exp(i);
-    return { expected: approx(est(i)), ...(sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched) } : {}) };
+    return { expected: approx(est(i), ref), ...(sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched, ref) } : {}) };
   };
 
   /** The train's own row on the timeline: where it is, in words that stay true whatever it is doing. */
@@ -105,7 +108,7 @@ export function derive(data) {
   };
 
   return {
-    first, last, nextIdx, passedIdx, mineIdx, est, now, run, progress, stops,
+    first, last, nextIdx, passedIdx, mineIdx, est, now, ref, run, progress, stops,
     lastIdx: stops.length - 1,
     next: stops[nextIdx], prev: stops[passedIdx], mine: mineIdx >= 0 ? stops[mineIdx] : null,
     totalKm: last?.km ?? 0,
@@ -122,7 +125,7 @@ export function trainMapFor(data, layout) {
   const d = derive(data);
   if (!data.run || !d.next || !d.prev) return '';
   const train = { label: `${trainNo(data.train)} · ${t('kmh', { n: data.run.speed })}` };
-  const when = d.est(d.nextIdx) != null ? approx(d.est(d.nextIdx)) : '';
+  const when = d.est(d.nextIdx) != null ? approx(d.est(d.nextIdx), d.ref) : '';
   const join = (...p) => p.filter(Boolean).join(' · ');
   if (layout !== 'web') {
     return trainMap({ layout, train, next: { title: place(d.next), sub: join(when, km(d.progress.kmToNext)) } });
@@ -130,7 +133,7 @@ export function trainMapFor(data, layout) {
   return trainMap({
     layout, train,
     next: { title: place(d.next), sub: join(when, d.inTime(d.nextIdx), km(d.progress.kmToNext)) },
-    ...(d.mine && d.mineIdx > d.nextIdx && d.est(d.mineIdx) != null ? { yourStop: { title: place(d.mine), sub: `${t('yourStop')} · ${approx(d.est(d.mineIdx))}` } } : {}),
+    ...(d.mine && d.mineIdx > d.nextIdx && d.est(d.mineIdx) != null ? { yourStop: { title: place(d.mine), sub: `${t('yourStop')} · ${approx(d.est(d.mineIdx), d.ref)}` } } : {}),
   });
 }
 
@@ -149,37 +152,64 @@ function speedCard(data) {
   });
 }
 
-/** The Right now rows: the last stop passed, the train, the next stop, your stop, a collapsed middle and the final stop. */
+/** The Right now rows: where it started, the stop just passed, the next stop, your stop, a collapsed middle and the last stop. */
 function timelineRows(data, d) {
-  const { train } = data;
-  const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress } = d;
+  const { train, run } = data;
+  const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d;
   const stopsHref = `#/train/${train.number}/stops`;
+  const join = (...p) => p.filter(Boolean).join(' · ');
+  // A stop behind the train: when it passed (recorded, else the timetable), with its day.
+  const passedAt = i => data.ests?.[i]?.at ?? d.schedOf(stops[i]);
+  const behind = i => (passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {});
+  // A stop ahead: the expected time with its day, and the countdown.
+  const ahead = i => {
+    const e = d.est(i), s = d.schedOf(stops[i]);
+    const expected = e != null ? dayApprox(e, ref) : s != null ? dayTime(s, ref) : null;
+    return { ...(expected ? { time: { expected } } : {}), ...(d.inTime(i) ? { countdown: d.inTime(i) } : {}) };
+  };
+  const planned = i => {
+    const e = d.est(i), s = d.schedOf(stops[i]);
+    return e != null && s != null && Math.round(e) !== s ? t('plannedAt', { time: time(s, ref) }) : '';
+  };
+  const moving = run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind);
+  const away = moving ? t('kmAwayNow', { km: kmNum(progress.kmToNext), speed: run.speed }) : t('kmAway', { km: kmNum(progress.kmToNext) });
   const rows = [];
-  let tail = passedIdx; // the furthest stop shown so far
-  if (passedIdx >= 0) {
-    rows.push({ kind: 'passed', name: place(d.prev), sub: t('lastPassed'), ...(d.schedOf(d.prev) != null ? { time: { expected: time(d.schedOf(d.prev)) } } : {}) });
+
+  if (run.status?.kind === 'done' || passedIdx >= lastIdx) {
+    rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
+    rows.push({ kind: 'final', label: t('lastStop'), name: place(d.last), ...behind(lastIdx) });
+    return rows;
   }
-  rows.push({ kind: 'train', name: d.trainText(false) });
-  if (nextIdx >= 0) {
+  if (passedIdx >= 0) rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
+  else rows.push({ kind: 'next', label: t('startsFrom'), name: place(d.first), ...ahead(0) });
+  let tail = 0; // the furthest stop shown so far
+  if (passedIdx > 0) {
+    rows.push({ kind: 'passed', label: t('lastPassed'), name: place(d.prev), ...behind(passedIdx) });
+    tail = passedIdx;
+  }
+  if (nextIdx > 0 && nextIdx < lastIdx) {
     const mineNext = nextIdx === mineIdx;
-    const lastNext = nextIdx === lastIdx;
-    const sub = mineNext ? t('yourStop') : lastNext ? t('finalStop') : d.nextHalt ? `${t('nextStop')} · ${t('halt', { d: dur(d.nextHalt) })}` : t('nextStop');
     rows.push({
-      kind: mineNext ? 'yourstop' : lastNext ? 'final' : 'next', name: place(d.next), sub,
-      time: lastNext && !mineNext ? d.both(nextIdx) : d.exp(nextIdx), countdown: d.inTime(nextIdx) || undefined,
-      ...(mineNext ? { change: true } : {}),
+      kind: mineNext ? 'yourstop' : 'next', label: t(mineNext ? 'yourStop' : 'nextStop'), name: place(d.next),
+      sub: join(away, d.nextHalt ? t('halt', { d: dur(d.nextHalt) }) : ''),
+      ...ahead(nextIdx), ...(mineNext ? { change: true } : {}),
     });
     tail = nextIdx;
   }
-  if (mineIdx > tail) {
-    rows.push({ kind: 'yourstop', name: place(d.mine), sub: t('yourStop'), time: d.exp(mineIdx), countdown: d.inTime(mineIdx) || undefined, change: true });
+  if (mineIdx > tail && mineIdx < lastIdx) {
+    rows.push({ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), ...ahead(mineIdx), change: true });
     tail = mineIdx;
   }
-  if (lastIdx > tail) {
-    const more = lastIdx - tail - 1;
-    if (more > 0) rows.push({ kind: 'more', name: t('moreStops', { n: more }), href: stopsHref });
-    rows.push({ kind: 'final', name: place(d.last), sub: t('finalStop'), time: d.both(lastIdx) });
-  }
+  const more = lastIdx - tail - 1;
+  if (more > 0) rows.push({ kind: 'more', name: t('moreStops', { n: more }), href: stopsHref });
+  const mineLast = mineIdx === lastIdx;
+  rows.push({
+    kind: mineLast ? 'yourstop' : 'final',
+    label: mineLast ? `${t('yourStop')} · ${t('lastStop')}` : t('lastStop'),
+    name: place(d.last),
+    sub: join(nextIdx === lastIdx ? away : '', planned(lastIdx)),
+    ...ahead(lastIdx), ...(mineLast ? { change: true } : {}),
+  });
   return rows;
 }
 
@@ -208,7 +238,7 @@ function yourStopPrompt(data, d) {
   if (run && d.mineIdx <= d.passedIdx) {
     const at = data.ests?.[d.mineIdx]?.at ?? (d.schedOf(d.mine) != null ? d.schedOf(d.mine) + run.late : null);
     return row(
-      fill(note(at != null ? t('passedYourStop', { time: time(at) }) : `${t('yourStop')} · ${place(d.mine)}`)),
+      fill(note(at != null ? t('passedYourStop', { time: time(at, d.ref) }) : `${t('yourStop')} · ${place(d.mine)}`)),
       Button({ label: t('change'), href: pickHref, variant: 'link' }),
     );
   }
@@ -226,7 +256,7 @@ function rightNow(data, d) {
     // Timetable mode: no live run, so no position, estimates or progress.
     const gps = data.gps !== false;
     const mineRow = d.mine
-      ? StopTimeline({ mode: 'compact', rows: [{ kind: 'yourstop', name: place(d.mine), sub: t('yourStop'), time: d.exp(d.mineIdx), change: true }] })
+      ? StopTimeline({ mode: 'card', rows: [{ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), time: d.exp(d.mineIdx), change: true }] })
       : '';
     return Card({
       tone: 'key', header: t('rightNow'),
@@ -250,11 +280,13 @@ function rightNow(data, d) {
         delay: { tone: statusTone(run.late), text: delayText(run.late) },
         updated: t('updated', { ago: ago < 1 ? t('justNow') : t('ago', { d: dur(ago) }) }),
       }),
-      StopTimeline({ mode: 'compact', rows: timelineRows(data, d) }),
+      StopTimeline({ mode: 'card', rows: timelineRows(data, d) }),
       JourneyProgress({
         fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, d.progress.kmDone / d.totalKm)) : 0,
-        start: d.passedIdx >= 0 && first.dep != null && run.status?.kind !== 'wait' ? t('leftAt', { station: place(first), time: time(first.dep) }) : place(first),
+        start: '',
         end: t('kmOf', { done: kmNum(done ? d.totalKm : d.progress.kmDone), total: kmNum(d.totalKm) }),
+        train: true,
+        moving: run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind),
       }),
       yourStopPrompt(data, d),
       seeAll,
@@ -277,7 +309,7 @@ function about(data, d) {
     { label: t('liveTracking'), value: (run ? run.gps : data.gps !== false) ? t('gps') : t('timetable') },
   ].filter(i => i.value);
   return cards(
-    Card({ header: t('aboutTrain'), body: DetailGrid({ items }) }),
+    Card({ header: t('aboutTrain'), body: data.photo ? stack(Photo(data.photo), DetailGrid({ items })) : DetailGrid({ items }) }),
     returnTrain ? LinkRow({ href: `#/train/${returnTrain.number}`, eyebrow: t('returnShort'), label: `${trainNo(returnTrain)} ${trainTitle(returnTrain)}` }) : '',
   );
 }
@@ -334,7 +366,7 @@ export function TrainScreen(data, options = {}) {
     return frame({
       name: 'train', options, label, snap: 'half',
       map,
-      start: backButton('#/', 'float'),
+      back: { href: '#/', label: t('home') },
       end: following + wholeRoute,
       body: body(...content, d.first ? speedCard(data) : '', d.first ? about(data, d) : ''),
     });

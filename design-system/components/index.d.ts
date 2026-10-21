@@ -103,6 +103,10 @@ export interface JourneyProgressProps {
   start: string;
   /** Already localised, such as "305 of 1,165 km". Also the progressbar's aria-valuetext. */
   end: string;
+  /** Draw the little locomotive riding the bar, nose at the progress point. Default false. */
+  train?: boolean;
+  /** Only with train: a gentle chug while the train is running. Both animations stop under prefers-reduced-motion. Default false. */
+  moving?: boolean;
   /** Extra classes, so a composing component can hook its own styles. */
   className?: string;
 }
@@ -137,10 +141,12 @@ export interface LiveIndicatorProps {
   state?: 'on' | 'reconnecting' | 'off';
 }
 
-/** The followed train's marker: a yellow dot with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the dot. (MapMarkers.js) */
+/** The followed train's marker: a 40px yellow badge holding the little green locomotive, with a dark ring and halo, and a dark label beside it. Anchor the marker at its centre, which is the badge. (MapMarkers.js) */
 export interface TrainMarkerProps {
-  /** The text beside the dot, such as "28 DN · 105 km/h". Already localised. */
+  /** The text beside the badge, such as "28 DN · 105 km/h". Already localised. */
   label: string;
+  /** Which way the locomotive points, so it can face the way the train travels on the map. Default 'right'. */
+  facing?: 'left' | 'right';
 }
 
 /** A label card on the map: the next stop, your stop, the selected station or the one under the pointer. (MapMarkers.js) */
@@ -155,12 +161,14 @@ export interface MapLabelProps {
 
 /** MapLibre paint values read from the design tokens when called, so a token change reaches the map. Pass them as the paint of a layer: station and majorCity to circle layers, rail, routeDone, routeDoneCasing, routeAhead and border to line layers, land and water to fill layers, cityLabel to a symbol layer. (MapMarkers.js) */
 export interface MapPaintResult {
-  /** Small station dot, map-station, radius 2.5. */
+  /** Small station dot, map-station, radius 2.5; shown when the map is zoomed in. */
   station: Record<string, unknown>;
   /** Surface fill, ink stroke 2, radius 5.5. */
   majorCity: Record<string, unknown>;
   /** A zard-500 fill inside a sabz-700 ring. */
   selectedStation: Record<string, unknown>;
+  /** A running train on the Home and Station maps: a zard-500 dot with a sabz-900 ring, radius 5. */
+  trainDot: Record<string, unknown>;
   /** Rail lines with no train selected, map-rail. */
   rail: Record<string, unknown>;
   /** The white casing under the route done, width 8. */
@@ -239,12 +247,28 @@ export interface PanelProps {
   snap?: 'down' | 'half' | 'full';
   /** The accessible name of the panel. Already localised. */
   label: string;
+  /** A back link at the inline-start of the sheet's top bar (beside the handle), which never scrolls, so the way back stays visible at every snap and scroll. Phone sheet only; the sidebar's AppBar carries the web back link. The label is already localised. */
+  back?: { href: string, label: string };
 }
 
 /** Panel.js */
 export interface PanelHandlers {
   /** Called every time the sheet settles on a different snap. */
   onSnap?: (snap: 'down' | 'half' | 'full') => void;
+}
+
+/** A photo with its credit underneath: the train in About this train, the city on the Station page. It loads only when scrolled near, and reserves its 16:9 box so nothing shifts. (Photo.js) */
+export interface PhotoProps {
+  /** The image URL. */
+  src: string;
+  /** What the photo shows, for screen readers. */
+  alt: string;
+  /** Already localised, such as "Photo: A. Khan · CC BY-SA 4.0". */
+  credit: string;
+  /** The photo's source page. The credit links to it, opening in a new tab. */
+  href?: string;
+  /** Extra classes, so a composing component can hook its own styles. */
+  className?: string;
 }
 
 /** The search box for a train name, number, station or city. With a route it also shows a "From → To" link beside the field. (SearchField.js) */
@@ -355,12 +379,12 @@ export interface StatusStripProps {
   updated?: string;
 }
 
-/** The stops timeline: a rail down the start edge with one marker per row, the stop name, and the times at the end edge. The Right now card uses the compact form, the All stops page the full form. (StopTimeline.js) */
+/** The stops timeline: a rail down the start edge with one marker per row, the stop name, and the times at the end edge. The Right now card uses the card form, the All stops page the full form, and compact is the tight form without sub lines. (StopTimeline.js) */
 export interface StopTimelineProps {
-  /** One entry per row, top to bottom. name is already localised: for a train row it is the whole sentence ("Train here · 27 km to Multan Cantt"), for a more row the collapsed text ("8 more stops", href required). sub shows in full mode only. time.scheduled is struck through under the expected time. countdown is a short phrase such as "in 20 min". href turns the name into a link. change adds a Change link; wire it with bindStopTimeline(). */
-  rows: { kind: 'passed' | 'train' | 'next' | 'yourstop' | 'stop' | 'more' | 'final', name: string, sub?: string, time?: { expected: string, scheduled?: string }, countdown?: string, href?: string, change?: boolean }[];
-  /** compact hides sub and uses tighter padding; full shows everything. Default 'full'. */
-  mode?: 'compact' | 'full';
+  /** One entry per row, top to bottom. name is already localised: for a train row it is the whole sentence ("Train here · 27 km to Multan Cantt"), for a more row the collapsed text ("8 more stops", href required). label is a short label above the name, such as "Next stop" (card mode). sub shows in full and card modes. time.scheduled is struck through under the expected time. countdown is a short phrase such as "in 20 min". href turns the name into a link. change adds a Change link; wire it with bindStopTimeline(). */
+  rows: { kind: 'passed' | 'train' | 'next' | 'yourstop' | 'stop' | 'more' | 'final', name: string, label?: string, sub?: string, time?: { expected: string, scheduled?: string }, countdown?: string, href?: string, change?: boolean }[];
+  /** compact hides sub and uses tighter padding; full shows everything; card is the Right now form: a label over each name, heading-size names and sub lines shown. Default 'full'. */
+  mode?: 'compact' | 'full' | 'card';
   /** Adds an "expected · scheduled" key above the rows, at the end edge over the time column. Decorative (aria-hidden); the struck time already has a hidden "Scheduled" prefix. Default false. */
   legend?: boolean;
 }
@@ -415,7 +439,7 @@ export interface TrainRowProps {
   follow?: { followed: boolean };
 }
 
-/** Home: the station map (stations, not trains) under the AppBar, and the Panel with the search field and its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the sidebar with the AppBar as its header; the map gets zoom buttons. (screens/HomeScreen.js) */
+/** Home: the station map (stations and the running trains) under the AppBar, and the Panel with the search field and its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the sidebar with the AppBar as its header; the map gets zoom buttons. (screens/HomeScreen.js) */
 export interface HomeScreenData {
   /** The feed state, for the AppBar's LiveIndicator. */
   live: 'on' | 'reconnecting' | 'off';
@@ -536,7 +560,7 @@ export interface SearchTrain {
 
 export type SearchRecent = { kind: 'trip', from: ScreenStation, to: ScreenStation } | { kind: 'station', station: ScreenStation };
 
-/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations, not trains. Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
+/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations and the running trains. Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
 export interface StationScreenData {
   /** The feed state, for the web sidebar's AppBar. */
   live: 'on' | 'reconnecting' | 'off';
@@ -554,6 +578,8 @@ export interface StationScreenData {
   loading?: boolean;
   /** Short feedback under the header, already localised, such as "Link copied". It sits in a polite live region. */
   notice?: string;
+  /** A photo of the station's city, when there is one. */
+  photo?: PhotoProps;
   /** Map stand-in only: a station shown hovered on the web map (key such as 'khanewal'). */
   map?: { hover?: { key: string, station: ScreenStation } };
 }
@@ -608,6 +634,8 @@ export interface TrainScreenData {
   speed?: { points: [number, number][], stops: { ms: number, id: string }[], now: number, illustrative?: boolean };
   /** Extra facts for About this train. */
   details?: { locomotive?: string };
+  /** A photo of this train (or a general one) for About this train. */
+  photo?: PhotoProps;
   /** The train running the other way. */
   returnTrain?: ScreenTrain;
   /** The runs worth choosing between, newest first (two or three). More than one shows a SegmentedControl of links ("Left Sun 18 Oct"), each to #/train/N?run=id. */
@@ -734,6 +762,7 @@ export interface PatriApi {
   MapToggle(props: MapToggleProps): string;
   PageHeader(props: PageHeaderProps): string;
   Panel(props: PanelProps): string;
+  Photo(props: PhotoProps): string;
   SearchField(props: SearchFieldProps): string;
   SectionHeader(props: SectionHeaderProps): string;
   SegmentedControl(props: SegmentedControlProps): string;

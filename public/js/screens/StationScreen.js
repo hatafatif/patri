@@ -1,6 +1,6 @@
 // StationScreen: one station's board, with the map zoomed to it.
 import { t, getLang, dur } from '../i18n.js';
-import { AppBar, PageHeader, SectionHeader, StatusChip, DepartureRow, statusTone } from '../components/index.js';
+import { AppBar, PageHeader, SectionHeader, StatusChip, DepartureRow, Photo, statusTone } from '../components/index.js';
 import { frame, body, section, list, row, fill, note, notice, mapButton, backButton } from './_layout.js';
 import { stationMap } from './_map-standin.js';
 import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus } from './_format.js';
@@ -9,7 +9,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * The Station page, opened from a station on the map or in search: the map zoomed to the station, and the
  * Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board).
  * Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows
- * stations, not trains.
+ * stations and the running trains.
  * Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons.
  * @typedef {object} StationScreenData
  * @property {'on' | 'reconnecting' | 'off'} live - The feed state, for the web sidebar's AppBar.
@@ -20,6 +20,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * @property {StationRow[]} rows - The next trains, in expected-time order (never by lateness). Empty shows "No trains due".
  * @property {boolean} [loading] - The board hasn't arrived yet: a loading note instead of the list.
  * @property {string} [notice] - Short feedback under the header, already localised, such as "Link copied". It sits in a polite live region.
+ * @property {import('../components/Photo.js').PhotoProps} [photo] - A photo of the station's city, when there is one.
  * @property {{ hover?: { key: string, station: import('./_format.js').ScreenStation } }} [map] - Map stand-in only: a station shown hovered on the web map (key such as 'khanewal').
  */
 /**
@@ -64,10 +65,11 @@ export function StationScreen(data, options = {}) {
       ],
     }),
     notice(data.notice),
+    data.photo ? Photo(data.photo) : '',
     data.loading ? note(t('loading'))
       : section(
         row(fill(SectionHeader({ label: t('nextTrains'), count: rows.length })), StatusChip({ tone: 'neutral', text: t('updated', { ago: age }) })),
-        rows.length ? list(...rows.map(r => boardRow(r, station))) : note(t('noTrainsSoon')),
+        rows.length ? list(...rows.map(r => boardRow(r, station, data.now))) : note(t('noTrainsSoon')),
       ),
   );
 
@@ -77,21 +79,21 @@ export function StationScreen(data, options = {}) {
     label: name,
     snap: 'half',
     map: stationMap({ layout: web ? 'web' : 'phone', selected, ...(hover ? { hover } : {}) }),
-    start: web ? '' : backButton('#/', 'float'),
+    back: { href: '#/', label: t('home') },
     end: web ? mapButton('zoomIn') + mapButton('zoomOut') + mapButton('layers') : '',
     body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: '#/', label: t('home') } }) + panel : panel,
   });
 }
 
 /** One train on the board, linking to its page with this station as the stop. */
-function boardRow(r, station) {
+function boardRow(r, station, now) {
   const { train, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
   const moved = est !== sched;
   let when;
-  if (atPlatform) when = { expected: time(est) };
-  else if (late != null) when = { expected: approx(est) };
-  else when = { expected: time(sched) };
-  if (when.expected !== time(sched) && moved) when.scheduled = time(sched);
+  if (atPlatform) when = { expected: time(est, now) };
+  else if (late != null) when = { expected: approx(est, now) };
+  else when = { expected: time(sched, now) };
+  if (when.expected !== time(sched, now) && moved) when.scheduled = time(sched, now);
 
   let sub;
   if (kind === 'starts') sub = t('startsHereTo', { x: place(dest) });

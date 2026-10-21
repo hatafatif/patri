@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"}]} */
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -24,6 +24,7 @@
     MapToggle: () => MapToggle,
     PageHeader: () => PageHeader,
     Panel: () => Panel,
+    Photo: () => Photo,
     SearchField: () => SearchField,
     SectionHeader: () => SectionHeader,
     SegmentedControl: () => SegmentedControl,
@@ -69,7 +70,7 @@
       groupLive: "Live tracking",
       groupTimetable: "Timetable only",
       tagLive: "Live",
-      tagNoGps: "No GPS",
+      tagNoGps: "Location unavailable",
       runningNow: "Running now \xB7 {n}",
       onTime: "On time",
       underHour: "Under 1 h late",
@@ -109,7 +110,7 @@
       hiddenRuns: "{n} more run hidden: its data looks wrong",
       showAnyway: "Show anyway",
       noLiveRun: "This train has no live run right now.",
-      noGpsTrain: "This train has no GPS, so only its timetable is shown.",
+      noGpsTrain: "This train\u2019s location is unavailable, so only its timetable is shown.",
       yourStop: "Your stop",
       change: "Change",
       arrivesAt: "Arrives ~{time}",
@@ -150,7 +151,7 @@
       leavingNow: "leaving now",
       kmAway: "{km} km away",
       noLivePos: "No live position yet",
-      trainNoGps: "This train has no GPS",
+      trainNoGps: "This train\u2019s location is unavailable",
       startsHere: "Starts here",
       timetable: "Timetable",
       headingTo: "{n} trains heading to {station}",
@@ -201,7 +202,7 @@
       back: "Back",
       running: "Running",
       updated: "Updated {ago}",
-      myTrains: "My trains",
+      myTrains: "Recently checked",
       rightNow: "Right now",
       aboutTrain: "About this train",
       seeAllStops: "See all stops",
@@ -243,7 +244,7 @@
       onTheWay: "Already on the way",
       arrives: "Arrives {time}",
       showWholeRoute: "Show the whole route",
-      lastPassed: "Last stop",
+      lastPassed: "Just passed",
       finalStop: "Final stop",
       halt: "{d} halt",
       seeAllStopsN: "See all {n} stops",
@@ -265,7 +266,8 @@
       toStation: "To {x}",
       startsHereTo: "Starts here \u2192 {x}",
       clickForStation: "Click for station",
-      mapStations: "Map of railway stations, with major cities labelled",
+      mapStations: "Map of railway stations and running trains, with major cities labelled",
+      clickForTrain: "Click for train",
       mapFollowing: "Map following {train}",
       mapAround: "Map around {station}",
       // The Sabz app (views, component variants)
@@ -286,7 +288,18 @@
       whichRun: "Which run",
       pickStopHint: "Tap the station where you get on or off.",
       timetableTimes: "Times are from the timetable.",
-      loadFailed: "Couldn\u2019t load this. Trying again\u2026"
+      loadFailed: "Couldn\u2019t load this. Trying again\u2026",
+      // Right now rows, days on times, photos
+      startedFrom: "Started from",
+      startsFrom: "Starts from",
+      kmAwayNow: "{km} km away \xB7 {speed} km/h now",
+      plannedAt: "Planned {time}",
+      yesterday: "Yesterday",
+      dayTime: "{day} {time}",
+      timeOnDay: "{time} {day}",
+      nextDay: "next day",
+      dayN: "day {n}",
+      photoBy: "Photo: {author} \xB7 {licence}"
     },
     ur: {
       appTitle: "\u067E\u0679\u0691\u06CC",
@@ -304,7 +317,7 @@
       groupLive: "\u0644\u0627\u0626\u06CC\u0648 \u0679\u0631\u06CC\u06A9\u0646\u06AF",
       groupTimetable: "\u0635\u0631\u0641 \u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644",
       tagLive: "\u0644\u0627\u0626\u06CC\u0648",
-      tagNoGps: "\u062C\u06CC \u067E\u06CC \u0627\u06CC\u0633 \u0646\u06C1\u06CC\u06BA",
+      tagNoGps: "\u0645\u0642\u0627\u0645 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA",
       runningNow: "\u0627\u0633 \u0648\u0642\u062A \u0631\u0648\u0627\u06BA \xB7 {n}",
       onTime: "\u0628\u0631\u0648\u0642\u062A",
       underHour: "\u0627\u06CC\u06A9 \u06AF\u06BE\u0646\u0679\u06D2 \u0633\u06D2 \u06A9\u0645 \u062A\u0627\u062E\u06CC\u0631",
@@ -344,7 +357,7 @@
       hiddenRuns: "{n} \u0645\u0632\u06CC\u062F \u0633\u0641\u0631 \u0686\u06BE\u067E\u0627\u06CC\u0627 \u06AF\u06CC\u0627: \u0688\u06CC\u0679\u0627 \u062F\u0631\u0633\u062A \u0646\u06C1\u06CC\u06BA \u0644\u06AF\u062A\u0627",
       showAnyway: "\u067E\u06BE\u0631 \u0628\u06BE\u06CC \u062F\u06A9\u06BE\u0627\u0626\u06CC\u06BA",
       noLiveRun: "\u06CC\u06C1 \u0679\u0631\u06CC\u0646 \u0627\u0633 \u0648\u0642\u062A \u0644\u0627\u0626\u06CC\u0648 \u0646\u06C1\u06CC\u06BA \u0686\u0644 \u0631\u06C1\u06CC\u06D4",
-      noGpsTrain: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u0645\u06CC\u06BA \u062C\u06CC \u067E\u06CC \u0627\u06CC\u0633 \u0646\u06C1\u06CC\u06BA\u060C \u0635\u0631\u0641 \u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644 \u062F\u0633\u062A\u06CC\u0627\u0628 \u06C1\u06D2\u06D4",
+      noGpsTrain: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u0645\u0642\u0627\u0645 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA\u060C \u0627\u0633 \u0644\u06CC\u06D2 \u0635\u0631\u0641 \u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644 \u062F\u06A9\u06BE\u0627\u06CC\u0627 \u06AF\u06CC\u0627 \u06C1\u06D2\u06D4",
       yourStop: "\u0622\u067E \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
       change: "\u062A\u0628\u062F\u06CC\u0644 \u06A9\u0631\u06CC\u06BA",
       arrivesAt: "\u062A\u0642\u0631\u06CC\u0628\u0627\u064B {time} \u067E\u06C1\u0646\u0686\u06D2 \u06AF\u06CC",
@@ -385,7 +398,7 @@
       leavingNow: "\u0631\u0648\u0627\u0646\u06C1 \u06C1\u0648 \u0631\u06C1\u06CC \u06C1\u06D2",
       kmAway: "{km} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631 \u062F\u0648\u0631",
       noLivePos: "\u0627\u0628\u06BE\u06CC \u0644\u0627\u0626\u06CC\u0648 \u0645\u0642\u0627\u0645 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA",
-      trainNoGps: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u0645\u06CC\u06BA \u062C\u06CC \u067E\u06CC \u0627\u06CC\u0633 \u0646\u06C1\u06CC\u06BA",
+      trainNoGps: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u0645\u0642\u0627\u0645 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA",
       startsHere: "\u06CC\u06C1\u0627\u06BA \u0633\u06D2 \u0634\u0631\u0648\u0639",
       timetable: "\u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644",
       headingTo: "{n} \u0679\u0631\u06CC\u0646\u06CC\u06BA {station} \u06A9\u06CC \u0637\u0631\u0641",
@@ -436,7 +449,7 @@
       back: "\u0648\u0627\u067E\u0633",
       running: "\u0631\u0648\u0627\u06BA",
       updated: "{ago} \u0627\u067E \u0688\u06CC\u0679 \u06C1\u0648\u0627",
-      myTrains: "\u0645\u06CC\u0631\u06CC \u0679\u0631\u06CC\u0646\u06CC\u06BA",
+      myTrains: "\u062D\u0627\u0644 \u06C1\u06CC \u0645\u06CC\u06BA \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC \u0679\u0631\u06CC\u0646\u06CC\u06BA",
       rightNow: "\u0627\u0628\u06BE\u06CC",
       aboutTrain: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u06D2 \u0628\u0627\u0631\u06D2 \u0645\u06CC\u06BA",
       seeAllStops: "\u062A\u0645\u0627\u0645 \u0627\u0633\u0679\u06CC\u0634\u0646 \u062F\u06CC\u06A9\u06BE\u06CC\u06BA",
@@ -500,7 +513,8 @@
       toStation: "{x} \u06A9\u06CC \u0637\u0631\u0641",
       startsHereTo: "\u06CC\u06C1\u0627\u06BA \u0633\u06D2 \u0634\u0631\u0648\u0639 \u2190 {x}",
       clickForStation: "\u0627\u0633\u0679\u06CC\u0634\u0646 \u062F\u06CC\u06A9\u06BE\u0646\u06D2 \u06A9\u06D2 \u0644\u06CC\u06D2 \u06A9\u0644\u06A9 \u06A9\u0631\u06CC\u06BA",
-      mapStations: "\u0631\u06CC\u0644\u0648\u06D2 \u0627\u0633\u0679\u06CC\u0634\u0646\u0648\u06BA \u06A9\u0627 \u0646\u0642\u0634\u06C1\u060C \u0628\u0691\u06D2 \u0634\u06C1\u0631\u0648\u06BA \u06A9\u06D2 \u0646\u0627\u0645\u0648\u06BA \u06A9\u06D2 \u0633\u0627\u062A\u06BE",
+      mapStations: "\u0631\u06CC\u0644\u0648\u06D2 \u0627\u0633\u0679\u06CC\u0634\u0646\u0648\u06BA \u0627\u0648\u0631 \u0686\u0644\u062A\u06CC \u0679\u0631\u06CC\u0646\u0648\u06BA \u06A9\u0627 \u0646\u0642\u0634\u06C1\u060C \u0628\u0691\u06D2 \u0634\u06C1\u0631\u0648\u06BA \u06A9\u06D2 \u0646\u0627\u0645\u0648\u06BA \u06A9\u06D2 \u0633\u0627\u062A\u06BE",
+      clickForTrain: "\u0679\u0631\u06CC\u0646 \u062F\u06CC\u06A9\u06BE\u0646\u06D2 \u06A9\u06D2 \u0644\u06CC\u06D2 \u06A9\u0644\u06A9 \u06A9\u0631\u06CC\u06BA",
       mapFollowing: "{train} \u06A9\u06D2 \u0633\u0627\u062A\u06BE \u0686\u0644\u062A\u0627 \u0646\u0642\u0634\u06C1",
       mapAround: "{station} \u06A9\u06D2 \u0622\u0633 \u067E\u0627\u0633 \u06A9\u0627 \u0646\u0642\u0634\u06C1",
       // The Sabz app (views, component variants)
@@ -521,7 +535,18 @@
       whichRun: "\u06A9\u0648\u0646 \u0633\u0627 \u0633\u0641\u0631",
       pickStopHint: "\u0648\u06C1 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA \u062C\u06C1\u0627\u06BA \u0622\u067E \u0633\u0648\u0627\u0631 \u06C1\u0648\u06BA \u06AF\u06D2 \u06CC\u0627 \u0627\u062A\u0631\u06CC\u06BA \u06AF\u06D2\u06D4",
       timetableTimes: "\u0627\u0648\u0642\u0627\u062A \u0679\u0627\u0626\u0645 \u0679\u06CC\u0628\u0644 \u06A9\u06D2 \u0645\u0637\u0627\u0628\u0642 \u06C1\u06CC\u06BA\u06D4",
-      loadFailed: "\u0644\u0648\u0688 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u0627\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06C1\u0648 \u0631\u06C1\u06CC \u06C1\u06D2\u2026"
+      loadFailed: "\u0644\u0648\u0688 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u0627\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06C1\u0648 \u0631\u06C1\u06CC \u06C1\u06D2\u2026",
+      // Right now rows, days on times, photos
+      startedFrom: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      startsFrom: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      kmAwayNow: "{km} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631 \u062F\u0648\u0631 \xB7 \u0627\u0628\u06BE\u06CC {speed} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631 \u0641\u06CC \u06AF\u06BE\u0646\u0679\u06C1",
+      plannedAt: "\u0645\u0642\u0631\u0631\u06C1 \u0648\u0642\u062A {time}",
+      yesterday: "\u06AF\u0632\u0634\u062A\u06C1 \u0631\u0648\u0632",
+      dayTime: "{day} {time}",
+      timeOnDay: "{day} {time}",
+      nextDay: "\u0627\u06AF\u0644\u06D2 \u062F\u0646",
+      dayN: "\u062F\u0646 {n}",
+      photoBy: "\u062A\u0635\u0648\u06CC\u0631: {author} \xB7 {licence}"
     }
   };
   var MONTHS = {
@@ -577,6 +602,7 @@
   }
 
   // public/js/components/_shared.js
+  var trainIcon = () => '<svg class="p-train" viewBox="0 0 40 22" aria-hidden="true" focusable="false"><rect class="p-train__roof" x="9" y="2.2" width="8" height="2.2" rx="1"/><path class="p-train__body" d="M5 4h20.5c1.4 0 2.8.6 3.8 1.7l5.6 6.1c.7.8 1.1 1.8 1.1 2.8V16.5H3V6a2 2 0 0 1 2-2z"/><path class="p-train__window" d="M25.2 6.4h.6c.9 0 1.7.4 2.3 1l3.4 3.8h-6.3z"/><rect class="p-train__window" x="6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__window" x="13.6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__stripe" x="3" y="12.2" width="33" height="1.8"/><circle class="p-train__lamp" cx="34.3" cy="15" r="0.9"/><rect class="p-train__frame" x="4" y="16.3" width="31" height="1.6" rx=".8"/><circle class="p-train__wheel" cx="8.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="13.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="25.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="30.5" cy="18.8" r="2.1"/></svg>';
   var icon = {
     train: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 10h14M9 13.5h.01M15 13.5h.01M8 21l2-4M16 21l-2-4"/></svg>',
     station: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
@@ -657,8 +683,9 @@
   }
 
   // public/js/components/Panel.js
-  function Panel({ body: body2 = "", snap = "half", label = "" } = {}) {
-    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button><div class="p-panel__body">${body2}</div></section>`;
+  function Panel({ body: body2 = "", snap = "half", label = "", back } = {}) {
+    const link = back ? `<a class="p-panel__back" href="${esc(back.href)}">${icon.back}<span class="p-panel__backlabel">${esc(back.label)}</span></a>` : "";
+    return `<section class="p-panel" data-snap="${esc(snap)}" aria-label="${esc(label)}"><div class="p-panel__top">${link}<button type="button" class="p-panel__handle" aria-label="${t("panelHandle")}"><span class="p-panel__bar"></span></button></div><div class="p-panel__body">${body2}</div></section>`;
   }
   var SNAPS = ["down", "half", "full"];
   var DOWN_PX = 150;
@@ -960,19 +987,21 @@
 
   // public/js/components/StopTimeline.js
   function StopTimeline({ rows = [], mode = "full", legend = false } = {}) {
-    const full = mode !== "compact";
+    const shape = mode === "compact" || mode === "card" ? mode : "full";
+    const full = shape !== "compact";
     const items = rows.map((row2) => {
-      const { kind = "stop", name, sub, time: time2, countdown, href, change } = row2;
+      const { kind = "stop", name, label: tag, sub, time: time2, countdown, href, change } = row2;
       const label = kind === "more" ? esc(name) : bdi(name);
       const nameEl2 = href ? `<a class="p-stoptimeline__name" href="${esc(href)}">${label}</a>` : `<span class="p-stoptimeline__name">${label}</span>`;
+      const tagEl = tag ? `<span class="p-stoptimeline__label">${bdi(tag)}</span>` : "";
       const subEl = full && sub ? `<span class="p-stoptimeline__sub">${bdi(sub)}</span>` : "";
       const changeEl = change ? Button({ label: t("change"), variant: "link", className: "p-stoptimeline__change" }) : "";
       const timeEl = time2 || countdown ? `<div class="p-stoptimeline__time">${time2?.expected ? `<span class="p-stoptimeline__expected">${bdi(time2.expected)}</span>` : ""}${time2?.scheduled ? `<s class="p-stoptimeline__scheduled"><span class="p-sr">${esc(t("scheduled"))} </span>${bdi(time2.scheduled)}</s>` : ""}${countdown ? `<span class="p-stoptimeline__countdown">${bdi(countdown)}</span>` : ""}</div>` : "";
       const here = kind === "train" ? ' aria-current="location"' : "";
-      return `<li class="p-stoptimeline__row p-stoptimeline__row--${esc(kind)}"${here}><span class="p-stoptimeline__rail" aria-hidden="true"><span class="p-stoptimeline__dot"></span></span><div class="p-stoptimeline__main">${nameEl2}${subEl}${changeEl}</div>${timeEl}</li>`;
+      return `<li class="p-stoptimeline__row p-stoptimeline__row--${esc(kind)}"${here}><span class="p-stoptimeline__rail" aria-hidden="true"><span class="p-stoptimeline__dot"></span></span><div class="p-stoptimeline__main">${tagEl}${nameEl2}${subEl}${changeEl}</div>${timeEl}</li>`;
     });
     const key = legend ? `<li class="p-stoptimeline__legend" aria-hidden="true"><span class="p-stoptimeline__legend-expected">${esc(t("legendExpected"))}</span> \xB7 <s class="p-stoptimeline__legend-scheduled">${esc(t("legendScheduled"))}</s></li>` : "";
-    return `<ol class="${cx("p-stoptimeline", `p-stoptimeline--${full ? "full" : "compact"}`)}">${key}${items.join("")}</ol>`;
+    return `<ol class="${cx("p-stoptimeline", `p-stoptimeline--${shape}`)}">${key}${items.join("")}</ol>`;
   }
   function bindStopTimeline(root, handlers = {}) {
     const onClick = (e) => {
@@ -985,10 +1014,12 @@
   }
 
   // public/js/components/JourneyProgress.js
-  function JourneyProgress({ fraction = 0, start = "", end = "", className } = {}) {
+  function JourneyProgress({ fraction = 0, start = "", end = "", train: train2 = false, moving = false, className } = {}) {
     const f = Math.min(1, Math.max(0, Number(fraction) || 0));
     const pct2 = Math.round(f * 100);
-    return `<div class="${cx("p-journeyprogress", className)}"><div class="p-journeyprogress__track" role="progressbar" aria-label="${esc(t("journeyProgress"))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct2}" aria-valuetext="${esc(end)}"><span class="p-journeyprogress__fill" style="--p:${+(f * 100).toFixed(2)}%"></span></div><div class="p-journeyprogress__labels"><span class="p-journeyprogress__start">${bdi(start)}</span><span class="p-journeyprogress__end">${bdi(end)}</span></div></div>`;
+    const pp = +(f * 100).toFixed(2);
+    const rider = train2 ? `<span class="p-journeyprogress__train" style="--p:${pp}%">${trainIcon()}</span>` : "";
+    return `<div class="${cx("p-journeyprogress", train2 && "p-journeyprogress--train", train2 && moving && "p-journeyprogress--moving", className)}"><div class="p-journeyprogress__track" role="progressbar" aria-label="${esc(t("journeyProgress"))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct2}" aria-valuetext="${esc(end)}"><span class="p-journeyprogress__fill" style="--p:${pp}%"></span>${rider}</div><div class="p-journeyprogress__labels"><span class="p-journeyprogress__start">${bdi(start)}</span><span class="p-journeyprogress__end">${bdi(end)}</span></div></div>`;
   }
 
   // public/js/components/SectionHeader.js
@@ -1081,10 +1112,10 @@
         const ms = x0 + Math.min(Math.max(f, 0), 1) * (x1 - x0);
         let best = points[0];
         for (const p of points) if (Math.abs(p[0] - ms) < Math.abs(best[0] - ms)) best = p;
-        const at2 = (best[0] - x0) / (x1 - x0) * 100;
+        const at3 = (best[0] - x0) / (x1 - x0) * 100;
         cursor.hidden = tip.hidden = false;
-        cursor.style.insetInlineStart = `${at2}%`;
-        tip.style.insetInlineStart = `${Math.min(Math.max(at2, 14), 86)}%`;
+        cursor.style.insetInlineStart = `${at3}%`;
+        tip.style.insetInlineStart = `${Math.min(Math.max(at3, 14), 86)}%`;
         tip.innerHTML = `${bdi(clock(best[0]))} \xB7 ${best[1] > MOVING ? bdi(t("kmh", { n: Math.round(best[1]) })) : esc(t("stopped"))}`;
       };
       const leave = (e) => {
@@ -1108,8 +1139,8 @@
   }
 
   // public/js/components/MapMarkers.js
-  function trainMarker({ label = "" } = {}) {
-    return `<div class="p-trainmarker"><span class="p-trainmarker__dot"></span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+  function trainMarker({ label = "", facing = "right" } = {}) {
+    return `<div class="${cx("p-trainmarker", facing === "left" && "p-trainmarker--left")}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
   }
   function mapLabel({ title = "", sub, kind = "next" } = {}) {
     const k = ["next", "yourstop", "selected", "hover"].includes(kind) ? kind : "next";
@@ -1122,6 +1153,7 @@
       station: { "circle-color": v("map-station"), "circle-radius": 2.5 },
       majorCity: { "circle-color": v("surface"), "circle-stroke-color": v("ink"), "circle-stroke-width": 2, "circle-radius": 5.5 },
       selectedStation: { "circle-color": v("zard-500"), "circle-stroke-color": v("sabz-700"), "circle-stroke-width": 3, "circle-radius": 7 },
+      trainDot: { "circle-color": v("zard-500"), "circle-stroke-color": v("sabz-900"), "circle-stroke-width": 2, "circle-radius": 5 },
       rail: { "line-color": v("map-rail"), "line-width": 1.5 },
       routeDoneCasing: { "line-color": v("surface"), "line-width": 8 },
       routeDone: { "line-color": v("sabz-700"), "line-width": 5 },
@@ -1193,6 +1225,13 @@
     };
   }
 
+  // public/js/components/Photo.js
+  function Photo({ src = "", alt = "", credit = "", href, className } = {}) {
+    const text = bdi(credit);
+    const line = href ? `<a class="p-photo__link" href="${esc(href)}" target="_blank" rel="noopener">${text}</a>` : text;
+    return `<figure class="${cx("p-photo", className)}"><img class="p-photo__img" src="${esc(src)}" alt="${esc(alt)}" width="800" height="450" loading="lazy" decoding="async">${credit ? `<figcaption class="p-photo__credit">${line}</figcaption>` : ""}</figure>`;
+  }
+
   // public/js/screens/index.js
   var screens_exports = {};
   __export(screens_exports, {
@@ -1206,12 +1245,12 @@
   });
 
   // public/js/screens/_layout.js
-  function frame({ name, options = {}, label = "", body: body2 = "", snap = "half", top = "", map = "", start = "", end = "", dock = "" }) {
+  function frame({ name, options = {}, label = "", body: body2 = "", snap = "half", top = "", map = "", start = "", end = "", dock = "", back }) {
     const web = options.layout === "web";
     const expanded = !web && options.expanded;
     const sheetSnap = options.snap || (expanded ? "full" : snap);
     const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top"].filter(Boolean).join(" ");
-    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label })}</div></div>`;
+    return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (start ? `<div class="p-screen__controls p-screen__controls--start">${start}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label, ...!web && back ? { back } : {} })}</div></div>`;
   }
   var join = (parts) => parts.filter(Boolean).join("");
   var body = (...parts) => `<div class="p-screen__body">${join(parts)}</div>`;
@@ -1277,14 +1316,33 @@
   var place2 = (s) => s ? stationName(s.name, s.nameUr) : "";
   var placeEn = (s) => s ? place(s.name) : "";
   var placeUr2 = (s) => clean(s?.nameUr).replace(/[\s,،.]+$/, "");
-  var cityOf = (s) => isUrdu() && s?.cityUr ? s.cityUr : s?.city ? stationName(s.city, "") : place2(s);
+  var cityOf = (s) => isUrdu() ? s?.cityUr || place2(s) : s?.city ? stationName(s.city, "") : place2(s);
   var trainTitle = (train2) => trainName(train2);
   var trainNo = (train2) => `${train2.label ?? train2.number} ${t(train2.up ? "up" : "dn")}`;
   var badgeOf = (train2, size) => ({ number: train2.label ?? String(train2.number), direction: train2.up ? "up" : "dn", ...size ? { size } : {} });
   var route = (a, b) => t("passesFromTo", { a: place2(a), b: place2(b) });
   var ltr = (s) => isUrdu() ? `\u2066${s}\u2069` : s;
-  var time = (min) => ltr(`${clockMin(min)}${min >= 1440 ? ` +${Math.floor(min / 1440)}` : ""}`);
-  var approx = (min) => ltr(`~${time(min)}`);
+  var DAY_MS = 864e5;
+  function dayWord(diff) {
+    if (diff === -1) return t("yesterday");
+    if (diff === 0) return t("today");
+    if (diff === 1) return t("tomorrow");
+    const wd = new Date(Date.now() + 5 * 36e5 + diff * DAY_MS).getUTCDay();
+    return t(`wd${wd}`);
+  }
+  function at(min, now, mark, always) {
+    const clock2 = ltr(`${mark}${clockMin(min)}`);
+    if (now == null) {
+      const n = Math.floor(min / 1440);
+      return n <= 0 ? clock2 : t("timeOnDay", { time: clock2, day: n === 1 ? t("nextDay") : t("dayN", { n: n + 1 }) });
+    }
+    const diff = Math.floor(min / 1440) - Math.floor(now / 1440);
+    return diff === 0 && !always ? clock2 : t("dayTime", { day: dayWord(diff), time: clock2 });
+  }
+  var time = (min, now) => at(min, now, "", false);
+  var approx = (min, now) => at(min, now, "~", false);
+  var dayTime = (min, now) => at(min, now, "", true);
+  var dayApprox = (min, now) => at(min, now, "~", true);
   var kmNum = (n) => Math.round(n).toLocaleString("en-US");
   var km = (n) => t("km", { n: kmNum(n) });
   function dateLabel(iso) {
@@ -1431,7 +1489,7 @@
     }
   };
   var pct = (v, total) => `${+(v / total * 100).toFixed(3)}%`;
-  var at = (x, y, w, h) => `left:${pct(x, w)};top:${pct(y, h)}`;
+  var at2 = (x, y, w, h) => `left:${pct(x, w)};top:${pct(y, h)}`;
   var d = (pts) => pts.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join(" ");
   var dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
   var near = (p, list2, r) => list2.some((q) => dist(p, q) < r);
@@ -1453,27 +1511,24 @@
     }
     return out;
   }
-  var dotEl = (cls, [x, y], w, h) => `<span class="p-mapstandin__dot ${cls}" style="${at(x, y, w, h)}"></span>`;
+  var dotEl = (cls, [x, y], w, h) => `<span class="p-mapstandin__dot ${cls}" style="${at2(x, y, w, h)}"></span>`;
   var rtl = () => isUrdu() ? "rtl" : "ltr";
   function nameEl(key, [x, y], side, major, w, h) {
     const [en, ur] = NAMES[key];
     const cls = ["p-mapstandin__at", `p-mapstandin__at--${side}`, "p-mapstandin__name", major ? "p-mapstandin__name--major" : "", isUrdu() ? "p-mapstandin__name--ur" : ""].filter(Boolean).join(" ");
-    return `<span class="${cls}" style="${at(x, y, w, h)}">${esc(isUrdu() ? ur : en)}</span>`;
+    return `<span class="${cls}" style="${at2(x, y, w, h)}">${esc(isUrdu() ? ur : en)}</span>`;
   }
   function pin(kind, text, [x, y], side, w, h, wide = false) {
-    return `<div class="p-mapstandin__at p-mapstandin__at--${side} p-mapstandin__pin${wide ? " p-mapstandin__pin--wide" : ""}" dir="${rtl()}" style="${at(x, y, w, h)}">${mapLabel({ kind, title: text.title, sub: text.sub })}</div>`;
+    return `<div class="p-mapstandin__at p-mapstandin__at--${side} p-mapstandin__pin${wide ? " p-mapstandin__pin--wide" : ""}" dir="${rtl()}" style="${at2(x, y, w, h)}">${mapLabel({ kind, title: text.title, sub: text.sub })}</div>`;
   }
   function shell(mode, w, h, label, body2) {
     return `<div class="p-mapstandin p-mapstandin--${mode}"><div class="p-mapstandin__box" style="--w:${w};--h:${h}"><svg class="p-mapstandin__svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)}">${body2.svg}</svg><div class="p-mapstandin__layer" aria-hidden="true">${body2.layer}</div>${body2.cards || ""}</div></div>`;
   }
   function countryMap({ layout = "phone", hover } = {}) {
     const { w, h } = COUNTRY;
-    const majors = COUNTRY.places.map((p) => [p[1], p[2]]);
-    const named = [...COUNTRY.stations, ...majors];
-    const extra = along(COUNTRY.rails, COUNTRY.step, named, 7);
     const hov = hover && COUNTRY.places.find((p) => p[0] === hover.key);
     const svg = `<path class="p-mapstandin__sea" d="${COUNTRY.sea}"/><path class="p-mapstandin__border" d="${COUNTRY.border}"/>` + COUNTRY.rails.map((r) => `<path class="p-mapstandin__rail" d="${d(r)}"/>`).join("");
-    const layer = [...COUNTRY.stations, ...extra].map((p) => dotEl("p-mapstandin__dot--station", p, w, h)).join("") + COUNTRY.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--city", [x, y], w, h)).join("") + COUNTRY.places.filter((p) => p !== hov).map(([k, x, y, side]) => nameEl(k, [x, y], side, true, w, h)).join("");
+    const layer = COUNTRY.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--city", [x, y], w, h)).join("") + COUNTRY.places.filter((p) => p !== hov).map(([k, x, y, side]) => nameEl(k, [x, y], side, true, w, h)).join("");
     const cards2 = hov ? pin("hover", hover, [hov[1], hov[2]], hov[5], w, h) : "";
     return shell("country", w, h, t("mapStations"), { svg, layer, cards: cards2 });
   }
@@ -1485,7 +1540,7 @@
     const svg = g.rails.map((r) => `<path class="p-mapstandin__rail" d="${d(r)}"/>`).join("") + `<path class="p-mapstandin__route-casing" d="${d(done)}"/><path class="p-mapstandin__route-done" d="${d(done)}"/><path class="p-mapstandin__route-ahead" d="${d(ahead)}"/>`;
     const showStop = yourStop && g.bahawalpur;
     const layer = g.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--station p-mapstandin__dot--onroute", [x, y], w, h)).join("") + dotEl("p-mapstandin__dot--city", g.multan, w, h) + (showStop ? dotEl("p-mapstandin__dot--station p-mapstandin__dot--onroute", g.bahawalpur, w, h) : "") + g.places.map(([k, x, y, side]) => nameEl(k, [x, y], side, false, w, h)).join("");
-    const cards2 = pin("next", next, g.multan, g.multanSide, w, h) + (showStop ? pin("yourstop", yourStop, g.bahawalpur, "e", w, h) : "") + `<div class="p-mapstandin__train" dir="ltr" style="${at(here[0], here[1], w, h)}">${trainMarker({ label: train2.label })}</div>`;
+    const cards2 = pin("next", next, g.multan, g.multanSide, w, h) + (showStop ? pin("yourstop", yourStop, g.bahawalpur, "e", w, h) : "") + `<div class="p-mapstandin__train" dir="ltr" style="${at2(here[0], here[1], w, h)}">${trainMarker({ label: train2.label })}</div>`;
     return shell("zoom", w, h, t("mapFollowing", { train: train2.label }), { svg, layer, cards: cards2 });
   }
   function stationMap({ layout = "phone", selected = { title: "" }, hover } = {}) {
@@ -1674,16 +1729,17 @@
     const ests2 = data.ests || [];
     const progress = run && data.progress ? data.progress : { passedIdx: -1, nextIdx: -1, kmDone: 0, kmToNext: 0 };
     const now = data.now ?? 0;
+    const ref = run && data.now != null ? data.now : void 0;
     const first = stops[0], last = stops.at(-1);
     const { nextIdx, passedIdx } = progress;
     const mineIdx = data.myStop ? stops.findIndex((s) => s.id === data.myStop) : -1;
     const est = (i) => ests2[i]?.est != null && !ests2[i].passed ? ests2[i].est : null;
     const inTime = (i) => est(i) != null ? t("inTime", { d: dur(est(i) - now) }) : "";
-    const exp = (i) => est(i) != null ? { expected: approx(est(i)) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i])) } : void 0;
+    const exp = (i) => est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : void 0;
     const both = (i) => {
       const sched = schedOf(stops[i]);
       if (est(i) == null) return exp(i);
-      return { expected: approx(est(i)), ...sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched) } : {} };
+      return { expected: approx(est(i), ref), ...sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched, ref) } : {} };
     };
     const trainText = (full) => {
       const st = run?.status;
@@ -1705,6 +1761,7 @@
       mineIdx,
       est,
       now,
+      ref,
       run,
       progress,
       stops,
@@ -1726,7 +1783,7 @@
     const d2 = derive(data);
     if (!data.run || !d2.next || !d2.prev) return "";
     const train2 = { label: `${trainNo(data.train)} \xB7 ${t("kmh", { n: data.run.speed })}` };
-    const when = d2.est(d2.nextIdx) != null ? approx(d2.est(d2.nextIdx)) : "";
+    const when = d2.est(d2.nextIdx) != null ? approx(d2.est(d2.nextIdx), d2.ref) : "";
     const join2 = (...p) => p.filter(Boolean).join(" \xB7 ");
     if (layout !== "web") {
       return trainMap({ layout, train: train2, next: { title: place2(d2.next), sub: join2(when, km(d2.progress.kmToNext)) } });
@@ -1735,7 +1792,7 @@
       layout,
       train: train2,
       next: { title: place2(d2.next), sub: join2(when, d2.inTime(d2.nextIdx), km(d2.progress.kmToNext)) },
-      ...d2.mine && d2.mineIdx > d2.nextIdx && d2.est(d2.mineIdx) != null ? { yourStop: { title: place2(d2.mine), sub: `${t("yourStop")} \xB7 ${approx(d2.est(d2.mineIdx))}` } } : {}
+      ...d2.mine && d2.mineIdx > d2.nextIdx && d2.est(d2.mineIdx) != null ? { yourStop: { title: place2(d2.mine), sub: `${t("yourStop")} \xB7 ${approx(d2.est(d2.mineIdx), d2.ref)}` } } : {}
     });
   }
   function speedCard(data) {
@@ -1752,38 +1809,63 @@
     });
   }
   function timelineRows(data, d2) {
-    const { train: train2 } = data;
-    const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress } = d2;
+    const { train: train2, run } = data;
+    const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d2;
     const stopsHref = `#/train/${train2.number}/stops`;
+    const join2 = (...p) => p.filter(Boolean).join(" \xB7 ");
+    const passedAt = (i) => data.ests?.[i]?.at ?? d2.schedOf(stops[i]);
+    const behind = (i) => passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {};
+    const ahead = (i) => {
+      const e = d2.est(i), s = d2.schedOf(stops[i]);
+      const expected = e != null ? dayApprox(e, ref) : s != null ? dayTime(s, ref) : null;
+      return { ...expected ? { time: { expected } } : {}, ...d2.inTime(i) ? { countdown: d2.inTime(i) } : {} };
+    };
+    const planned = (i) => {
+      const e = d2.est(i), s = d2.schedOf(stops[i]);
+      return e != null && s != null && Math.round(e) !== s ? t("plannedAt", { time: time(s, ref) }) : "";
+    };
+    const moving = run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind);
+    const away = moving ? t("kmAwayNow", { km: kmNum(progress.kmToNext), speed: run.speed }) : t("kmAway", { km: kmNum(progress.kmToNext) });
     const rows = [];
-    let tail = passedIdx;
-    if (passedIdx >= 0) {
-      rows.push({ kind: "passed", name: place2(d2.prev), sub: t("lastPassed"), ...d2.schedOf(d2.prev) != null ? { time: { expected: time(d2.schedOf(d2.prev)) } } : {} });
+    if (run.status?.kind === "done" || passedIdx >= lastIdx) {
+      rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
+      rows.push({ kind: "final", label: t("lastStop"), name: place2(d2.last), ...behind(lastIdx) });
+      return rows;
     }
-    rows.push({ kind: "train", name: d2.trainText(false) });
-    if (nextIdx >= 0) {
+    if (passedIdx >= 0) rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
+    else rows.push({ kind: "next", label: t("startsFrom"), name: place2(d2.first), ...ahead(0) });
+    let tail = 0;
+    if (passedIdx > 0) {
+      rows.push({ kind: "passed", label: t("lastPassed"), name: place2(d2.prev), ...behind(passedIdx) });
+      tail = passedIdx;
+    }
+    if (nextIdx > 0 && nextIdx < lastIdx) {
       const mineNext = nextIdx === mineIdx;
-      const lastNext = nextIdx === lastIdx;
-      const sub = mineNext ? t("yourStop") : lastNext ? t("finalStop") : d2.nextHalt ? `${t("nextStop")} \xB7 ${t("halt", { d: dur(d2.nextHalt) })}` : t("nextStop");
       rows.push({
-        kind: mineNext ? "yourstop" : lastNext ? "final" : "next",
+        kind: mineNext ? "yourstop" : "next",
+        label: t(mineNext ? "yourStop" : "nextStop"),
         name: place2(d2.next),
-        sub,
-        time: lastNext && !mineNext ? d2.both(nextIdx) : d2.exp(nextIdx),
-        countdown: d2.inTime(nextIdx) || void 0,
+        sub: join2(away, d2.nextHalt ? t("halt", { d: dur(d2.nextHalt) }) : ""),
+        ...ahead(nextIdx),
         ...mineNext ? { change: true } : {}
       });
       tail = nextIdx;
     }
-    if (mineIdx > tail) {
-      rows.push({ kind: "yourstop", name: place2(d2.mine), sub: t("yourStop"), time: d2.exp(mineIdx), countdown: d2.inTime(mineIdx) || void 0, change: true });
+    if (mineIdx > tail && mineIdx < lastIdx) {
+      rows.push({ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), ...ahead(mineIdx), change: true });
       tail = mineIdx;
     }
-    if (lastIdx > tail) {
-      const more = lastIdx - tail - 1;
-      if (more > 0) rows.push({ kind: "more", name: t("moreStops", { n: more }), href: stopsHref });
-      rows.push({ kind: "final", name: place2(d2.last), sub: t("finalStop"), time: d2.both(lastIdx) });
-    }
+    const more = lastIdx - tail - 1;
+    if (more > 0) rows.push({ kind: "more", name: t("moreStops", { n: more }), href: stopsHref });
+    const mineLast = mineIdx === lastIdx;
+    rows.push({
+      kind: mineLast ? "yourstop" : "final",
+      label: mineLast ? `${t("yourStop")} \xB7 ${t("lastStop")}` : t("lastStop"),
+      name: place2(d2.last),
+      sub: join2(nextIdx === lastIdx ? away : "", planned(lastIdx)),
+      ...ahead(lastIdx),
+      ...mineLast ? { change: true } : {}
+    });
     return rows;
   }
   function runningText(run, d2) {
@@ -1805,9 +1887,9 @@
       );
     }
     if (run && d2.mineIdx <= d2.passedIdx) {
-      const at2 = data.ests?.[d2.mineIdx]?.at ?? (d2.schedOf(d2.mine) != null ? d2.schedOf(d2.mine) + run.late : null);
+      const at3 = data.ests?.[d2.mineIdx]?.at ?? (d2.schedOf(d2.mine) != null ? d2.schedOf(d2.mine) + run.late : null);
       return row(
-        fill(note(at2 != null ? t("passedYourStop", { time: time(at2) }) : `${t("yourStop")} \xB7 ${place2(d2.mine)}`)),
+        fill(note(at3 != null ? t("passedYourStop", { time: time(at3, d2.ref) }) : `${t("yourStop")} \xB7 ${place2(d2.mine)}`)),
         Button({ label: t("change"), href: pickHref, variant: "link" })
       );
     }
@@ -1820,7 +1902,7 @@
     const seeAll = Button({ label: t("seeAllStopsN", { n: d2.stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
     if (!run) {
       const gps = data.gps !== false;
-      const mineRow = d2.mine ? StopTimeline({ mode: "compact", rows: [{ kind: "yourstop", name: place2(d2.mine), sub: t("yourStop"), time: d2.exp(d2.mineIdx), change: true }] }) : "";
+      const mineRow = d2.mine ? StopTimeline({ mode: "card", rows: [{ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), time: d2.exp(d2.mineIdx), change: true }] }) : "";
       return Card({
         tone: "key",
         header: t("rightNow"),
@@ -1844,11 +1926,13 @@
           delay: { tone: statusTone(run.late), text: delayText(run.late) },
           updated: t("updated", { ago: ago < 1 ? t("justNow") : t("ago", { d: dur(ago) }) })
         }),
-        StopTimeline({ mode: "compact", rows: timelineRows(data, d2) }),
+        StopTimeline({ mode: "card", rows: timelineRows(data, d2) }),
         JourneyProgress({
           fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, d2.progress.kmDone / d2.totalKm)) : 0,
-          start: d2.passedIdx >= 0 && first.dep != null && run.status?.kind !== "wait" ? t("leftAt", { station: place2(first), time: time(first.dep) }) : place2(first),
-          end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) })
+          start: "",
+          end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) }),
+          train: true,
+          moving: run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind)
         }),
         yourStopPrompt(data, d2),
         seeAll
@@ -1869,7 +1953,7 @@
       { label: t("liveTracking"), value: (run ? run.gps : data.gps !== false) ? t("gps") : t("timetable") }
     ].filter((i) => i.value);
     return cards(
-      Card({ header: t("aboutTrain"), body: DetailGrid({ items }) }),
+      Card({ header: t("aboutTrain"), body: data.photo ? stack(Photo(data.photo), DetailGrid({ items })) : DetailGrid({ items }) }),
       returnTrain ? LinkRow({ href: `#/train/${returnTrain.number}`, eyebrow: t("returnShort"), label: `${trainNo(returnTrain)} ${trainTitle(returnTrain)}` }) : ""
     );
   }
@@ -1917,7 +2001,7 @@
         label,
         snap: "half",
         map,
-        start: backButton("#/", "float"),
+        back: { href: "#/", label: t("home") },
         end: following + wholeRoute,
         body: body(...content, d2.first ? speedCard(data) : "", d2.first ? about(data, d2) : "")
       });
@@ -1954,10 +2038,10 @@
       const change = !pick ? { change: true } : {};
       if (passed) {
         const sched = d2.schedOf(s);
-        const at2 = sched != null ? { time: { expected: time(sched) } } : {};
+        const at3 = sched != null ? { time: { expected: time(sched, d2.ref) } } : {};
         const kmText = i === 0 ? join2(t("start"), km(0)) : i === passedIdx ? join2(km(s.km), t("lastPassed")) : km(s.km);
-        if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...at2, ...change });
-        else out.push({ kind: "passed", name, sub: kmText, ...at2 });
+        if (mine) out.push({ kind: "yourstop", name, sub: join2(t("yourStop"), km(s.km)), ...at3, ...change });
+        else out.push({ kind: "passed", name, sub: kmText, ...at3 });
         if (i === passedIdx) out.push({ kind: "train", name: d2.trainText(true) });
         return;
       }
@@ -1978,9 +2062,8 @@
     const title = pick ? t("chooseStop") : t("allStopsN", { n: stops.length });
     const header2 = PageHeader({
       title,
-      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`,
-      // On the web the AppBar's back link goes to the train, so the header has no back of its own.
-      actions: web ? [] : [{ kind: "back", href: `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, label: t("back") }]
+      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
+      // No back of its own: the Panel's top bar (phone) or the AppBar (web) links back to the train.
     });
     const content = body(
       header2,
@@ -1994,7 +2077,15 @@
     );
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     if (!web) {
-      return frame({ name: "stops", options, snap: "full", label: title, map, body: content });
+      return frame({
+        name: "stops",
+        options,
+        snap: "full",
+        label: title,
+        map,
+        body: content,
+        back: { href: `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, label: t("back") }
+      });
     }
     return frame({
       name: "stops",
@@ -2026,9 +2117,10 @@
         ]
       }),
       notice(data.notice),
+      data.photo ? Photo(data.photo) : "",
       data.loading ? note(t("loading")) : section(
         row(fill(SectionHeader({ label: t("nextTrains"), count: rows.length })), StatusChip({ tone: "neutral", text: t("updated", { ago: age }) })),
-        rows.length ? list(...rows.map((r) => boardRow(r, station2))) : note(t("noTrainsSoon"))
+        rows.length ? list(...rows.map((r) => boardRow(r, station2, data.now))) : note(t("noTrainsSoon"))
       )
     );
     return frame({
@@ -2037,19 +2129,19 @@
       label: name,
       snap: "half",
       map: stationMap({ layout: web ? "web" : "phone", selected, ...hover ? { hover } : {} }),
-      start: web ? "" : backButton("#/", "float"),
+      back: { href: "#/", label: t("home") },
       end: web ? mapButton("zoomIn") + mapButton("zoomOut") + mapButton("layers") : "",
       body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + panel : panel
     });
   }
-  function boardRow(r, station2) {
+  function boardRow(r, station2, now) {
     const { train: train2, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
     const moved = est !== sched;
     let when;
-    if (atPlatform) when = { expected: time(est) };
-    else if (late != null) when = { expected: approx(est) };
-    else when = { expected: time(sched) };
-    if (when.expected !== time(sched) && moved) when.scheduled = time(sched);
+    if (atPlatform) when = { expected: time(est, now) };
+    else if (late != null) when = { expected: approx(est, now) };
+    else when = { expected: time(sched, now) };
+    if (when.expected !== time(sched, now) && moved) when.scheduled = time(sched, now);
     let sub;
     if (kind === "starts") sub = t("startsHereTo", { x: place2(dest) });
     else if (kind === "ends") sub = t("arrivesFrom", { x: place2(origin) });

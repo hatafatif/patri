@@ -120,7 +120,7 @@
   font: var(--t-caption);
   letter-spacing: var(--t-caption-tracking);
 }
-[lang="ur"] .p-screen__note { font: var(--t-urdu-label); letter-spacing: normal; }
+[lang="ur"] .p-screen__note { font: var(--t-urdu-caption); letter-spacing: normal; }
 
 /* ---------- The live app ---------- */
 /* MapLibre's container, moved into the backdrop of whichever screen is showing (public/js/app.js). */

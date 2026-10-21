@@ -35,7 +35,7 @@ function rowsOf(data, d) {
     const change = !pick ? { change: true } : {};
     if (passed) {
       const sched = d.schedOf(s);
-      const at = sched != null ? { time: { expected: time(sched) } } : {};
+      const at = sched != null ? { time: { expected: time(sched, d.ref) } } : {};
       const kmText = i === 0 ? join(t('start'), km(0)) : i === passedIdx ? join(km(s.km), t('lastPassed')) : km(s.km);
       if (mine) out.push({ kind: 'yourstop', name, sub: join(t('yourStop'), km(s.km)), ...at, ...change });
       else out.push({ kind: 'passed', name, sub: kmText, ...at });
@@ -66,8 +66,7 @@ export function StopsScreen(data, options = {}) {
   const header = PageHeader({
     title,
     subtitle: d.first ? `${trainNo(train)} ${trainTitle(train)} · ${route(d.first, d.last)}` : `${trainNo(train)} ${trainTitle(train)}`,
-    // On the web the AppBar's back link goes to the train, so the header has no back of its own.
-    actions: web ? [] : [{ kind: 'back', href: `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, label: t('back') }],
+    // No back of its own: the Panel's top bar (phone) or the AppBar (web) links back to the train.
   });
   const content = body(
     header,
@@ -81,7 +80,8 @@ export function StopsScreen(data, options = {}) {
   );
   const map = options.standin === false ? '' : trainMapFor(data, web ? 'web' : 'phone');
   if (!web) {
-    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content });
+    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content,
+      back: { href: `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, label: t('back') } });
   }
   return frame({
     name: 'stops', options, snap: 'full', label: title,
