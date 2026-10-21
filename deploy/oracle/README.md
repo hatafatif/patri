@@ -139,6 +139,46 @@ The recorder also sends push notifications (a train left, is about to reach your
 - **Data.** Watches and sent messages live in `trains.db` (tables `watches` and `sent`). A watch expires 3 days after it is created, or 12 hours after the train arrives, and is removed when the push service answers 404 or 410. Limits: 10 watches per device, 5000 in total.
 - **Local testing.** Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (for example from `node -e "console.log(require('web-push').generateVAPIDKeys())"`) before `npm start`.
 
+## Automatic deploys (GitHub Actions)
+
+`.github/workflows/deploy-monitor.yml` runs `deploy.sh` for you whenever server files change on `main` (server.js, lib.js, data.js, store.js, routes.js, archive.js, alerts.js, push.js, package.json, package-lock.json, `deploy/oracle/**`, or the workflow itself). It can also be started by hand from the Actions tab on any branch. It has no pull request trigger, so forks never see the secrets. The repository is public and so are the logs: nothing secret is printed, and in CI the script never prints `RECORDER_KEY`.
+
+The first-ever deploy must still be done from your PC (section 6): it creates `/etc/patri/recorder.env`. In CI the script stops with a clear message if that file is missing.
+
+Setup, once, on your PC:
+
+1. Make a dedicated key:
+   ```
+   ssh-keygen -t ed25519 -N "" -C "github-actions-patri" -f ~/.ssh/patri-gh-deploy
+   ```
+2. Authorise it on the VM (either one):
+   ```
+   ssh-copy-id -i ~/.ssh/patri-gh-deploy.pub hataf-oracle
+   cat ~/.ssh/patri-gh-deploy.pub | ssh hataf-oracle 'cat >> ~/.ssh/authorized_keys'
+   ```
+3. Pin the host key, and check it is really the VM's:
+   ```
+   ssh-keyscan -t ed25519 vm.hataf.dev > /tmp/vm_known_hosts
+   ssh-keygen -lf /tmp/vm_known_hosts
+   ssh hataf-oracle 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub'
+   ```
+   The two fingerprints (the `SHA256:...` part) must be identical.
+4. Add the secrets without printing them:
+   ```
+   gh secret set VM_SSH_KEY < ~/.ssh/patri-gh-deploy
+   gh secret set VM_KNOWN_HOSTS < /tmp/vm_known_hosts
+   gh variable set VM_HOST --body vm.hataf.dev
+   ```
+   Optional: `gh variable set MONITOR_HOSTNAME --body patri-monitor.hataf.dev` (that is the default).
+5. Test it:
+   ```
+   gh workflow run deploy-monitor.yml --ref main
+   gh run watch
+   ```
+6. To revoke: remove the key's line (the one ending `github-actions-patri`) from `~/.ssh/authorized_keys` on the VM, and delete the secret with `gh secret delete VM_SSH_KEY`.
+
+Order of changes: if a Vercel change needs a newer recorder, deploy the VM first (merge to main and let the workflow finish), or merge both together.
+
 ## Shared machine
 
 Each project on the VM gets its own:

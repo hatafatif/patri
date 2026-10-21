@@ -21,7 +21,13 @@ if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [ "$PORT" -lt 1 ] || [ "$PORT" -gt 65535 ]; th
   echo "Port must be a number from 1 to 65535: $PORT" >&2; exit 1
 fi
 URL="https://$HOSTNAME_PUBLIC"
-SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
+# Local runs trust a new host on first sight. In CI (CI=true) never: the pinned
+# known_hosts and ~/.ssh/config (StrictHostKeyChecking yes) decide, and nothing may prompt.
+if [ "${CI:-}" = "true" ]; then
+  SSH_OPTS=(-o BatchMode=yes)
+else
+  SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
+fi
 run() { ssh "${SSH_OPTS[@]}" "$TARGET" "$@"; }
 
 echo "==> Checking SSH to $TARGET"
@@ -38,6 +44,9 @@ echo "==> Creating /etc/patri/recorder.env (first run only)"
 NEW_KEY=""
 if run 'sudo test -f /etc/patri/recorder.env'; then
   echo "Already exists, keeping it."
+elif [ "${CI:-}" = "true" ]; then
+  echo "First deploy must be run from your PC: it creates /etc/patri/recorder.env (the secrets file). CI never reads .env." >&2
+  exit 1
 else
   API_KEY="$(grep -E '^PAKRAIL_API_KEY=' .env 2>/dev/null | head -1 | cut -d= -f2- || true)"
   [ -n "$API_KEY" ] || { echo "PAKRAIL_API_KEY is missing from .env on this PC." >&2; exit 1; }
@@ -72,7 +81,7 @@ echo "==> Restarting the recorder"
 run 'sudo systemctl restart patri-recorder'
 
 echo
-if [ -n "$NEW_KEY" ]; then
+if [ -n "$NEW_KEY" ] && [ "${CI:-}" != "true" ]; then
   echo "Add these to the Vercel project (Production), then redeploy:"
   echo "RECORDER_URL=$URL"
   echo "RECORDER_KEY=$NEW_KEY"
