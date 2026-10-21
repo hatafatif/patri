@@ -2,7 +2,7 @@
 import { t, getLang, dur, delayText } from '../i18n.js';
 import {
   AppBar, PageHeader, Card, StatusChip, StatusStrip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
-  MapToggle, SegmentedControl, statusTone,
+  MapToggle, SegmentedControl, Photo, statusTone,
 } from '../components/index.js';
 import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton } from './_layout.js';
 import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dayTime, dayApprox, dateLabel, delayStatus } from './_format.js';
@@ -30,6 +30,7 @@ import { trainMap } from './_map-standin.js';
  * @property {boolean} followed - Whether the train is in My trains.
  * @property {{ points: [number, number][], stops: { ms: number, id: string }[], now: number, illustrative?: boolean }} [speed] - SpeedChart input: [ms, km/h] samples, the stations passed (by stop id) and now in ms. Needed with a run.
  * @property {{ locomotive?: string }} [details] - Extra facts for About this train.
+ * @property {import('../components/Photo.js').PhotoProps} [photo] - A photo of this train (or a general one) for About this train.
  * @property {import('./_format.js').ScreenTrain} [returnTrain] - The train running the other way.
  * @property {{ id: string, date: string }[]} [runs] - The runs worth choosing between, newest first (two or three). More than one shows a SegmentedControl of links ("Left Sun 18 Oct"), each to #/train/N?run=id.
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
@@ -306,7 +307,7 @@ function about(data, d) {
     { label: t('liveTracking'), value: (run ? run.gps : data.gps !== false) ? t('gps') : t('timetable') },
   ].filter(i => i.value);
   return cards(
-    Card({ header: t('aboutTrain'), body: DetailGrid({ items }) }),
+    Card({ header: t('aboutTrain'), body: data.photo ? stack(Photo(data.photo), DetailGrid({ items })) : DetailGrid({ items }) }),
     returnTrain ? LinkRow({ href: `#/train/${returnTrain.number}`, eyebrow: t('returnShort'), label: `${trainNo(returnTrain)} ${trainTitle(returnTrain)}` }) : '',
   );
 }

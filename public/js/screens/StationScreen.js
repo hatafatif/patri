@@ -1,6 +1,6 @@
 // StationScreen: one station's board, with the map zoomed to it.
 import { t, getLang, dur } from '../i18n.js';
-import { AppBar, PageHeader, SectionHeader, StatusChip, DepartureRow, statusTone } from '../components/index.js';
+import { AppBar, PageHeader, SectionHeader, StatusChip, DepartureRow, Photo, statusTone } from '../components/index.js';
 import { frame, body, section, list, row, fill, note, notice, mapButton, backButton } from './_layout.js';
 import { stationMap } from './_map-standin.js';
 import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus } from './_format.js';
@@ -20,6 +20,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * @property {StationRow[]} rows - The next trains, in expected-time order (never by lateness). Empty shows "No trains due".
  * @property {boolean} [loading] - The board hasn't arrived yet: a loading note instead of the list.
  * @property {string} [notice] - Short feedback under the header, already localised, such as "Link copied". It sits in a polite live region.
+ * @property {import('../components/Photo.js').PhotoProps} [photo] - A photo of the station's city, when there is one.
  * @property {{ hover?: { key: string, station: import('./_format.js').ScreenStation } }} [map] - Map stand-in only: a station shown hovered on the web map (key such as 'khanewal').
  */
 /**
@@ -64,6 +65,7 @@ export function StationScreen(data, options = {}) {
       ],
     }),
     notice(data.notice),
+    data.photo ? Photo(data.photo) : '',
     data.loading ? note(t('loading'))
       : section(
         row(fill(SectionHeader({ label: t('nextTrains'), count: rows.length })), StatusChip({ tone: 'neutral', text: t('updated', { ago: age }) })),

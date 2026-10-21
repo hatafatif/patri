@@ -325,9 +325,9 @@ The app's pages, built from the components above. **Views render their pages thr
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
 | RouteScreen | Search › From → To: trains leaving next and already on the way | phone |
-| TrainScreen | Train page: map following the train, Right now, speed, About, Return | phone, web |
+| TrainScreen | Train page: map following the train, Right now, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen) | phone |
-| StationScreen | Station page: the board of next trains | phone, web |
+| StationScreen | Station page: the board of next trains (a Photo of the city above it when there is one) | phone, web |
 
 - **Library:** each screen has a showcase page in `design-system/components/<Name>Screen[Web]/` (group "Screens").
 - **In-app gallery:** `/screens.html` shows every screen, phone and web, in English and Urdu.
