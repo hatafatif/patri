@@ -4,11 +4,10 @@ import { place } from '../screens/_format.js';
 import { t, pktMidnight } from '../i18n.js';
 import { estimates } from '../eta.js';
 import {
-  state, paint, layout, api, navigate, getStop, followedTrains, recentTrains, stationLabel,
+  state, FRESH_MS, mapTrains, paint, layout, api, navigate, getStop, followedTrains, recentTrains, stationLabel,
 } from '../app.js';
 import * as map from '../map.js';
 
-const FRESH_MS = 3 * 3600e3; // a run not heard from for 3 hours is not running
 const MAX_MINE = 6;
 
 let timer = 0, noticeTimer = 0, notice = '', unfocus = null, mounted = false;
@@ -92,6 +91,7 @@ function say(text) {
 }
 
 function render() {
+  map.setTrains(mapTrains());
   if (!mounted) return;
   clearTimeout(timer);
   timer = 0;
@@ -105,6 +105,7 @@ export default {
     notice = '';
     map.showStations({ key: 'home', stations: state.stations, fit: 'country' });
     map.onStationClick(id => navigate(`#/station/${id}`));
+    map.onTrainClick(n => navigate(`#/train/${n}`));
     // Focusing the search field opens Search, where the typing happens.
     const root = document.getElementById('app');
     const onFocus = e => { if (e.target.closest?.('.p-searchfield__input')) navigate('#/search'); };

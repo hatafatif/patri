@@ -15,9 +15,12 @@
 //                               fly to the station nearest the rider and select it; keep the view when it fails
 //   onUserMove(fn)              the rider dragged, pinched or zoomed the map (Following turns off)
 //   onStationClick(fn(id))      a station dot was tapped
+//   onTrainClick(fn(number))    a running-train dot was tapped
+//   setTrains(list)             [{ number, lat, lon, title }], title already localised; drawn as small yellow dots
+//                               in stations mode only (hover shows the title), empty in train mode
 //   showStations({ key, stations, selected?, fit? })
 //                               stations mode (Home, Search, From → To, Station): every station a small dot, the major
-//                               cities bigger and labelled, selected ids drawn as selected with a mapLabel 'selected'.
+//                               cities bigger and labelled, running trains as small dots, selected ids drawn as selected with a mapLabel 'selected'.
 //                               fit: 'country' | 'selected' | 'keep'; applied only when key changes.
 //   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow })
 //                               train mode (Train page, All stops): the route from the stop coordinates, done solid and
@@ -67,7 +70,7 @@ try {
 let styleInfo = null;
 
 // Overlay data survives a change of base style, which wipes sources and layers.
-const SOURCES = ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected'];
+const SOURCES = ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains'];
 const data = Object.fromEntries(SOURCES.map(id => [id, EMPTY]));
 const put = (id, value) => { data[id] = value; map?.getSource(id)?.setData(value); };
 
@@ -83,7 +86,8 @@ let keyDirty = false; // a key changed and the map has not drawn it yet
 let camera = null; // { type: 'country' | 'selected' | 'route' | 'train' }: what the camera keeps in view
 let userMoved = false, followBroken = false;
 let lastFitSig = '', refitTimer = 0, hasFitted = false;
-let moveHandler = () => {}, clickHandler = () => {};
+let moveHandler = () => {}, clickHandler = () => {}, trainClickHandler = () => {};
+let trainList = [];
 let hovered = null;
 
 export const ready = () => readyPromise;
@@ -238,6 +242,7 @@ async function addOverlays() {
   const fadeIn = ['interpolate', ['linear'], ['zoom'], 7.5, 0, 8.5, 1];
   map.addLayer({ id: 'stations', type: 'circle', source: 'stations', minzoom: 7.5, paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1, 'circle-opacity': fadeIn, 'circle-stroke-opacity': fadeIn } });
   map.addLayer({ id: 'majors', type: 'circle', source: 'majors', paint: { ...p.majorCity, 'circle-radius': grow(4.5, 5.5, 7) } });
+  map.addLayer({ id: 'trains', type: 'circle', source: 'trains', paint: { ...p.trainDot, 'circle-radius': grow(4, 5.5, 7) } });
   if (styleName === 'sabz') {
     // Latin glyphs only; MapLibre can't shape Urdu here, so city labels are English in both languages.
     map.addLayer({
@@ -252,6 +257,7 @@ async function addOverlays() {
   map.addLayer({ id: 'stations-selected', type: 'circle', source: 'stations-selected', paint: p.selectedStation });
   // Invisible and wide, so a finger hits a station.
   map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', minzoom: 8, paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
+  map.addLayer({ id: 'trains-hit', type: 'circle', source: 'trains', paint: { 'circle-radius': 14, 'circle-color': ring, 'circle-opacity': 0 } });
   map.addLayer({ id: 'majors-hit', type: 'circle', source: 'majors', paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
 }
 
@@ -274,12 +280,16 @@ function drawStations() {
   }
   const sel = selectedStations();
   put('stations-selected', points(sel));
+  put('trains', trainPoints());
   put('route-ahead', EMPTY); put('route-done', EMPTY); put('route-stops', EMPTY);
   dropMarkers(slot => slot.startsWith('sel:') || slot === 'hover');
   for (const [slot, m] of markers) if (slot.startsWith('sel:') && !sel.some(s => `sel:${s.id}` === slot)) { m.marker.remove(); markers.delete(slot); }
   for (const s of sel) place(`sel:${s.id}`, [s.lon, s.lat], mapLabel({ title: nameOf(s), kind: 'selected' }), { anchor: 'bottom', offset: [0, -14], z: 3 });
-  if (hovered && sel.some(s => String(s.id) === hovered)) hideHover();
+  if (hovered && sel.some(s => `station:${s.id}` === hovered)) hideHover();
+  if (hovered?.startsWith('train:') && !trainList.some(x => `train:${x.number}` === hovered)) hideHover();
 }
+
+const trainPoints = () => points(trainList.map(sane).filter(Boolean).map(x => ({ ...x, props: { number: String(x.number), title: x.title || '' } })));
 
 const nameClean = s => String(s ?? '').replace(/\s+/g, ' ').trim();
 
@@ -306,12 +316,14 @@ function drawTrain(keyChanged) {
   const cut = pts.filter(s => all.indexOf(s) <= passedIdx);
   const after = pts.filter(s => all.indexOf(s) > passedIdx);
   const pos = located(position) ? { lat: position.lat, lon: position.lon } : null;
+  const nextStop = next && Number.isInteger(next.idx) ? all[next.idx] : null;
+  const facing = pos && nextStop && nextStop.lon < pos.lon ? 'left' : 'right';
   const done = pos ? [...cut, pos] : passedIdx >= 0 ? cut : [];
   const rest = pos ? [pos, ...after] : passedIdx >= 0 ? [...cut.slice(-1), ...after] : pts;
   put('route-done', done.length > 1 ? line(done) : EMPTY);
   put('route-ahead', rest.length > 1 ? line(rest) : EMPTY);
   put('route-stops', points(pts.map(s => ({ ...s, props: { passed: all.indexOf(s) <= passedIdx } }))));
-  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY);
+  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY);
   stationSig = '';
   hideHover();
   dropMarkers(slot => slot === 'train' || slot === 'next' || slot === 'mine');
@@ -326,9 +338,10 @@ function drawTrain(keyChanged) {
   if (pos) {
     const to = [pos.lon, pos.lat];
     const m = markers.get('train');
-    if (!m) { place('train', to, trainMarker({ label: marker || '' }), { anchor: 'center', offset: [0, 0], z: 4, root: true }); trainAt = to; markers.get('train').label = marker || ''; }
+    if (!m) { place('train', to, trainMarker({ label: marker || '', facing }), { anchor: 'center', offset: [0, 0], z: 4, root: true }); trainAt = to; markers.get('train').label = marker || ''; markers.get('train').facing = facing; }
     else {
       if (m.label !== (marker || '')) { m.label = marker || ''; const b = m.marker.getElement().querySelector('.p-trainmarker__label bdi'); if (b) b.textContent = m.label; }
+      if (m.facing !== facing) { m.facing = facing; m.marker.getElement().classList.toggle('p-trainmarker--left', facing === 'left'); }
       moveTrain(to, keyChanged);
     }
   } else dropMarkers(slot => slot !== 'train');
@@ -363,7 +376,7 @@ function sync() {
     drawTrain(keyChanged);
     if (fitPending && !keyChanged) applyCamera(0);
   } else {
-    for (const id of ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected']) put(id, EMPTY);
+    for (const id of ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains']) put(id, EMPTY);
     stationSig = '';
     dropMarkers();
   }
@@ -379,14 +392,15 @@ function hideHover() {
 }
 
 function nearestAt(point) {
-  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['stations-hit', 'majors-hit'] });
+  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['trains-hit', 'stations-hit', 'majors-hit'] });
   let best = null, bd = Infinity;
   for (const f of fs) {
     const p = map.project(f.geometry.coordinates);
     const d = (p.x - point.x) ** 2 + (p.y - point.y) ** 2;
     if (d < bd) { bd = d; best = f; }
   }
-  return best && bd <= 18 * 18 ? best.properties.id : null;
+  if (!best || bd > 18 * 18) return null;
+  return best.layer.id === 'trains-hit' ? { kind: 'train', id: best.properties.number, title: best.properties.title, at: best.geometry.coordinates } : { kind: 'station', id: best.properties.id };
 }
 
 function bindEvents() {
@@ -398,18 +412,24 @@ function bindEvents() {
   });
   map.on('click', e => {
     if (mode !== 'stations') return;
-    const id = nearestAt(e.point);
-    if (id) clickHandler(id);
+    const hit = nearestAt(e.point);
+    if (!hit) return;
+    if (hit.kind === 'train') trainClickHandler(hit.id); else clickHandler(hit.id);
   });
   if (hoverable()) {
     map.on('mousemove', e => {
       if (mode !== 'stations') return;
-      const id = nearestAt(e.point);
-      if (id === hovered) return;
-      if (!id) return hideHover();
-      hovered = id;
+      const hit = nearestAt(e.point);
+      const key = hit && `${hit.kind}:${hit.id}`;
+      if (key === hovered) return;
+      if (!hit) return hideHover();
+      hovered = key;
       map.getCanvas().style.cursor = 'pointer';
-      const s = stationOf(id);
+      if (hit.kind === 'train') {
+        place('hover', hit.at, mapLabel({ title: hit.title, sub: t('clickForTrain'), kind: 'hover' }), { anchor: 'bottom', offset: [0, -12], z: 5 });
+        return;
+      }
+      const id = hit.id, s = stationOf(id);
       if (!s || selectedIds().includes(id)) { const m = markers.get('hover'); if (m) { m.marker.remove(); markers.delete('hover'); } return; }
       place('hover', [s.lon, s.lat], mapLabel({ title: nameOf(s), sub: t('clickForStation'), kind: 'hover' }), { anchor: 'bottom', offset: [0, -12], z: 5 });
     });
@@ -480,6 +500,11 @@ export const baseStyle = () => styleName;
 
 export function onUserMove(fn) { moveHandler = fn || (() => {}); }
 export function onStationClick(fn) { clickHandler = fn || (() => {}); }
+export function onTrainClick(fn) { trainClickHandler = fn || (() => {}); }
+export function setTrains(list) {
+  trainList = Array.isArray(list) ? list : [];
+  if (loaded && mode === 'stations') put('trains', trainPoints());
+}
 
 export async function locate() {
   let pos;

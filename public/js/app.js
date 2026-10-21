@@ -5,6 +5,7 @@ import { trainInfo, stationName } from './names.js';
 import { bindScreen } from './screens/index.js';
 import { paint as paintInto } from './render.js';
 import * as map from './map.js';
+import { trainNo, trainTitle } from './screens/_format.js';
 import home from './views/home.js';
 import search from './views/search.js';
 import trip from './views/trip.js';
@@ -149,6 +150,7 @@ function switchLang(lang) {
 
 // ---- Live positions: polled, since the hosted version has no long-lived connection to stream from.
 // Upstream positions change every 10-30 s, so this loses nothing. Paused while the tab is hidden.
+export const FRESH_MS = 3 * 3600e3; // a run not heard from for 3 hours is not running
 const POLL_MS = 15000;
 let pollTimer = 0, polling = false;
 async function poll() {
@@ -170,6 +172,16 @@ async function poll() {
     polling = false;
     if (!document.hidden) pollTimer = setTimeout(poll, POLL_MS);
   }
+}
+/** Running trains for the map: number, position and a localised title. Never filtered or sorted by lateness. */
+export function mapTrains() {
+  const out = [];
+  for (const r of state.runs.values()) {
+    const info = state.byNumber.get(r.train);
+    if (r.suspect || !info || !(Date.now() - r.updatedAt < FRESH_MS) || !Number.isFinite(r.lat) || !Number.isFinite(r.lon)) continue;
+    out.push({ number: r.train, lat: r.lat, lon: r.lon, title: `${trainNo(info)} ${trainTitle(info)}` });
+  }
+  return out;
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) clearTimeout(pollTimer);
@@ -254,6 +266,7 @@ function route() {
   current?.view.unmount?.();
   map.onUserMove(() => {});
   map.onStationClick(() => {});
+  map.onTrainClick(() => {});
   current = { name: view, view: VIEWS[view], params };
   freshNext = true;
   current.view.mount(params);
