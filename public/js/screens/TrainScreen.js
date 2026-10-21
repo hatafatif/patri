@@ -76,18 +76,20 @@ export function derive(data) {
   const ests = data.ests || [];
   const progress = run && data.progress ? data.progress : { passedIdx: -1, nextIdx: -1, kmDone: 0, kmToNext: 0 };
   const now = data.now ?? 0;
+  // The rider's now, for days on times ("Tomorrow 2:50 AM"); without a run, times count from the first day.
+  const ref = run && data.now != null ? data.now : undefined;
   const first = stops[0], last = stops.at(-1);
   const { nextIdx, passedIdx } = progress;
   const mineIdx = data.myStop ? stops.findIndex(s => s.id === data.myStop) : -1;
   const est = i => (ests[i]?.est != null && !ests[i].passed ? ests[i].est : null);
   const inTime = i => (est(i) != null ? t('inTime', { d: dur(est(i) - now) }) : '');
   /** The expected time alone ("~1:20 PM"), or the scheduled time when there is no estimate. */
-  const exp = i => (est(i) != null ? { expected: approx(est(i)) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i])) } : undefined);
+  const exp = i => (est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : undefined);
   /** Expected and scheduled, the scheduled one struck through when it differs. */
   const both = i => {
     const sched = schedOf(stops[i]);
     if (est(i) == null) return exp(i);
-    return { expected: approx(est(i)), ...(sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched) } : {}) };
+    return { expected: approx(est(i), ref), ...(sched != null && Math.round(est(i)) !== sched ? { scheduled: time(sched, ref) } : {}) };
   };
 
   /** The train's own row on the timeline: where it is, in words that stay true whatever it is doing. */
@@ -105,7 +107,7 @@ export function derive(data) {
   };
 
   return {
-    first, last, nextIdx, passedIdx, mineIdx, est, now, run, progress, stops,
+    first, last, nextIdx, passedIdx, mineIdx, est, now, ref, run, progress, stops,
     lastIdx: stops.length - 1,
     next: stops[nextIdx], prev: stops[passedIdx], mine: mineIdx >= 0 ? stops[mineIdx] : null,
     totalKm: last?.km ?? 0,
@@ -122,7 +124,7 @@ export function trainMapFor(data, layout) {
   const d = derive(data);
   if (!data.run || !d.next || !d.prev) return '';
   const train = { label: `${trainNo(data.train)} · ${t('kmh', { n: data.run.speed })}` };
-  const when = d.est(d.nextIdx) != null ? approx(d.est(d.nextIdx)) : '';
+  const when = d.est(d.nextIdx) != null ? approx(d.est(d.nextIdx), d.ref) : '';
   const join = (...p) => p.filter(Boolean).join(' · ');
   if (layout !== 'web') {
     return trainMap({ layout, train, next: { title: place(d.next), sub: join(when, km(d.progress.kmToNext)) } });
@@ -130,7 +132,7 @@ export function trainMapFor(data, layout) {
   return trainMap({
     layout, train,
     next: { title: place(d.next), sub: join(when, d.inTime(d.nextIdx), km(d.progress.kmToNext)) },
-    ...(d.mine && d.mineIdx > d.nextIdx && d.est(d.mineIdx) != null ? { yourStop: { title: place(d.mine), sub: `${t('yourStop')} · ${approx(d.est(d.mineIdx))}` } } : {}),
+    ...(d.mine && d.mineIdx > d.nextIdx && d.est(d.mineIdx) != null ? { yourStop: { title: place(d.mine), sub: `${t('yourStop')} · ${approx(d.est(d.mineIdx), d.ref)}` } } : {}),
   });
 }
 
@@ -157,7 +159,7 @@ function timelineRows(data, d) {
   const rows = [];
   let tail = passedIdx; // the furthest stop shown so far
   if (passedIdx >= 0) {
-    rows.push({ kind: 'passed', name: place(d.prev), sub: t('lastPassed'), ...(d.schedOf(d.prev) != null ? { time: { expected: time(d.schedOf(d.prev)) } } : {}) });
+    rows.push({ kind: 'passed', name: place(d.prev), sub: t('lastPassed'), ...(d.schedOf(d.prev) != null ? { time: { expected: time(d.schedOf(d.prev), d.ref) } } : {}) });
   }
   rows.push({ kind: 'train', name: d.trainText(false) });
   if (nextIdx >= 0) {
@@ -208,7 +210,7 @@ function yourStopPrompt(data, d) {
   if (run && d.mineIdx <= d.passedIdx) {
     const at = data.ests?.[d.mineIdx]?.at ?? (d.schedOf(d.mine) != null ? d.schedOf(d.mine) + run.late : null);
     return row(
-      fill(note(at != null ? t('passedYourStop', { time: time(at) }) : `${t('yourStop')} · ${place(d.mine)}`)),
+      fill(note(at != null ? t('passedYourStop', { time: time(at, d.ref) }) : `${t('yourStop')} · ${place(d.mine)}`)),
       Button({ label: t('change'), href: pickHref, variant: 'link' }),
     );
   }
@@ -253,7 +255,7 @@ function rightNow(data, d) {
       StopTimeline({ mode: 'compact', rows: timelineRows(data, d) }),
       JourneyProgress({
         fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, d.progress.kmDone / d.totalKm)) : 0,
-        start: d.passedIdx >= 0 && first.dep != null && run.status?.kind !== 'wait' ? t('leftAt', { station: place(first), time: time(first.dep) }) : place(first),
+        start: d.passedIdx >= 0 && first.dep != null && run.status?.kind !== 'wait' ? t('leftAt', { station: place(first), time: time(first.dep, d.ref) }) : place(first),
         end: t('kmOf', { done: kmNum(done ? d.totalKm : d.progress.kmDone), total: kmNum(d.totalKm) }),
       }),
       yourStopPrompt(data, d),

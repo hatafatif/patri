@@ -35,7 +35,7 @@ function rowsOf(data, d) {
     const change = !pick ? { change: true } : {};
     if (passed) {
       const sched = d.schedOf(s);
-      const at = sched != null ? { time: { expected: time(sched) } } : {};
+      const at = sched != null ? { time: { expected: time(sched, d.ref) } } : {};
       const kmText = i === 0 ? join(t('start'), km(0)) : i === passedIdx ? join(km(s.km), t('lastPassed')) : km(s.km);
       if (mine) out.push({ kind: 'yourstop', name, sub: join(t('yourStop'), km(s.km)), ...at, ...change });
       else out.push({ kind: 'passed', name, sub: kmText, ...at });

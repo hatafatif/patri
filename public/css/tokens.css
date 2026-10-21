@@ -29,11 +29,21 @@
   --status-nogps-bg: #e3e6e4; /* No live GPS / timetable only background. */
   --status-nogps-fg: #4a5650; /* No live GPS text. 6.6:1 on its background. */
   --focus: #0b4a6f; /* 3px keyboard focus ring on every control. */
-  --map-land: #f2efe6; /* Map land fill. */
-  --map-water: #b8d4e9; /* Rivers and sea. */
+  --map-land: #f4efe2; /* Map land under the relief, and land outside Pakistan before the fade. */
+  --map-water: #8fc1e3; /* Rivers, lakes and the Arabian Sea. */
   --map-border: #8e8799; /* Province and country borders, dashed. */
-  --map-rail: #9aa59f; /* Rail lines with no train selected. */
-  --map-station: #56665d; /* Small station dots. */
+  --map-rail: #7c8580; /* Rail lines with no train selected. */
+  --map-station: var(--sabz-700); /* Small station dots, shown once the map is zoomed in. */
+  --map-outside: #e3e8e4; /* The fade over the neighbouring countries, so Pakistan stands out. */
+  --map-urban: #e9dfcf; /* Built-up areas, zoomed in. */
+  --map-green: #dfe8cc; /* Farmland and grass, zoomed in. */
+  --map-wood: #c9dcb8; /* Forest, zoomed in. */
+  --map-ice: #f7fafc; /* Glaciers. */
+  --map-relief-low: #e6edd3; /* Relief tint for the plains, up to about 200 m. */
+  --map-relief-mid: #f1e8cf; /* Relief tint for the uplands, around 900 m. */
+  --map-relief-high: #ddc9a8; /* Relief tint for the mountains, around 2,600 m. */
+  --map-relief-peak: #f7f7f4; /* Relief tint for the high peaks, 4,800 m and up. */
+  --map-relief-shade: #4b5a4a; /* The colour of slopes facing away from the sun in the relief. */
 
   /* Type families */
   --font-body: Barlow, system-ui, sans-serif;
@@ -63,8 +73,12 @@
   --t-urdu-title-tracking: normal;
   --t-urdu-body: 600 16px/32px var(--font-urdu); /* Names and running text in Urdu. */
   --t-urdu-body-tracking: normal;
+  --t-urdu-strong: 700 18px/36px var(--font-urdu); /* Names and values that are body-strong or heading in English: station and train names, DetailGrid values, row titles. */
+  --t-urdu-strong-tracking: normal;
   --t-urdu-label: 600 15px/28px var(--font-urdu); /* Replaces the condensed uppercase label in Urdu: no capitals, one size up. */
   --t-urdu-label-tracking: normal;
+  --t-urdu-caption: 400 14px/28px var(--font-urdu); /* What caption is in English: field labels, sub-lines and notes under a name. Pair with ink-muted, so it reads quieter than the value beside it. */
+  --t-urdu-caption-tracking: normal;
 
   /* Spacing */
   --space-1: 4px; /* Gap between a dot and its label. */
@@ -104,4 +118,6 @@
 .t-number { font: var(--t-number); letter-spacing: var(--t-number-tracking); }
 .t-urdu-title { font: var(--t-urdu-title); letter-spacing: var(--t-urdu-title-tracking); }
 .t-urdu-body { font: var(--t-urdu-body); letter-spacing: var(--t-urdu-body-tracking); }
+.t-urdu-strong { font: var(--t-urdu-strong); letter-spacing: var(--t-urdu-strong-tracking); }
 .t-urdu-label { font: var(--t-urdu-label); letter-spacing: var(--t-urdu-label-tracking); }
+.t-urdu-caption { font: var(--t-urdu-caption); letter-spacing: var(--t-urdu-caption-tracking); }

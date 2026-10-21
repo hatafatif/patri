@@ -67,7 +67,7 @@ export function StationScreen(data, options = {}) {
     data.loading ? note(t('loading'))
       : section(
         row(fill(SectionHeader({ label: t('nextTrains'), count: rows.length })), StatusChip({ tone: 'neutral', text: t('updated', { ago: age }) })),
-        rows.length ? list(...rows.map(r => boardRow(r, station))) : note(t('noTrainsSoon')),
+        rows.length ? list(...rows.map(r => boardRow(r, station, data.now))) : note(t('noTrainsSoon')),
       ),
   );
 
@@ -84,14 +84,14 @@ export function StationScreen(data, options = {}) {
 }
 
 /** One train on the board, linking to its page with this station as the stop. */
-function boardRow(r, station) {
+function boardRow(r, station, now) {
   const { train, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
   const moved = est !== sched;
   let when;
-  if (atPlatform) when = { expected: time(est) };
-  else if (late != null) when = { expected: approx(est) };
-  else when = { expected: time(sched) };
-  if (when.expected !== time(sched) && moved) when.scheduled = time(sched);
+  if (atPlatform) when = { expected: time(est, now) };
+  else if (late != null) when = { expected: approx(est, now) };
+  else when = { expected: time(sched, now) };
+  if (when.expected !== time(sched, now) && moved) when.scheduled = time(sched, now);
 
   let sub;
   if (kind === 'starts') sub = t('startsHereTo', { x: place(dest) });
