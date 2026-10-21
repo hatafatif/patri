@@ -568,6 +568,8 @@ export interface StationScreenData {
   loading?: boolean;
   /** Short feedback under the header, already localised, such as "Link copied". It sits in a polite live region. */
   notice?: string;
+  /** A photo of the station's city, when there is one. */
+  photo?: PhotoProps;
   /** Map stand-in only: a station shown hovered on the web map (key such as 'khanewal'). */
   map?: { hover?: { key: string, station: ScreenStation } };
 }
@@ -622,6 +624,8 @@ export interface TrainScreenData {
   speed?: { points: [number, number][], stops: { ms: number, id: string }[], now: number, illustrative?: boolean };
   /** Extra facts for About this train. */
   details?: { locomotive?: string };
+  /** A photo of this train (or a general one) for About this train. */
+  photo?: PhotoProps;
   /** The train running the other way. */
   returnTrain?: ScreenTrain;
   /** The runs worth choosing between, newest first (two or three). More than one shows a SegmentedControl of links ("Left Sun 18 Oct"), each to #/train/N?run=id. */

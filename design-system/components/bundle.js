@@ -1944,7 +1944,7 @@
       { label: t("liveTracking"), value: (run ? run.gps : data.gps !== false) ? t("gps") : t("timetable") }
     ].filter((i) => i.value);
     return cards(
-      Card({ header: t("aboutTrain"), body: DetailGrid({ items }) }),
+      Card({ header: t("aboutTrain"), body: data.photo ? stack(Photo(data.photo), DetailGrid({ items })) : DetailGrid({ items }) }),
       returnTrain ? LinkRow({ href: `#/train/${returnTrain.number}`, eyebrow: t("returnShort"), label: `${trainNo(returnTrain)} ${trainTitle(returnTrain)}` }) : ""
     );
   }
@@ -2101,6 +2101,7 @@
         ]
       }),
       notice(data.notice),
+      data.photo ? Photo(data.photo) : "",
       data.loading ? note(t("loading")) : section(
         row(fill(SectionHeader({ label: t("nextTrains"), count: rows.length })), StatusChip({ tone: "neutral", text: t("updated", { ago: age }) })),
         rows.length ? list(...rows.map((r) => boardRow(r, station2, data.now))) : note(t("noTrainsSoon"))
