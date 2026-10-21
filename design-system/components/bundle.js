@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"}]} */
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -24,6 +24,7 @@
     MapToggle: () => MapToggle,
     PageHeader: () => PageHeader,
     Panel: () => Panel,
+    Photo: () => Photo,
     SearchField: () => SearchField,
     SectionHeader: () => SectionHeader,
     SegmentedControl: () => SegmentedControl,
@@ -982,19 +983,21 @@
 
   // public/js/components/StopTimeline.js
   function StopTimeline({ rows = [], mode = "full", legend = false } = {}) {
-    const full = mode !== "compact";
+    const shape = mode === "compact" || mode === "card" ? mode : "full";
+    const full = shape !== "compact";
     const items = rows.map((row2) => {
-      const { kind = "stop", name, sub, time: time2, countdown, href, change } = row2;
+      const { kind = "stop", name, label: tag, sub, time: time2, countdown, href, change } = row2;
       const label = kind === "more" ? esc(name) : bdi(name);
       const nameEl2 = href ? `<a class="p-stoptimeline__name" href="${esc(href)}">${label}</a>` : `<span class="p-stoptimeline__name">${label}</span>`;
+      const tagEl = tag ? `<span class="p-stoptimeline__label">${bdi(tag)}</span>` : "";
       const subEl = full && sub ? `<span class="p-stoptimeline__sub">${bdi(sub)}</span>` : "";
       const changeEl = change ? Button({ label: t("change"), variant: "link", className: "p-stoptimeline__change" }) : "";
       const timeEl = time2 || countdown ? `<div class="p-stoptimeline__time">${time2?.expected ? `<span class="p-stoptimeline__expected">${bdi(time2.expected)}</span>` : ""}${time2?.scheduled ? `<s class="p-stoptimeline__scheduled"><span class="p-sr">${esc(t("scheduled"))} </span>${bdi(time2.scheduled)}</s>` : ""}${countdown ? `<span class="p-stoptimeline__countdown">${bdi(countdown)}</span>` : ""}</div>` : "";
       const here = kind === "train" ? ' aria-current="location"' : "";
-      return `<li class="p-stoptimeline__row p-stoptimeline__row--${esc(kind)}"${here}><span class="p-stoptimeline__rail" aria-hidden="true"><span class="p-stoptimeline__dot"></span></span><div class="p-stoptimeline__main">${nameEl2}${subEl}${changeEl}</div>${timeEl}</li>`;
+      return `<li class="p-stoptimeline__row p-stoptimeline__row--${esc(kind)}"${here}><span class="p-stoptimeline__rail" aria-hidden="true"><span class="p-stoptimeline__dot"></span></span><div class="p-stoptimeline__main">${tagEl}${nameEl2}${subEl}${changeEl}</div>${timeEl}</li>`;
     });
     const key = legend ? `<li class="p-stoptimeline__legend" aria-hidden="true"><span class="p-stoptimeline__legend-expected">${esc(t("legendExpected"))}</span> \xB7 <s class="p-stoptimeline__legend-scheduled">${esc(t("legendScheduled"))}</s></li>` : "";
-    return `<ol class="${cx("p-stoptimeline", `p-stoptimeline--${full ? "full" : "compact"}`)}">${key}${items.join("")}</ol>`;
+    return `<ol class="${cx("p-stoptimeline", `p-stoptimeline--${shape}`)}">${key}${items.join("")}</ol>`;
   }
   function bindStopTimeline(root, handlers = {}) {
     const onClick = (e) => {
@@ -1215,6 +1218,13 @@
     };
   }
 
+  // public/js/components/Photo.js
+  function Photo({ src = "", alt = "", credit = "", href, className } = {}) {
+    const text = bdi(credit);
+    const line = href ? `<a class="p-photo__link" href="${esc(href)}" target="_blank" rel="noopener">${text}</a>` : text;
+    return `<figure class="${cx("p-photo", className)}"><img class="p-photo__img" src="${esc(src)}" alt="${esc(alt)}" width="800" height="450" loading="lazy" decoding="async">${credit ? `<figcaption class="p-photo__credit">${line}</figcaption>` : ""}</figure>`;
+  }
+
   // public/js/screens/index.js
   var screens_exports = {};
   __export(screens_exports, {
@@ -1324,6 +1334,8 @@
   }
   var time = (min, now) => at(min, now, "", false);
   var approx = (min, now) => at(min, now, "~", false);
+  var dayTime = (min, now) => at(min, now, "", true);
+  var dayApprox = (min, now) => at(min, now, "~", true);
   var kmNum = (n) => Math.round(n).toLocaleString("en-US");
   var km = (n) => t("km", { n: kmNum(n) });
   function dateLabel(iso) {
@@ -1507,12 +1519,9 @@
   }
   function countryMap({ layout = "phone", hover } = {}) {
     const { w, h } = COUNTRY;
-    const majors = COUNTRY.places.map((p) => [p[1], p[2]]);
-    const named = [...COUNTRY.stations, ...majors];
-    const extra = along(COUNTRY.rails, COUNTRY.step, named, 7);
     const hov = hover && COUNTRY.places.find((p) => p[0] === hover.key);
     const svg = `<path class="p-mapstandin__sea" d="${COUNTRY.sea}"/><path class="p-mapstandin__border" d="${COUNTRY.border}"/>` + COUNTRY.rails.map((r) => `<path class="p-mapstandin__rail" d="${d(r)}"/>`).join("");
-    const layer = [...COUNTRY.stations, ...extra].map((p) => dotEl("p-mapstandin__dot--station", p, w, h)).join("") + COUNTRY.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--city", [x, y], w, h)).join("") + COUNTRY.places.filter((p) => p !== hov).map(([k, x, y, side]) => nameEl(k, [x, y], side, true, w, h)).join("");
+    const layer = COUNTRY.places.map(([k, x, y]) => dotEl("p-mapstandin__dot--city", [x, y], w, h)).join("") + COUNTRY.places.filter((p) => p !== hov).map(([k, x, y, side]) => nameEl(k, [x, y], side, true, w, h)).join("");
     const cards2 = hov ? pin("hover", hover, [hov[1], hov[2]], hov[5], w, h) : "";
     return shell("country", w, h, t("mapStations"), { svg, layer, cards: cards2 });
   }
@@ -1793,38 +1802,63 @@
     });
   }
   function timelineRows(data, d2) {
-    const { train: train2 } = data;
-    const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress } = d2;
+    const { train: train2, run } = data;
+    const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d2;
     const stopsHref = `#/train/${train2.number}/stops`;
+    const join2 = (...p) => p.filter(Boolean).join(" \xB7 ");
+    const passedAt = (i) => data.ests?.[i]?.at ?? d2.schedOf(stops[i]);
+    const behind = (i) => passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {};
+    const ahead = (i) => {
+      const e = d2.est(i), s = d2.schedOf(stops[i]);
+      const expected = e != null ? dayApprox(e, ref) : s != null ? dayTime(s, ref) : null;
+      return { ...expected ? { time: { expected } } : {}, ...d2.inTime(i) ? { countdown: d2.inTime(i) } : {} };
+    };
+    const planned = (i) => {
+      const e = d2.est(i), s = d2.schedOf(stops[i]);
+      return e != null && s != null && Math.round(e) !== s ? t("plannedAt", { time: time(s, ref) }) : "";
+    };
+    const moving = run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(run.status?.kind);
+    const away = moving ? t("kmAwayNow", { km: kmNum(progress.kmToNext), speed: run.speed }) : t("kmAway", { km: kmNum(progress.kmToNext) });
     const rows = [];
-    let tail = passedIdx;
-    if (passedIdx >= 0) {
-      rows.push({ kind: "passed", name: place2(d2.prev), sub: t("lastPassed"), ...d2.schedOf(d2.prev) != null ? { time: { expected: time(d2.schedOf(d2.prev), d2.ref) } } : {} });
+    if (run.status?.kind === "done" || passedIdx >= lastIdx) {
+      rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
+      rows.push({ kind: "final", label: t("lastStop"), name: place2(d2.last), ...behind(lastIdx) });
+      return rows;
     }
-    rows.push({ kind: "train", name: d2.trainText(false) });
-    if (nextIdx >= 0) {
+    if (passedIdx >= 0) rows.push({ kind: "passed", label: t("startedFrom"), name: place2(d2.first), ...behind(0) });
+    else rows.push({ kind: "next", label: t("startsFrom"), name: place2(d2.first), ...ahead(0) });
+    let tail = 0;
+    if (passedIdx > 0) {
+      rows.push({ kind: "passed", label: t("lastPassed"), name: place2(d2.prev), ...behind(passedIdx) });
+      tail = passedIdx;
+    }
+    if (nextIdx > 0 && nextIdx < lastIdx) {
       const mineNext = nextIdx === mineIdx;
-      const lastNext = nextIdx === lastIdx;
-      const sub = mineNext ? t("yourStop") : lastNext ? t("finalStop") : d2.nextHalt ? `${t("nextStop")} \xB7 ${t("halt", { d: dur(d2.nextHalt) })}` : t("nextStop");
       rows.push({
-        kind: mineNext ? "yourstop" : lastNext ? "final" : "next",
+        kind: mineNext ? "yourstop" : "next",
+        label: t(mineNext ? "yourStop" : "nextStop"),
         name: place2(d2.next),
-        sub,
-        time: lastNext && !mineNext ? d2.both(nextIdx) : d2.exp(nextIdx),
-        countdown: d2.inTime(nextIdx) || void 0,
+        sub: join2(away, d2.nextHalt ? t("halt", { d: dur(d2.nextHalt) }) : ""),
+        ...ahead(nextIdx),
         ...mineNext ? { change: true } : {}
       });
       tail = nextIdx;
     }
-    if (mineIdx > tail) {
-      rows.push({ kind: "yourstop", name: place2(d2.mine), sub: t("yourStop"), time: d2.exp(mineIdx), countdown: d2.inTime(mineIdx) || void 0, change: true });
+    if (mineIdx > tail && mineIdx < lastIdx) {
+      rows.push({ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), ...ahead(mineIdx), change: true });
       tail = mineIdx;
     }
-    if (lastIdx > tail) {
-      const more = lastIdx - tail - 1;
-      if (more > 0) rows.push({ kind: "more", name: t("moreStops", { n: more }), href: stopsHref });
-      rows.push({ kind: "final", name: place2(d2.last), sub: t("finalStop"), time: d2.both(lastIdx) });
-    }
+    const more = lastIdx - tail - 1;
+    if (more > 0) rows.push({ kind: "more", name: t("moreStops", { n: more }), href: stopsHref });
+    const mineLast = mineIdx === lastIdx;
+    rows.push({
+      kind: mineLast ? "yourstop" : "final",
+      label: mineLast ? `${t("yourStop")} \xB7 ${t("lastStop")}` : t("lastStop"),
+      name: place2(d2.last),
+      sub: join2(nextIdx === lastIdx ? away : "", planned(lastIdx)),
+      ...ahead(lastIdx),
+      ...mineLast ? { change: true } : {}
+    });
     return rows;
   }
   function runningText(run, d2) {
@@ -1861,7 +1895,7 @@
     const seeAll = Button({ label: t("seeAllStopsN", { n: d2.stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
     if (!run) {
       const gps = data.gps !== false;
-      const mineRow = d2.mine ? StopTimeline({ mode: "compact", rows: [{ kind: "yourstop", name: place2(d2.mine), sub: t("yourStop"), time: d2.exp(d2.mineIdx), change: true }] }) : "";
+      const mineRow = d2.mine ? StopTimeline({ mode: "card", rows: [{ kind: "yourstop", label: t("yourStop"), name: place2(d2.mine), time: d2.exp(d2.mineIdx), change: true }] }) : "";
       return Card({
         tone: "key",
         header: t("rightNow"),
@@ -1885,10 +1919,10 @@
           delay: { tone: statusTone(run.late), text: delayText(run.late) },
           updated: t("updated", { ago: ago < 1 ? t("justNow") : t("ago", { d: dur(ago) }) })
         }),
-        StopTimeline({ mode: "compact", rows: timelineRows(data, d2) }),
+        StopTimeline({ mode: "card", rows: timelineRows(data, d2) }),
         JourneyProgress({
           fraction: d2.totalKm > 0 ? Math.min(1, Math.max(0, d2.progress.kmDone / d2.totalKm)) : 0,
-          start: d2.passedIdx >= 0 && first.dep != null && run.status?.kind !== "wait" ? t("leftAt", { station: place2(first), time: time(first.dep, d2.ref) }) : place2(first),
+          start: "",
           end: t("kmOf", { done: kmNum(done ? d2.totalKm : d2.progress.kmDone), total: kmNum(d2.totalKm) })
         }),
         yourStopPrompt(data, d2),

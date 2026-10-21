@@ -155,7 +155,7 @@ export interface MapLabelProps {
 
 /** MapLibre paint values read from the design tokens when called, so a token change reaches the map. Pass them as the paint of a layer: station and majorCity to circle layers, rail, routeDone, routeDoneCasing, routeAhead and border to line layers, land and water to fill layers, cityLabel to a symbol layer. (MapMarkers.js) */
 export interface MapPaintResult {
-  /** Small station dot, map-station, radius 2.5. */
+  /** Small station dot, map-station, radius 2.5; shown when the map is zoomed in. */
   station: Record<string, unknown>;
   /** Surface fill, ink stroke 2, radius 5.5. */
   majorCity: Record<string, unknown>;
@@ -245,6 +245,20 @@ export interface PanelProps {
 export interface PanelHandlers {
   /** Called every time the sheet settles on a different snap. */
   onSnap?: (snap: 'down' | 'half' | 'full') => void;
+}
+
+/** A photo with its credit underneath: the train in About this train, the city on the Station page. It loads only when scrolled near, and reserves its 16:9 box so nothing shifts. (Photo.js) */
+export interface PhotoProps {
+  /** The image URL. */
+  src: string;
+  /** What the photo shows, for screen readers. */
+  alt: string;
+  /** Already localised, such as "Photo: A. Khan · CC BY-SA 4.0". */
+  credit: string;
+  /** The photo's source page. The credit links to it, opening in a new tab. */
+  href?: string;
+  /** Extra classes, so a composing component can hook its own styles. */
+  className?: string;
 }
 
 /** The search box for a train name, number, station or city. With a route it also shows a "From → To" link beside the field. (SearchField.js) */
@@ -355,12 +369,12 @@ export interface StatusStripProps {
   updated?: string;
 }
 
-/** The stops timeline: a rail down the start edge with one marker per row, the stop name, and the times at the end edge. The Right now card uses the compact form, the All stops page the full form. (StopTimeline.js) */
+/** The stops timeline: a rail down the start edge with one marker per row, the stop name, and the times at the end edge. The Right now card uses the card form, the All stops page the full form, and compact is the tight form without sub lines. (StopTimeline.js) */
 export interface StopTimelineProps {
-  /** One entry per row, top to bottom. name is already localised: for a train row it is the whole sentence ("Train here · 27 km to Multan Cantt"), for a more row the collapsed text ("8 more stops", href required). sub shows in full mode only. time.scheduled is struck through under the expected time. countdown is a short phrase such as "in 20 min". href turns the name into a link. change adds a Change link; wire it with bindStopTimeline(). */
-  rows: { kind: 'passed' | 'train' | 'next' | 'yourstop' | 'stop' | 'more' | 'final', name: string, sub?: string, time?: { expected: string, scheduled?: string }, countdown?: string, href?: string, change?: boolean }[];
-  /** compact hides sub and uses tighter padding; full shows everything. Default 'full'. */
-  mode?: 'compact' | 'full';
+  /** One entry per row, top to bottom. name is already localised: for a train row it is the whole sentence ("Train here · 27 km to Multan Cantt"), for a more row the collapsed text ("8 more stops", href required). label is a short label above the name, such as "Next stop" (card mode). sub shows in full and card modes. time.scheduled is struck through under the expected time. countdown is a short phrase such as "in 20 min". href turns the name into a link. change adds a Change link; wire it with bindStopTimeline(). */
+  rows: { kind: 'passed' | 'train' | 'next' | 'yourstop' | 'stop' | 'more' | 'final', name: string, label?: string, sub?: string, time?: { expected: string, scheduled?: string }, countdown?: string, href?: string, change?: boolean }[];
+  /** compact hides sub and uses tighter padding; full shows everything; card is the Right now form: a label over each name, heading-size names and sub lines shown. Default 'full'. */
+  mode?: 'compact' | 'full' | 'card';
   /** Adds an "expected · scheduled" key above the rows, at the end edge over the time column. Decorative (aria-hidden); the struck time already has a hidden "Scheduled" prefix. Default false. */
   legend?: boolean;
 }
@@ -734,6 +748,7 @@ export interface PatriApi {
   MapToggle(props: MapToggleProps): string;
   PageHeader(props: PageHeaderProps): string;
   Panel(props: PanelProps): string;
+  Photo(props: PhotoProps): string;
   SearchField(props: SearchFieldProps): string;
   SectionHeader(props: SectionHeaderProps): string;
   SegmentedControl(props: SegmentedControlProps): string;
