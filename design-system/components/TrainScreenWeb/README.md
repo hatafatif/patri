@@ -6,7 +6,7 @@ The Train page on a wide screen: the 440px sidebar with the train's status, stop
 [AppBar](../AppBar/README.md) (with a back link to Home, the sidebar's header and where the language switch lives), [PageHeader](../PageHeader/README.md), [Card](../Card/README.md), [StatusStrip](../StatusChip/README.md), [StopTimeline](../StopTimeline/README.md), [JourneyProgress](../JourneyProgress/README.md), [Button](../Button/README.md), [DetailGrid](../DetailGrid/README.md), [LinkRow](../LinkRow/README.md), [SpeedChart](../SpeedChart/README.md), [IconButton](../IconButton/README.md), [MapToggle](../MapToggle/README.md), [MapMarkers](../MapMarkers/README.md).
 
 ## Layout
-- Sidebar (the Panel): AppBar, then PageHeader (no back, the AppBar has it), the Right now card, About this train and the Return train link. There is no speed card in the sidebar.
+- Sidebar (the Panel): AppBar, then PageHeader (no back, the AppBar has it), the Current status and Journey cards, About this train and the Return train link. There is no speed card in the sidebar.
 - Map: the train, a "next stop" card (expected time, in how long, km to go) and a "your stop" card; at the top end Following (on), Show the whole route and zoom in and out as float IconButtons.
 - Dock: a Card holding the SpeedChart along the bottom of the map.
 

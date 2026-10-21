@@ -1,7 +1,7 @@
 // TrainScreen: everything about one train, with the map following it.
 import { t, getLang, dur, delayText } from '../i18n.js';
 import {
-  AppBar, PageHeader, Card, StatusChip, StatusStrip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
+  AppBar, PageHeader, Card, StatusChip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
   MapToggle, SegmentedControl, Photo, statusTone,
 } from '../components/index.js';
 import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton } from './_layout.js';
@@ -9,14 +9,16 @@ import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, k
 import { trainMap } from './_map-standin.js';
 
 /**
- * The Train page: the map following the train, and the Panel with the PageHeader, the Right now card
- * (status, stops around the train, progress, See all stops), speed so far, About this train and the
- * return train. Web: the same content in the sidebar, the speed chart docked along the bottom of the map.
+ * The Train page: the map following the train, and the Panel with the PageHeader, the Current status card
+ * (speed, delay, next stop and arrival as big figures, when it last reported), the Journey card (first stop,
+ * the stop it is at or heading for, last stop, progress, See all stops), speed so far, About this train and
+ * the return train. Web: the same content in the sidebar, the speed chart docked along the bottom of the map.
  * The same data renders StopsScreen.
  *
- * With `run` null (no live run now, or a train without GPS) the page is in timetable mode: a Right now card
- * with a "Timetable" or "No GPS" chip, your stop with its scheduled time, About this train and the return
- * train; no speed card. With no `stops` yet it shows the header and a loading note.
+ * With `run` null (no live run now, or a train without GPS) the page is in timetable mode: a Current status
+ * card with a "Timetable" or "No GPS" chip, a Journey card with the first and last stop at their scheduled
+ * times, About this train and the return train; no speed card. With no `stops` yet it shows the header and a
+ * loading note.
  * @typedef {object} TrainScreenData
  * @property {'on' | 'reconnecting' | 'off'} live - The feed state, for the web sidebar's AppBar.
  * @property {import('./_format.js').ScreenTrain} train
@@ -37,7 +39,6 @@ import { trainMap } from './_map-standin.js';
  * @property {{ count: number, href: string }} [hiddenRuns] - Suspect runs that are not shown: a note and a "Show anyway" link to href.
  * @property {boolean} [following=true] - The MapToggle's state.
  * @property {string} [notice] - Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives.
- * @property {boolean} [pick] - StopsScreen only: choose-your-stop mode.
  */
 /**
  * The live run of a train.
@@ -152,12 +153,76 @@ function speedCard(data) {
   });
 }
 
-/** The Right now rows: where it started, the stop just passed, the next stop, your stop, a collapsed middle and the last stop. */
-function timelineRows(data, d) {
+/** Current status: the key live numbers as big figures, and when the train last reported. */
+function statusCard(data, d) {
+  const { run, now } = data;
+  if (!run) {
+    // Timetable mode: no live run, so no figures.
+    const gps = data.gps !== false;
+    return Card({
+      tone: 'key', header: t('rightNow'),
+      body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? 'noLiveRun' : 'noGpsTrain'))),
+    });
+  }
+  const st = run.status;
+  const ago = now - run.updatedAt;
+  const speed = { label: t('speedLabel') };
+  if (st?.kind === 'stopAt') Object.assign(speed, { value: t('stopped'), sub: place(st.station) });
+  else if (st?.kind === 'stopBetween') speed.value = t('stopped');
+  else if (st?.kind === 'wait') speed.value = t('stNotDeparted');
+  else if (st?.kind === 'lost') speed.value = t('stLost', { d: dur(st.minutes) });
+  else if (st?.kind === 'done') Object.assign(speed, { value: t('stArrived', { station: place(st.station ?? d.last) }), wide: true });
+  else speed.value = t('kmh', { n: run.speed });
+  const items = [speed, { label: t('delayLabel'), value: delayText(run.late), tone: statusTone(run.late) }];
+
+  if (st?.kind !== 'done') {
+    if (st?.kind === 'wait' || d.passedIdx < 0) {
+      items.push(
+        { label: t('startsFrom'), value: place(d.first) },
+        { label: t('detailDeparts'), value: d.inTime(0) || dayTime(d.first.dep, d.ref), sub: d.inTime(0) ? dayTime(d.first.dep, d.ref) : '' },
+      );
+    } else if (d.nextIdx >= 0) {
+      const i = d.nextIdx;
+      const expected = d.est(i) != null ? dayApprox(d.est(i), d.ref) : dayTime(d.schedOf(d.stops[i]), d.ref);
+      items.push(
+        { label: t('nextStop'), value: place(d.next), sub: t('kmAway', { km: kmNum(d.progress.kmToNext) }) },
+        { label: t('arrivalLabel'), value: d.inTime(i) || expected, sub: d.inTime(i) ? expected : '' },
+      );
+    }
+  }
+  return Card({
+    tone: 'key', header: t('rightNow'),
+    body: stack(
+      DetailGrid({ size: 'lg', items: items.filter(i => i.value) }),
+      note(t('updated', { ago: ago < 1 ? t('justNow') : t('ago', { d: dur(ago) }) })),
+    ),
+  });
+}
+
+/** Journey: first stop, the stop the train is at or heading for, last stop, progress and the link to all stops. */
+function journeyCard(data, d) {
   const { train, run } = data;
-  const { stops, lastIdx, passedIdx, nextIdx, mineIdx, progress, ref } = d;
+  const { stops, lastIdx, passedIdx, progress, ref } = d;
   const stopsHref = `#/train/${train.number}/stops`;
-  const join = (...p) => p.filter(Boolean).join(' · ');
+  const seeAll = Button({ label: t('seeAllStopsN', { n: stops.length }), href: stopsHref, variant: 'primary', icon: 'chevronEnd', full: true });
+  const more = n => (n > 0 ? [{ kind: 'more', name: t('moreStops', { n }), href: stopsHref }] : []);
+
+  if (!run) {
+    // Timetable mode: scheduled times only.
+    const stopRow = (kind, label, s, at) => ({ kind, label, name: place(s), ...(at != null ? { time: { expected: time(at) } } : {}) });
+    return Card({
+      header: t('journey'),
+      body: stack(
+        StopTimeline({
+          mode: 'card',
+          rows: [stopRow('stop', t('firstStop'), d.first, d.first.dep), ...more(lastIdx - 1), stopRow('final', t('lastStop'), d.last, d.last.arr)],
+        }),
+        seeAll,
+      ),
+    });
+  }
+
+  const st = run.status;
   // A stop behind the train: when it passed (recorded, else the timetable), with its day.
   const passedAt = i => data.ests?.[i]?.at ?? d.schedOf(stops[i]);
   const behind = i => (passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {});
@@ -171,124 +236,36 @@ function timelineRows(data, d) {
     const e = d.est(i), s = d.schedOf(stops[i]);
     return e != null && s != null && Math.round(e) !== s ? t('plannedAt', { time: time(s, ref) }) : '';
   };
-  const moving = run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind);
-  const away = moving ? t('kmAwayNow', { km: kmNum(progress.kmToNext), speed: run.speed }) : t('kmAway', { km: kmNum(progress.kmToNext) });
-  const rows = [];
 
-  if (run.status?.kind === 'done' || passedIdx >= lastIdx) {
-    rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
-    rows.push({ kind: 'final', label: t('lastStop'), name: place(d.last), ...behind(lastIdx) });
-    return rows;
+  const rows = [{ kind: passedIdx >= 0 ? 'passed' : 'next', label: t('firstStop'), name: place(d.first), ...(passedIdx >= 0 ? behind(0) : ahead(0)) }];
+  let f = -1, focus = null;
+  const k = st?.kind === 'stopAt' ? stops.findIndex(s => s.id === st.station?.id) : -1;
+  if (k >= 1 && k <= lastIdx - 1) {
+    f = k;
+    focus = { kind: 'next', label: t('currentStop'), name: place(stops[k]) };
+  } else if (d.nextIdx > 0 && d.nextIdx < lastIdx) {
+    f = d.nextIdx;
+    focus = { kind: 'next', label: t('nextStop'), name: place(d.next), ...ahead(f) };
   }
-  if (passedIdx >= 0) rows.push({ kind: 'passed', label: t('startedFrom'), name: place(d.first), ...behind(0) });
-  else rows.push({ kind: 'next', label: t('startsFrom'), name: place(d.first), ...ahead(0) });
-  let tail = 0; // the furthest stop shown so far
-  if (passedIdx > 0) {
-    rows.push({ kind: 'passed', label: t('lastPassed'), name: place(d.prev), ...behind(passedIdx) });
-    tail = passedIdx;
+  if (focus) rows.push(...more(f - 1), focus, ...more(lastIdx - f - 1));
+  else rows.push(...more(lastIdx - 1));
+  if (st?.kind === 'done' || passedIdx >= lastIdx) {
+    rows.push({ kind: 'passed', label: t('lastStop'), name: place(d.last), ...behind(lastIdx) });
+  } else {
+    rows.push({ kind: 'final', label: t('lastStop'), name: place(d.last), sub: planned(lastIdx), ...ahead(lastIdx) });
   }
-  if (nextIdx > 0 && nextIdx < lastIdx) {
-    const mineNext = nextIdx === mineIdx;
-    rows.push({
-      kind: mineNext ? 'yourstop' : 'next', label: t(mineNext ? 'yourStop' : 'nextStop'), name: place(d.next),
-      sub: join(away, d.nextHalt ? t('halt', { d: dur(d.nextHalt) }) : ''),
-      ...ahead(nextIdx), ...(mineNext ? { change: true } : {}),
-    });
-    tail = nextIdx;
-  }
-  if (mineIdx > tail && mineIdx < lastIdx) {
-    rows.push({ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), ...ahead(mineIdx), change: true });
-    tail = mineIdx;
-  }
-  const more = lastIdx - tail - 1;
-  if (more > 0) rows.push({ kind: 'more', name: t('moreStops', { n: more }), href: stopsHref });
-  const mineLast = mineIdx === lastIdx;
-  rows.push({
-    kind: mineLast ? 'yourstop' : 'final',
-    label: mineLast ? `${t('yourStop')} · ${t('lastStop')}` : t('lastStop'),
-    name: place(d.last),
-    sub: join(nextIdx === lastIdx ? away : '', planned(lastIdx)),
-    ...ahead(lastIdx), ...(mineLast ? { change: true } : {}),
-  });
-  return rows;
-}
-
-/** The status strip's running text, from what the train is doing. */
-function runningText(run, d) {
-  const st = run.status;
-  if (st?.kind === 'stopAt') return t('stStoppedAt', { station: place(st.station) });
-  if (st?.kind === 'stopBetween') return t('stStoppedBetween');
-  if (st?.kind === 'wait') return t('stNotDeparted');
-  if (st?.kind === 'done') return t('stArrived', { station: place(st.station ?? d.last) });
-  if (st?.kind === 'lost') return t('stLost', { d: dur(st.minutes) });
-  return t('stRunningShort', { speed: run.speed });
-}
-
-/** Your stop, when there is none to show in the timeline: a prompt to choose one, or a line that you passed it. */
-function yourStopPrompt(data, d) {
-  const { train, run } = data;
-  const pickHref = `#/train/${train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
-  if (!d.mine) {
-    return stack(
-      Button({ label: t('chooseStop'), href: pickHref, variant: 'secondary', full: true }),
-      note(t('promptStopSub')),
-    );
-  }
-  // Passed your stop (a stop ahead is already a row of the timeline).
-  if (run && d.mineIdx <= d.passedIdx) {
-    const at = data.ests?.[d.mineIdx]?.at ?? (d.schedOf(d.mine) != null ? d.schedOf(d.mine) + run.late : null);
-    return row(
-      fill(note(at != null ? t('passedYourStop', { time: time(at, d.ref) }) : `${t('yourStop')} · ${place(d.mine)}`)),
-      Button({ label: t('change'), href: pickHref, variant: 'link' }),
-    );
-  }
-  return '';
-}
-
-/** Right now: status, the stops around the train, progress and the link to all stops. */
-function rightNow(data, d) {
-  const { train, run, now } = data;
-  const { first } = d;
-  const stopsHref = `#/train/${train.number}/stops`;
-  const seeAll = Button({ label: t('seeAllStopsN', { n: d.stops.length }), href: stopsHref, variant: 'primary', icon: 'chevronEnd', full: true });
-
-  if (!run) {
-    // Timetable mode: no live run, so no position, estimates or progress.
-    const gps = data.gps !== false;
-    const mineRow = d.mine
-      ? StopTimeline({ mode: 'card', rows: [{ kind: 'yourstop', label: t('yourStop'), name: place(d.mine), time: d.exp(d.mineIdx), change: true }] })
-      : '';
-    return Card({
-      tone: 'key', header: t('rightNow'),
-      body: stack(
-        row(StatusChip(delayStatus(null, { gps }))),
-        note(t(gps ? 'noLiveRun' : 'noGpsTrain')),
-        mineRow,
-        d.mine ? note(t('timetableTimes')) : yourStopPrompt(data, d),
-        seeAll,
-      ),
-    });
-  }
-
-  const ago = now - run.updatedAt;
-  const done = run.status?.kind === 'done';
+  const done = st?.kind === 'done';
   return Card({
-    tone: 'key', header: t('rightNow'),
+    header: t('journey'),
     body: stack(
-      StatusStrip({
-        running: { text: runningText(run, d) },
-        delay: { tone: statusTone(run.late), text: delayText(run.late) },
-        updated: t('updated', { ago: ago < 1 ? t('justNow') : t('ago', { d: dur(ago) }) }),
-      }),
-      StopTimeline({ mode: 'card', rows: timelineRows(data, d) }),
+      StopTimeline({ mode: 'card', rows }),
       JourneyProgress({
-        fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, d.progress.kmDone / d.totalKm)) : 0,
+        fraction: d.totalKm > 0 ? Math.min(1, Math.max(0, progress.kmDone / d.totalKm)) : 0,
         start: '',
-        end: t('kmOf', { done: kmNum(done ? d.totalKm : d.progress.kmDone), total: kmNum(d.totalKm) }),
+        end: t('kmOf', { done: kmNum(done ? d.totalKm : progress.kmDone), total: kmNum(d.totalKm) }),
         train: true,
-        moving: run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(run.status?.kind),
+        moving: run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(st?.kind),
       }),
-      yourStopPrompt(data, d),
       seeAll,
     ),
   });
@@ -359,7 +336,7 @@ export function TrainScreen(data, options = {}) {
   const status = data.notice != null ? notice(data.notice) : '';
   // Without the route there is nothing to show but the header and a loading note.
   const content = d.first
-    ? [header(data, d), status, runChoice(data), rightNow(data, d)]
+    ? [header(data, d), status, runChoice(data), statusCard(data, d), journeyCard(data, d)]
     : [header(data, d), status, note(t('loading'))];
 
   if (!web) {

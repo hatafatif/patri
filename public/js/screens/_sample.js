@@ -174,7 +174,6 @@ const trainSample = {
   now: 780,
   ests,
   progress: { passedIdx: PASSED, nextIdx: PASSED + 1, kmDone: 305, kmToNext: 27 },
-  myStop: S.bahawalpur.id,
   followed: true,
   speed: {
     illustrative: true,

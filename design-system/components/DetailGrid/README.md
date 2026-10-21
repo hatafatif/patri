@@ -12,7 +12,8 @@ Key and value facts about a train, in a two-column grid.
 ## Props
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `items` | `{ label: string, value: string, lang?: 'ur' }[]` | `[]` | Already localised. One cell per item. |
+| `items` | `{ label: string, value: string, lang?: 'ur', sub?: string, tone?: 'ontime' \| 'late' \| 'early' \| 'nogps', wide?: boolean }[]` | `[]` | Already localised. One cell per item. `sub` is a small line under the value, `tone` colours the value, `wide` spans both columns. |
+| `size` | `'md' \| 'lg'` | `'md'` | `'lg'` shows big figures with uppercase labels (Train page, Current status). |
 | `className` | `string` | none | Extra classes for a composing component. |
 
 ## Urdu and right-to-left

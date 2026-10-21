@@ -1013,6 +1013,20 @@
   letter-spacing: normal;
 }
 
+/* Large variant (size 'lg'), the extra item fields and tones. */
+.p-detailgrid__item--wide { grid-column: 1 / -1; }
+.p-detailgrid__sub { margin: 0; color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
+.p-detailgrid--lg { row-gap: var(--space-4); }
+.p-detailgrid--lg .p-detailgrid__label { font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
+.p-detailgrid--lg .p-detailgrid__value { font: var(--t-title); letter-spacing: var(--t-title-tracking); }
+.p-detailgrid__value--ontime { color: var(--status-ontime-fg); }
+.p-detailgrid__value--late { color: var(--status-late-bg); }
+.p-detailgrid__value--early { color: var(--status-early-fg); }
+.p-detailgrid__value--nogps { color: var(--status-nogps-fg); }
+[lang="ur"] .p-detailgrid--lg .p-detailgrid__label { font: var(--t-urdu-caption); letter-spacing: normal; text-transform: none; }
+[lang="ur"] .p-detailgrid--lg .p-detailgrid__value { font: var(--t-urdu-title); letter-spacing: normal; }
+[lang="ur"] .p-detailgrid__sub { font: var(--t-urdu-caption); letter-spacing: normal; }
+
 /* ---------- 20. LinkRow ---------- */
 .p-linkrow {
   display: flex;
