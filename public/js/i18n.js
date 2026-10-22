@@ -86,6 +86,11 @@ const STRINGS = {
     alertsUnsupported: 'This browser can’t show notifications. On iPhone, add Patri to your Home Screen first.',
     alertsNoLive: 'Alerts need live location, and this train has none right now.', alertsFailed: 'Couldn’t turn on alerts. Try again.',
     lastSeen: 'Last seen near {station} · {ago}', lastSeenShort: 'Last seen {ago}',
+    // Journey replay (recorded days played back on the map)
+    replay: 'Replay past journeys', replayTitle: 'Journey replay', replayWith: 'With the return train, {name}', replayPeriod: 'Replay period',
+    nDays: '{n} days', replayTime: 'Replay time', play: 'Play', pause: 'Pause', replayIdle: 'Between journeys',
+    replaySince: 'Recorded since {date}', replayHint: 'Sped up: the whole period plays in about a minute.',
+    replayEmpty: 'Nothing recorded for this train yet. Patri keeps the last 90 days.', replayFailed: 'The replay isn’t available right now.',
   },
   ur: {
     appTitle: 'پٹڑی',
@@ -172,6 +177,11 @@ const STRINGS = {
     alertsUnsupported: 'یہ براؤزر اطلاعات نہیں دکھا سکتا۔ آئی فون پر پہلے پٹڑی کو ہوم اسکرین پر شامل کریں۔',
     alertsNoLive: 'اطلاعات کے لیے لائیو مقام ضروری ہے، جو اس وقت اس ٹرین کا دستیاب نہیں۔', alertsFailed: 'اطلاعات آن نہیں ہو سکیں۔ دوبارہ کوشش کریں۔',
     lastSeen: '{station} کے قریب آخری بار دیکھی گئی · {ago}', lastSeenShort: 'آخری بار {ago} دیکھی گئی',
+    // Journey replay (recorded days played back on the map)
+    replay: 'پچھلے سفر دوبارہ دیکھیں', replayTitle: 'سفر کا ری پلے', replayWith: 'واپسی کی ٹرین {name} کے ساتھ', replayPeriod: 'ری پلے کا دورانیہ',
+    nDays: '{n} دن', replayTime: 'ری پلے کا وقت', play: 'چلائیں', pause: 'روکیں', replayIdle: 'سفر کے درمیان',
+    replaySince: '{date} سے ریکارڈ شدہ', replayHint: 'تیز رفتار: پورا دورانیہ تقریباً ایک منٹ میں چلتا ہے۔',
+    replayEmpty: 'اس ٹرین کا ابھی کوئی ریکارڈ نہیں۔ پٹڑی پچھلے 90 دن کا ریکارڈ رکھتی ہے۔', replayFailed: 'ری پلے اس وقت دستیاب نہیں۔',
   },
 };
 
