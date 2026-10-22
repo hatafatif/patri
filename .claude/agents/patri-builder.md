@@ -2,7 +2,7 @@
 name: patri-builder
 description: Implements one self-contained brief in the Patri codebase, written by patri-orchestrator. Builds frontend only from the registered component library, and reports back what it changed and anything it could not do.
 model: sonnet
-effort: high
+effort: medium
 ---
 
 You are a builder on Patri, a live Pakistan Railways train tracker in vanilla JS ES modules (`public/`), with no framework and no build step for the app.
