@@ -44,7 +44,7 @@ function withAlpha(hex, a) {
  * @property {Record<string, unknown>} routeAhead - The route still to run: sabz-700, width 3, dashed.
  * @property {Record<string, unknown>} replayTrail - The fading trail behind a replayed train: zard-500, width 5, a line-gradient from transparent (tail) to opaque (train); the source needs lineMetrics.
  * @property {Record<string, unknown>} replayTrailCasing - Under replayTrail: sabz-900, width 9, fading the same way, so the yellow reads on the light map like the marker's ring.
- * @property {Record<string, unknown>} railNetwork - The rail lines trains run on, under the stations on the overview maps: sabz-700 at 55%, 1.2px at zoom 5 widening to 4px at zoom 12.
+ * @property {Record<string, unknown>} railNetwork - The rail lines trains run on, under the stations on the overview maps: sabz-700 at 80%, 1.4px at zoom 5 widening to 4.5px at zoom 12. Roads in the Sabz style are kept faint beside it.
  * @property {Record<string, unknown>} trainClusterText - The count on a trainImages().cluster pill: sabz-900.
  * @property {Record<string, unknown>} cityLabel - Text paint for major city labels: ink with a surface halo.
  * @property {Record<string, unknown>} land - Land fill, map-land.
@@ -63,7 +63,7 @@ export function mapPaint() {
     routeDone: { 'line-color': v('sabz-700'), 'line-width': 5 },
     routeAhead: { 'line-color': v('sabz-700'), 'line-width': 3, 'line-dasharray': [2, 2] },
     // Both fade in over the oldest 40% of the trail only, so the yellow never sits half-transparent on the dark casing.
-    railNetwork: { 'line-color': v('sabz-700'), 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.2, 9, 2.5, 12, 4] },
+    railNetwork: { 'line-color': v('sabz-700'), 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.4, 9, 2.8, 12, 4.5] },
     trainClusterText: { 'text-color': v('sabz-900') },
     replayTrail: { 'line-width': 5, 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, withAlpha(v('zard-500'), 0), 0.4, v('zard-500'), 1, v('zard-500')] },
     replayTrailCasing: { 'line-width': 9, 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, withAlpha(v('sabz-900'), 0), 0.4, withAlpha(v('sabz-900'), 0.9), 1, withAlpha(v('sabz-900'), 0.9)] },
