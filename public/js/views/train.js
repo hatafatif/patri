@@ -15,6 +15,7 @@ import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
 import { loadLastSeen, lastSeenOf, lastSeenText, agoText } from '../lastseen.js';
 import { supported, blocked, watching, enable, disable } from '../alerts.js';
+import { loadTrack } from '../track.js';
 import * as map from '../map.js';
 
 const REPAINT_MS = 1000;   // debounce for repaints caused by live updates
@@ -149,7 +150,7 @@ function drawMap(c) {
       next = { idx: nextIdx, title: place(stops[nextIdx]), sub };
     }
   }
-  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run, lastSeen: c.lastSeen });
+  map.showTrain({ key: `train:${v.number}:${run?.id || 'timetable'}`, stops, passedIdx, position, marker, next, follow: v.following && !!run, lastSeen: c.lastSeen, track: v.track || null });
 }
 
 function render() {
@@ -232,7 +233,7 @@ function renderReplay(c, options) {
       drawFrame();
     },
   });
-  map.showReplay({ key: `replay:${v.number}:${v.replay.days}`, stops: v.stops });
+  map.showReplay({ key: `replay:${v.number}:${v.replay.days}`, stops: v.stops, track: v.track || null });
   drawFrame();
 }
 
@@ -359,7 +360,7 @@ export default {
         days: params.days, state: 'loading', model: null, at: 0,
         playing: !matchMedia('(prefers-reduced-motion: reduce)').matches, raf: 0, last: 0,
       } : null,
-      number: params.number, info, params, stops: same?.stops || [], fetched: same?.fetched || [], hist: same?.hist || EMPTY,
+      number: params.number, info, params, stops: same?.stops || [], track: same?.track || null, fetched: same?.fetched || [], hist: same?.hist || EMPTY,
       loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '',
     };
     const app = document.getElementById('app');
@@ -374,6 +375,10 @@ export default {
     after = null;
     loadPhotos().then(() => { if (v) render(); });
     load();
+    if (!v.track) {
+      const token = v;
+      loadTrack(v.number).then(track => { if (v === token && track) { v.track = track; render(); } });
+    }
   },
   render,
   update(changed) {
@@ -397,7 +402,7 @@ export default {
     clearTimeout(renderTimer); clearInterval(tickTimer); clearTimeout(noticeTimer); clearTimeout(retryTimer);
     renderTimer = tickTimer = noticeTimer = retryTimer = 0;
     // Moving between this train's Train and All stops pages keeps the map and the data as they are; anywhere else clears the map.
-    if (v && new RegExp(`^#/train/${v.number}(/|\\?|$)`).test(location.hash)) keep = { number: v.number, stops: v.stops, fetched: v.fetched, hist: v.hist, lastPrev: v.lastPrev };
+    if (v && new RegExp(`^#/train/${v.number}(/|\\?|$)`).test(location.hash)) keep = { number: v.number, stops: v.stops, track: v.track, fetched: v.fetched, hist: v.hist, lastPrev: v.lastPrev };
     else map.clear();
     v = null;
   },
