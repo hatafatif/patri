@@ -9,7 +9,8 @@
 // Train page opens. If it is down or slow, history() returns nothing, exactly as without a recorder.
 // The recorder also owns push alerts and "last seen": /api/lastseen, /api/push-key, /api/watch and
 // /api/unwatch are proxied to it (4 s timeout, status and body forwarded). Without a recorder,
-// lastseen is {} and the other three answer 503.
+// lastseen is {} and the other three answer 503. The recorder also serves /api/replay (recorded runs
+// for the journey time-lapse, 8 s timeout); without one it answers 503.
 const { fetchLiveRuns, normalize } = require('../lib');
 const { Timetable } = require('../data');
 const { createRoutes, decorate, sendJson, readJson } = require('../routes');
@@ -103,6 +104,7 @@ const route = createRoutes(timetable, {
   runsFor: async train => (await snapshot()).filter(r => r.train === train),
   history: run => useRecorder ? recorderHistory(run) : { positions: [], passes: [] },
   ...alertsSource,
+  ...(useRecorder ? { replay: (trains, days) => recorderGet(`/api/replay?trains=${trains.join(',')}&days=${days}`, 8000) } : {}),
 });
 
 // Vercel may already have parsed the body into req.body; otherwise read the stream. At most 8 KB.

@@ -6,6 +6,7 @@ const { DatabaseSync } = require('node:sqlite');
 
 const KEEP_DAYS = Number(process.env.KEEP_DAYS) || 14;
 const MIN_GAP_S = 20; // keep at most one position per run every 20 s, plus every stop/start
+const REPLAY_STEP = { 7: 120, 30: 300, 90: 900 }; // seconds between replay points, by days asked for
 
 class Store {
   constructor(file) {
@@ -41,6 +42,11 @@ class Store {
     this.insertPass = this.db.prepare('INSERT OR IGNORE INTO passes VALUES (?, ?, ?, ?, ?)');
     this.selectPositions = this.db.prepare('SELECT ts, lat, lon, speed FROM positions WHERE run = ? ORDER BY ts');
     this.selectPasses = this.db.prepare('SELECT station, ts, late FROM passes WHERE run = ? ORDER BY ts');
+    // Bare columns next to MIN() take the row with the smallest ts, so each step keeps its first position.
+    // The CAST matters: node:sqlite binds JS numbers as REAL, which would turn ts / ? into float division.
+    this.selectReplay = this.db.prepare(`
+      SELECT run, train, MIN(ts) AS ts, ROUND(lat, 4) AS lat, ROUND(lon, 4) AS lon, speed
+      FROM positions WHERE train IN (?, ?) AND ts >= ? GROUP BY run, ts / CAST(? AS INTEGER) ORDER BY run, ts`);
     this.selectLastSeen = this.db.prepare(`
       SELECT p.train, p.ts, p.lat, p.lon, p.speed, p.prev, p.next
       FROM positions p JOIN (SELECT train, MAX(ts) AS ts FROM positions WHERE ts >= ? GROUP BY train) m
@@ -78,6 +84,20 @@ class Store {
       positions: this.selectPositions.all(run).map(r => [r.ts * 1000, r.lat, r.lon, r.speed]),
       passes: this.selectPasses.all(run).map(r => ({ station: r.station, at: r.ts * 1000, late: r.late })),
     };
+  }
+
+  // The recorded runs of one or two trains over the last `days` (7, 30 or 90), thinned to one point per
+  // step so the download stays small. Runs are ordered by when they started.
+  replay(trains, days) {
+    const step = REPLAY_STEP[days];
+    const to = Date.now(), from = to - days * 86400e3;
+    const byRun = new Map();
+    for (const r of this.selectReplay.all(trains[0], trains[1] ?? trains[0], Math.floor(from / 1000), step)) {
+      if (!byRun.has(r.run)) byRun.set(r.run, { id: r.run, train: r.train, points: [] });
+      byRun.get(r.run).points.push([r.ts * 1000, r.lat, r.lon, r.speed]);
+    }
+    const runs = [...byRun.values()].sort((a, b) => a.points[0][0] - b.points[0][0]);
+    return { days, step, from, to, runs };
   }
 
   // Each train's most recent recorded position within keepDays, keyed by train number.
