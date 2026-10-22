@@ -1383,6 +1383,7 @@
   var screens_exports = {};
   __export(screens_exports, {
     HomeScreen: () => HomeScreen,
+    ReplayScreen: () => ReplayScreen,
     RouteScreen: () => RouteScreen,
     SearchScreen: () => SearchScreen,
     StationScreen: () => StationScreen,
@@ -2020,6 +2021,7 @@
     const { stops, lastIdx, passedIdx, progress, ref } = d2;
     const stopsHref = `#/train/${train2.number}/stops`;
     const seeAll = Button({ label: t("seeAllStopsN", { n: stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
+    const replay = data.gps ? Button({ label: t("replay"), href: `#/train/${train2.number}/replay`, variant: "secondary", icon: "play", full: true }) : "";
     const more = (n) => n > 0 ? [{ kind: "more", name: t("moreStops", { n }), href: stopsHref }] : [];
     if (!run) {
       const stopRow = (kind, label, s, at3) => ({ kind, label, name: place2(s), ...at3 != null ? { time: { expected: time(at3) } } : {} });
@@ -2030,7 +2032,8 @@
             mode: "card",
             rows: [stopRow("stop", t("firstStop"), d2.first, d2.first.dep), ...more(lastIdx - 1), stopRow("final", t("lastStop"), d2.last, d2.last.arr)]
           }),
-          seeAll
+          seeAll,
+          replay
         )
       });
     }
@@ -2075,7 +2078,8 @@
           train: true,
           moving: run.speed > 0 && !["stopAt", "stopBetween", "wait", "done", "lost"].includes(st?.kind)
         }),
-        seeAll
+        seeAll,
+        replay
       )
     });
   }
@@ -2231,6 +2235,40 @@
       label: title,
       map,
       body: AppBar({ live: data.live, lang: getLang(), back: { href: `#/train/${train2.number}`, label: trainTitle(train2) } }) + content
+    });
+  }
+
+  // public/js/screens/ReplayScreen.js
+  function ReplayScreen(data, options = {}) {
+    const web = options.layout === "web";
+    const { train: train2, replay: r } = data;
+    const title = t("replayTitle");
+    const header2 = PageHeader({
+      title,
+      subtitle: `${trainNo(train2)} ${trainTitle(train2)}${r.returnName ? ` \xB7 ${t("replayWith", { name: r.returnName })}` : ""}`
+    });
+    const inside = r.state === "ready" ? [ReplayBar(r.bar), note(r.since), note(t("replayHint"))] : [note(t(r.state === "loading" ? "loading" : r.state === "failed" ? "replayFailed" : "replayEmpty"))];
+    const content = body(
+      header2,
+      Card({
+        body: stack(
+          SegmentedControl({ label: t("replayPeriod"), value: String(r.days), options: r.periods }),
+          ...inside
+        )
+      })
+    );
+    const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
+    const backHref = `#/train/${train2.number}`;
+    if (!web) {
+      return frame({ name: "replay", options, snap: "half", label: title, map, body: content, back: { href: backHref, label: t("back") } });
+    }
+    return frame({
+      name: "replay",
+      options,
+      snap: "half",
+      label: title,
+      map,
+      body: AppBar({ live: data.live, lang: getLang(), back: { href: backHref, label: trainTitle(train2) } }) + content
     });
   }
 
@@ -2466,6 +2504,7 @@
     live: "on",
     train: T[28],
     stops: STOPS,
+    gps: true,
     run: { speed: 105, late: LATE, updatedAt: 779, date: "2026-10-18", gps: true },
     now: 780,
     ests,
@@ -2499,7 +2538,29 @@
     ],
     map: { hover: { key: "khanewal", station: S.khanewal } }
   };
-  var samples = freeze({ home, search, route: routeSample, train: trainSample, station });
+  var REPLAY_FROM = DAY0 - 4 * 864e5 + 7 * 36e5;
+  var REPLAY_TO = DAY0 + 20 * 36e5;
+  var replaySample = {
+    ...trainSample,
+    replay: {
+      state: "ready",
+      days: 7,
+      periods: [7, 30, 90].map((n) => ({ value: String(n), label: `${n} days`, href: `#/train/28/replay?days=${n}` })),
+      bar: {
+        playing: true,
+        at: DAY0 - 864e5 + 15 * 36e5,
+        from: REPLAY_FROM,
+        to: REPLAY_TO,
+        days: [0, 1, 2, 3, 4].map((i) => ({ start: DAY0 - (4 - i) * 864e5, recorded: i !== 2 })),
+        time: "Sat 17 Oct \xB7 3:00 PM",
+        speed: "96 km/h",
+        label: "Replay time"
+      },
+      since: "Recorded since Wed 14 Oct",
+      returnName: "27 UP Shalimar Express"
+    }
+  };
+  var samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, station });
 
   // ds-entry.js
   var wrap = (mod) => {

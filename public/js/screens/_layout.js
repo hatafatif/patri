@@ -117,6 +117,8 @@ export const notice = text => `<div class="p-screen__notice" role="status" aria-
  * @param {(button: HTMLElement) => void} [o.onShare] - The PageHeader's share button.
  * @param {() => void} [o.onChangeStop] - The StopTimeline's Change link.
  * @param {(on: boolean) => void} [o.onFollowing] - The MapToggle ("Following") flipped.
+ * @param {() => void} [o.onReplayToggle] - The ReplayBar's play/pause button.
+ * @param {(at: number) => void} [o.onReplayScrub] - The ReplayBar's range moved; at is the chosen replay time, epoch ms.
  * @param {(action: 'zoomIn' | 'zoomOut' | 'layers' | 'locate' | 'wholeRoute', button: HTMLElement) => void} [o.onMap] - A mapButton() was pressed.
  */
 export function bindScreen(root, o = {}) {

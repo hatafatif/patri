@@ -228,6 +228,7 @@ function journeyCard(data, d) {
   const { stops, lastIdx, passedIdx, progress, ref } = d;
   const stopsHref = `#/train/${train.number}/stops`;
   const seeAll = Button({ label: t('seeAllStopsN', { n: stops.length }), href: stopsHref, variant: 'primary', icon: 'chevronEnd', full: true });
+  const replay = data.gps ? Button({ label: t('replay'), href: `#/train/${train.number}/replay`, variant: 'secondary', icon: 'play', full: true }) : '';
   const more = n => (n > 0 ? [{ kind: 'more', name: t('moreStops', { n }), href: stopsHref }] : []);
 
   if (!run) {
@@ -241,6 +242,7 @@ function journeyCard(data, d) {
           rows: [stopRow('stop', t('firstStop'), d.first, d.first.dep), ...more(lastIdx - 1), stopRow('final', t('lastStop'), d.last, d.last.arr)],
         }),
         seeAll,
+        replay,
       ),
     });
   }
@@ -290,6 +292,7 @@ function journeyCard(data, d) {
         moving: run.speed > 0 && !['stopAt', 'stopBetween', 'wait', 'done', 'lost'].includes(st?.kind),
       }),
       seeAll,
+      replay,
     ),
   });
 }

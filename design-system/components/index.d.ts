@@ -509,6 +509,21 @@ export interface HomeTrain {
   yourStop?: { station: ScreenStation, est: number, scheduled?: boolean };
 }
 
+/** Train page › Journey replay: the map plays the train's recorded journeys, and its return train's, while the Panel (half height on the phone) holds the PageHeader and one Card: the period switch (SegmentedControl of links), then the ReplayBar with how far back the recordings go and a hint. While loading, or when nothing was recorded or the request failed, the card shows a note instead of the bar. Takes the same data as TrainScreen, plus `replay`. (screens/ReplayScreen.js) */
+export interface ReplayData {
+  state: 'loading' | 'ready' | 'empty' | 'failed';
+  /** The period shown. */
+  days: 7 | 30 | 90;
+  /** The SegmentedControl's options ("7 days", ...), each a link to #/train/N/replay?days=n. */
+  periods: { value: string, label: string, href: string }[];
+  /** Needed when state is 'ready'. */
+  bar?: ReplayBarProps;
+  /** Already localised, e.g. "Recorded since Tue 21 Oct". Needed when state is 'ready'. */
+  since?: string;
+  /** The return train, e.g. "8 DN Tezgam". Shown in the subtitle when given. */
+  returnName?: string;
+}
+
 /** Search › From → To: the Panel at full height with a back button and the mode switch, the From and To fields with swap, a Today | Tomorrow switch, then the direct trains still to leave From (views/trip.js, /api/trip). Either station may be null (the field shows its placeholder; the day switch and the lists are left out and a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note. (screens/RouteScreen.js) */
 export interface RouteScreenData {
   from: ScreenStation | null;
@@ -794,6 +809,7 @@ export interface ScreenOptions {
 /** window.Patri.screens: page templates built from the components (public/js/screens/). */
 export interface PatriScreens {
   HomeScreen(data: HomeScreenData, options?: ScreenOptions): string;
+  ReplayScreen(data: unknown, options?: ScreenOptions): string;
   RouteScreen(data: RouteScreenData, options?: ScreenOptions): string;
   SearchScreen(data: SearchScreenData, options?: ScreenOptions): string;
   StationScreen(data: StationScreenData, options?: ScreenOptions): string;
@@ -808,6 +824,7 @@ export interface PatriSamples {
   search: SearchScreenData;
   route: RouteScreenData;
   train: TrainScreenData;
+  replay: unknown;
   station: StationScreenData;
 }
 

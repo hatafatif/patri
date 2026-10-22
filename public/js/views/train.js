@@ -1,13 +1,15 @@
-// The Train page (#/train/<n>) and All stops (#/train/<n>/stops): both render through the
-// screen templates from the same data, so the map keeps its view when you move between them.
+// The Train page (#/train/<n>), All stops (#/train/<n>/stops) and Journey replay (#/train/<n>/replay): all render
+// through the screen templates from the same data, so the map keeps its view when you move between them.
 import { t, clock, delayText, isUrdu } from '../i18n.js';
+import { PERIODS, prepare, advance, frameAt } from '../replay.js';
 import { trainName } from '../names.js';
 import {
   state, api, paint, layout, navigate, returnTo,
   isFollowed, setFollowed, addRecentTrain,
 } from '../app.js';
-import { TrainScreen, StopsScreen } from '../screens/index.js';
-import { place, trainNo } from '../screens/_format.js';
+import { TrainScreen, StopsScreen, ReplayScreen } from '../screens/index.js';
+import { syncReplayBar } from '../components/index.js';
+import { place, trainNo, trainTitle, dateLabel } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
@@ -154,10 +156,103 @@ function render() {
   if (!v) return;
   const c = compute();
   const options = { layout: layout(), standin: false };
+  if (v.params.replay) { renderReplay(c, options); return; }
   const html = v.params.stops ? StopsScreen(c.data, options) : TrainScreen(c.data, options);
   paint(html, handlers(c.data));
   drawMap(c);
   ensureHistory(c.run);
+}
+
+// ---- Journey replay (#/train/<n>/replay)
+
+const timeText = ms => `${dateLabel(isoDate(ms))} · ${clock(ms)}`;
+
+/** The readout's speed: this train's, or "Between journeys" when it isn't on the move. */
+function speedText(frame) {
+  const mine = frame.find(x => x.train === v.number);
+  return mine ? t('kmh', { n: mine.speed }) : t('replayIdle');
+}
+
+function replayOf() {
+  const rp = v.replay, m = rp.model;
+  const r = returnTrainOf(v.info);
+  const out = {
+    state: rp.state, days: rp.days,
+    periods: PERIODS.map(n => ({ value: String(n), label: t('nDays', { n }), href: `#/train/${v.number}/replay?days=${n}` })),
+    ...(r ? { returnName: `${trainNo(r)} ${trainTitle(r)}` } : {}),
+  };
+  if (rp.state === 'ready') {
+    out.since = t('replaySince', { date: dateLabel(isoDate(m.from)) });
+    out.bar = { playing: rp.playing, at: rp.at, from: m.from, to: m.to, days: m.days, time: timeText(rp.at), speed: speedText(frameAt(m, rp.at)), label: t('replayTime') };
+  }
+  return out;
+}
+
+/** Draws the map and the bar for the replay time `at`. */
+function drawFrame() {
+  const rp = v.replay;
+  if (rp.state !== 'ready') return;
+  const f = frameAt(rp.model, rp.at);
+  map.setReplayFrame(f.map(x => ({
+    id: x.id, lat: x.lat, lon: x.lon, facing: x.facing, trail: x.trail,
+    label: `${trainNo(state.byNumber.get(x.train) || v.info)} · ${t('kmh', { n: x.speed })}`,
+  })));
+  syncReplayBar(document.getElementById('app'), { at: rp.at, time: timeText(rp.at), speed: speedText(f), playing: rp.playing });
+}
+
+function loop(now) {
+  const rp = v?.replay;
+  if (!rp || !rp.playing) return;
+  rp.raf = requestAnimationFrame(loop);
+  const dt = Math.min(100, now - (rp.last || now));
+  rp.last = now;
+  rp.at = advance(rp.model, rp.at, dt);
+  drawFrame();
+}
+
+function startLoop() {
+  const rp = v.replay;
+  cancelAnimationFrame(rp.raf);
+  rp.last = 0;
+  rp.raf = requestAnimationFrame(loop);
+}
+
+function renderReplay(c, options) {
+  const data = { ...c.data, replay: replayOf() };
+  paint(ReplayScreen(data, options), {
+    ...handlers(data),
+    onReplayToggle() {
+      const rp = v.replay;
+      rp.playing = !rp.playing;
+      if (rp.playing) startLoop(); else cancelAnimationFrame(rp.raf);
+      drawFrame();
+    },
+    onReplayScrub(ms) {
+      v.replay.at = ms;
+      drawFrame();
+    },
+  });
+  map.showReplay({ key: `replay:${v.number}:${v.replay.days}`, stops: v.stops });
+  drawFrame();
+}
+
+/** Loads the recorded journeys of this train and its return train (live data, so never cached). */
+function loadReplay() {
+  const token = v, rp = v.replay;
+  const r = returnTrainOf(v.info);
+  const trains = [v.number, r?.number].filter(Boolean).join(',');
+  api(`/api/replay?trains=${trains}&days=${rp.days}`).then(body => {
+    if (v !== token) return;
+    rp.model = prepare(body);
+    rp.state = rp.model ? 'ready' : 'empty';
+    if (rp.model) rp.at = rp.model.from;
+    render();
+    if (rp.model && rp.playing) startLoop();
+  }, () => {
+    if (v !== token) return;
+    rp.state = 'failed';
+    render();
+  });
 }
 
 function scheduleRender() {
@@ -246,6 +341,7 @@ async function load() {
     v.stops = stops;
     v.fetched = runs;
     render();
+    if (v.replay) loadReplay();
   } catch {
     if (v === token) retryTimer = setTimeout(() => { if (v === token) load(); }, 5000);
   }
@@ -259,6 +355,10 @@ export default {
     const same = keep?.number === params.number ? keep : null;
     keep = null;
     v = {
+      replay: params.replay ? {
+        days: params.days, state: 'loading', model: null, at: 0,
+        playing: !matchMedia('(prefers-reduced-motion: reduce)').matches, raf: 0, last: 0,
+      } : null,
       number: params.number, info, params, stops: same?.stops || [], fetched: same?.fetched || [], hist: same?.hist || EMPTY,
       loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '',
     };
@@ -277,7 +377,7 @@ export default {
   },
   render,
   update(changed) {
-    if (!v || !v.stops.length) return;
+    if (!v || v.replay || !v.stops.length) return;
     const mine = changed.filter(r => r.train === v.number);
     if (!mine.length) return;
     const { run } = pickRun();
@@ -291,6 +391,7 @@ export default {
     scheduleRender();
   },
   unmount() {
+    if (v?.replay) cancelAnimationFrame(v.replay.raf);
     offClick?.();
     offClick = null;
     clearTimeout(renderTimer); clearInterval(tickTimer); clearTimeout(noticeTimer); clearTimeout(retryTimer);

@@ -335,7 +335,7 @@ The app's pages, built from the components above. **Views render their pages thr
     - `expanded` is for showcase frames only: the map keeps a band at the top and the panel opens in full.
     - `standin: false` leaves the map area empty, so a view can mount MapLibre in `.p-screen__backdrop`.
 - **Layout helpers** in `_layout.js`, besides the wrappers: `mapButton(action)` (a floating IconButton for `zoomIn`, `zoomOut`, `layers`, `locate` or `wholeRoute`), `backButton(href, variant)` (the app goes back in history when it can, else follows `href`) and `notice(text)` (a polite live region holding a neutral StatusChip, for feedback such as "Link copied"; always rendered, empty when there is nothing to say).
-- **Behaviour:** `bindScreen(root, handlers)` wires every component inside a rendered screen and returns `unbind()`. Every handler is optional: `data` (feeds the speed chart readout), `onLang`, `onSnap`, `onSearch`, `onClear`, `onSegment`, `onPickFrom`, `onPickTo`, `onSwap`, `onFollow`, `onShare`, `onChangeStop`, `onFollowing` and `onMap(action)`.
+- **Behaviour:** `bindScreen(root, handlers)` wires every component inside a rendered screen and returns `unbind()`. Every handler is optional: `data` (feeds the speed chart readout), `onLang`, `onSnap`, `onSearch`, `onClear`, `onSegment`, `onPickFrom`, `onPickTo`, `onSwap`, `onFollow`, `onShare`, `onChangeStop`, `onFollowing`, `onMap(action)`, `onReplayToggle` and `onReplayScrub(ms)`.
 - **In the app:** each view in `public/js/views/` builds a screen's data from the live API and calls `paint(html, handlers)` from `public/js/app.js`. The first paint of a page is fresh; later ones morph the DOM in place (`public/js/render.js`), so the panel's snap, scroll, focus and the MapLibre map survive live updates.
 - **The rule:** a screen is composed **only** from registered components, plus layout markup from `_layout.js`. If a page needs a visual piece no component provides, propose a new component (see the top of this file). Don't add markup or CSS to the screen.
 
@@ -346,6 +346,7 @@ The app's pages, built from the components above. **Views render their pages thr
 | RouteScreen | Search › Plan a trip: trains you can still board | phone |
 | TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with Change stop and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey button, then the upcoming stops as links) | phone |
+| ReplayScreen | Train page › Journey replay (`#/train/<n>/replay`): a time-lapse of the train's recorded journeys and its return train's on the map, with a period switch (7, 30 or 90 days), the ReplayBar and a hint; loading, empty and failed notes | phone |
 | StationScreen | Station page: the board of next trains, or with the "Next trains / Timetable" switch (SegmentedControl, `?view=timetable`) the whole day's timetable (a Photo of the city above it when there is one) | phone, web |
 
 - **Library:** each screen has a showcase page in `design-system/components/<Name>Screen[Web]/` (group "Screens").

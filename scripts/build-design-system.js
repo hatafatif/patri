@@ -32,6 +32,7 @@ const SCREEN_PAGES = [
   { folder: 'TrainScreen', fn: 'TrainScreen', sample: 'train', layout: 'phone' },
   { folder: 'TrainScreenWeb', fn: 'TrainScreen', sample: 'train', layout: 'web' },
   { folder: 'StopsScreen', fn: 'StopsScreen', sample: 'train', layout: 'phone' },
+  { folder: 'ReplayScreen', fn: 'ReplayScreen', sample: 'replay', layout: 'phone' },
   { folder: 'StationScreen', fn: 'StationScreen', sample: 'station', layout: 'phone' },
   { folder: 'StationScreenWeb', fn: 'StationScreen', sample: 'station', layout: 'web' },
 ];
