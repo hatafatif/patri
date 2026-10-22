@@ -185,6 +185,8 @@ export interface MapPaintResult {
   routeAhead: Record<string, unknown>;
   /** The fading trail behind a replayed train: zard-500, width 5, a line-gradient from transparent (tail) to opaque (train); the source needs lineMetrics. */
   replayTrail: Record<string, unknown>;
+  /** Under replayTrail: sabz-900, width 9, fading the same way, so the yellow reads on the light map like the marker's ring. */
+  replayTrailCasing: Record<string, unknown>;
   /** Text paint for major city labels: ink with a surface halo. */
   cityLabel: Record<string, unknown>;
   /** Land fill, map-land. */

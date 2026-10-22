@@ -5,6 +5,9 @@ import { pktMidnight } from './i18n.js';
 export const PERIODS = [7, 30, 90];
 export const PLAY_MS = 60000; // a whole period plays in about a minute
 const DAY = 86400e3;
+// Recorded points are at most 15 min apart (the 90-day step); a longer gap means the recorder heard nothing,
+// so the train is left off the map then rather than drawn gliding across it.
+const GAP_MS = 45 * 60e3;
 
 /** First index in pts whose time is after ms (pts sorted by time). */
 function after(pts, ms) {
@@ -45,8 +48,8 @@ export function advance(model, at, dtMs) {
   return next > model.to ? model.from : next;
 }
 
-/** How far back each train's trail reaches: two hours, or a fortieth of the period when that is longer. */
-const trailMs = model => Math.max(2 * 3600e3, (model.to - model.from) / 40);
+/** How far back each train's trail reaches: a twelfth of the period, kept between 4 and 12 hours, so it reads at play speed. */
+const trailMs = model => Math.min(12 * 3600e3, Math.max(4 * 3600e3, (model.to - model.from) / 12));
 
 /** Which way the train is heading at index i: the first point ahead (else behind) at least ~500 m east or west. */
 function facingAt(pts, i) {
@@ -69,7 +72,8 @@ export function frameAt(model, at) {
     const { pts } = r;
     const i = Math.max(1, Math.min(pts.length - 1, after(pts, at)));
     const a = pts[i - 1], b = pts[i];
-    const k = b[0] > a[0] ? Math.min(1, Math.max(0, (at - a[0]) / (b[0] - a[0]))) : 0;
+    if (b[0] - a[0] > GAP_MS) continue;
+    const k =b[0] > a[0] ? Math.min(1, Math.max(0, (at - a[0]) / (b[0] - a[0]))) : 0;
     const lat = a[1] + (b[1] - a[1]) * k, lon = a[2] + (b[2] - a[2]) * k;
     const trail = pts.slice(after(pts, at - back), i).map(p => [p[2], p[1]]);
     trail.push([lon, lat]);

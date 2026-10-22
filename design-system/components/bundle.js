@@ -1247,7 +1247,9 @@
       routeDoneCasing: { "line-color": v("surface"), "line-width": 8 },
       routeDone: { "line-color": v("sabz-700"), "line-width": 5 },
       routeAhead: { "line-color": v("sabz-700"), "line-width": 3, "line-dasharray": [2, 2] },
-      replayTrail: { "line-width": 5, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("zard-500"), 0), 1, v("zard-500")] },
+      // Both fade in over the oldest 40% of the trail only, so the yellow never sits half-transparent on the dark casing.
+      replayTrail: { "line-width": 5, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("zard-500"), 0), 0.4, v("zard-500"), 1, v("zard-500")] },
+      replayTrailCasing: { "line-width": 9, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("sabz-900"), 0), 0.4, withAlpha(v("sabz-900"), 0.9), 1, withAlpha(v("sabz-900"), 0.9)] },
       cityLabel: { "text-color": v("ink"), "text-halo-color": v("surface"), "text-halo-width": 1.5 },
       land: { "fill-color": v("map-land") },
       water: { "fill-color": v("map-water") },
@@ -1329,8 +1331,8 @@
     const max = Math.max(0, Math.round(span / MIN));
     const value = Math.min(max, Math.max(0, Math.round((at3 - from) / MIN)));
     const off = disabled ? " disabled" : "";
-    const ticks = span > 0 ? days.filter((d2) => d2.start <= to).map((d2) => {
-      const f = Math.min(1, Math.max(0, (d2.start - from) / span));
+    const ticks = span > 0 ? days.filter((d2) => d2.start >= from && d2.start <= to).map((d2) => {
+      const f = (d2.start - from) / span;
       return `<span class="${cx("p-replaybar__tick", !d2.recorded && "p-replaybar__tick--empty")}" style="--f:${+f.toFixed(5)}"></span>`;
     }).join("") : "";
     const name = playing ? t("pause") : t("play");

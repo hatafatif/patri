@@ -23,9 +23,9 @@ export function ReplayBar({ playing = false, at, from, to, days = [], time = '',
   const max = Math.max(0, Math.round(span / MIN));
   const value = Math.min(max, Math.max(0, Math.round((at - from) / MIN)));
   const off = disabled ? ' disabled' : '';
-  // A day that starts before `from` (the first day) is clamped to the start; days after `to` are skipped.
-  const ticks = span > 0 ? days.filter(d => d.start <= to).map(d => {
-    const f = Math.min(1, Math.max(0, (d.start - from) / span));
+  // A tick marks where a day starts, so a day that started before `from` (the first, partial one) has none.
+  const ticks = span > 0 ? days.filter(d => d.start >= from && d.start <= to).map(d => {
+    const f = (d.start - from) / span;
     return `<span class="${cx('p-replaybar__tick', !d.recorded && 'p-replaybar__tick--empty')}" style="--f:${+f.toFixed(5)}"></span>`;
   }).join('') : '';
   const name = playing ? t('pause') : t('play');

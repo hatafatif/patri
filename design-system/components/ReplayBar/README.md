@@ -16,7 +16,7 @@ The playback control for the journey replay: a play/pause button, a scrubber wit
 | `at` | `number` | none | The replay's current time, epoch ms. |
 | `from` | `number` | none | Start of the replay, epoch ms. |
 | `to` | `number` | none | End of the replay, epoch ms. |
-| `days` | `{ start: number, recorded: boolean }[]` | `[]` | One tick per day: the day's start (epoch ms) and whether anything was recorded. A day before `from` is clamped to the start; a day after `to` is skipped. |
+| `days` | `{ start: number, recorded: boolean }[]` | `[]` | One tick per day: the day's start (epoch ms) and whether anything was recorded. A tick marks where a day starts, so days that start before `from` or after `to` get none. |
 | `time` | `string` | `''` | Already localised readout of `at`, such as "Tue 14 Oct · 3:40 PM". |
 | `speed` | `string` | `''` | Already localised, such as "92 km/h", or a short phrase such as "Between journeys". |
 | `label` | `string` | `''` | Already localised aria-label for the range, such as "Replay time". |

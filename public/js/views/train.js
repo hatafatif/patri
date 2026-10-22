@@ -167,9 +167,9 @@ function render() {
 
 const timeText = ms => `${dateLabel(isoDate(ms))} · ${clock(ms)}`;
 
-/** The readout's speed: this train's, or "Between journeys" when it isn't on the move. */
+/** The readout's speed: this train's newest run (two can overlap on long journeys), or "Between journeys". */
 function speedText(frame) {
-  const mine = frame.find(x => x.train === v.number);
+  const mine = frame.findLast(x => x.train === v.number);
   return mine ? t('kmh', { n: mine.speed }) : t('replayIdle');
 }
 

@@ -257,7 +257,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
   - rail: `map-rail`;
   - route done: `sabz-700`, width 5, with a white casing;
   - route ahead: `sabz-700`, dashed.
-  - replay trail: `zard-500`, width 5, fading to transparent at its tail (a `line-gradient`; the source needs `lineMetrics`).
+  - replay trail: `zard-500`, width 5, over a `sabz-900` casing, width 9, both fading to transparent at the tail (a `line-gradient`; the source needs `lineMetrics`).
 **Rules:**
 - Home and Station maps show **stations, plus a small marker for every running train** (`mapPaint().trainDot`; tapping or clicking one opens its Train page). Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
 - The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
@@ -312,7 +312,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Behaviour:**
 - The range counts whole minutes from `from` to `to`. `bindReplayBar(root, { onToggle, onScrub })` calls `onToggle()` for the button and `onScrub(at)` (epoch ms) when the range moves.
 - `syncReplayBar(root, { at, time, speed, playing })` updates the bar in place and only touches what changed, so it can run every frame.
-- A day before `from` is clamped to the start and a day after `to` is skipped. `disabled` greys the button and the range with the `line` and `ink-muted` tokens.
+- A tick marks where a day starts, so days that start before `from` or after `to` get none. `disabled` greys the button and the range with the `line` and `ink-muted` tokens.
 **Markup:** a `<div>` with `data-from` and `data-to`, a `<button>` (aria-label "Play" or "Pause"), the ticks (`aria-hidden`) and an `<input type="range">` with the label as its aria-label and the time as its aria-valuetext. Time and speed are in `<bdi>`.
 **Right-to-left:** the range and the ticks run from the right and mirror together (logical `inset-inline-start`). The play and pause icons are media icons and don't mirror.
 

@@ -241,6 +241,7 @@ async function addOverlays() {
   map.addLayer({ id: 'route-ahead', type: 'line', source: 'route-ahead', paint: p.routeAhead, layout: { 'line-join': 'round' } });
   map.addLayer({ id: 'route-done-casing', type: 'line', source: 'route-done', paint: p.routeDoneCasing, layout: round });
   map.addLayer({ id: 'route-done', type: 'line', source: 'route-done', paint: p.routeDone, layout: round });
+  map.addLayer({ id: 'replay-trail-casing', type: 'line', source: 'replay-trail', paint: p.replayTrailCasing, layout: round });
   map.addLayer({ id: 'replay-trail', type: 'line', source: 'replay-trail', paint: p.replayTrail, layout: round });
   map.addLayer({
     id: 'route-stops', type: 'circle', source: 'route-stops',
