@@ -40,8 +40,7 @@
 // its RTL-text plugin); the DOM labels (mapLabel, trainMarker) carry the language. Stations are
 // { id, name, nameUr, lat, lon }; stops are the same, in route order.
 /* global maplibregl */
-import { mapPaint, mapLabel, trainMarker } from './components/index.js';
-import { trainImages } from './components/MapMarkers.js';
+import { mapPaint, mapLabel, trainMarker, trainImages } from './components/index.js';
 import { loadNetwork, headingsAt, bearing } from './track.js';
 import { stationName } from './names.js';
 import { haversineKm } from './eta.js';

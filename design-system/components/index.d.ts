@@ -876,6 +876,7 @@ export interface PatriApi {
   mapPaint(): MapPaintResult;
   statusTone(lateMin: number | null | undefined, opts?: { gps?: boolean }): 'ontime' | 'late' | 'early' | 'nogps';
   syncReplayBar(...args: any[]): any;
+  trainImages(...args: any[]): any;
   trainMarker(props: TrainMarkerProps): string;
   screens: PatriScreens;
   samples: PatriSamples;

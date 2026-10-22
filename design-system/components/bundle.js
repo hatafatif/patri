@@ -52,6 +52,7 @@
     mapPaint: () => mapPaint,
     statusTone: () => statusTone,
     syncReplayBar: () => syncReplayBar,
+    trainImages: () => trainImages,
     trainMarker: () => trainMarker
   });
 
@@ -1256,6 +1257,74 @@
       water: { "fill-color": v("map-water") },
       border: { "line-color": v("map-border"), "line-width": 1, "line-dasharray": [3, 2] }
     };
+  }
+  var svgImage = (svg) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '))}`;
+  });
+  function draw(w, h, paint) {
+    const canvas = document.createElement("canvas");
+    canvas.width = w * 2;
+    canvas.height = h * 2;
+    const g = canvas.getContext("2d");
+    g.scale(2, 2);
+    paint(g);
+    return g.getImageData(0, 0, w * 2, h * 2);
+  }
+  async function trainImages() {
+    const css = getComputedStyle(document.documentElement);
+    const v = (name) => css.getPropertyValue(`--${name}`).trim();
+    const ink = v("sabz-900"), green = v("sabz-700"), yellow = v("zard-500"), surface = v("surface");
+    const glyph = await svgImage(icon.train.replace('stroke="currentColor"', `stroke="${ink}"`).replace('stroke-width="2"', 'stroke-width="2.4"'));
+    const outline = (g, path) => {
+      g.lineJoin = "round";
+      g.lineWidth = 3;
+      g.strokeStyle = surface;
+      g.stroke(path);
+    };
+    const cluster = draw(50, 26, (g) => {
+      g.beginPath();
+      g.roundRect(1, 1, 48, 24, 12);
+      g.fillStyle = yellow;
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = ink;
+      g.stroke();
+      g.drawImage(glyph, 7, 5, 16, 16);
+    });
+    const loco = draw(16, 22, (g) => {
+      const body2 = new Path2D();
+      body2.moveTo(-5, 20);
+      body2.lineTo(-5, 9);
+      body2.quadraticCurveTo(-5, 2, 0, 2);
+      body2.quadraticCurveTo(5, 2, 5, 9);
+      body2.lineTo(5, 20);
+      body2.closePath();
+      g.translate(8, 0);
+      outline(g, body2);
+      g.fillStyle = ink;
+      g.fill(body2);
+      g.save();
+      g.clip(body2);
+      g.fillStyle = yellow;
+      g.fillRect(-6, 1, 12, 6);
+      g.restore();
+      g.fillStyle = yellow;
+      g.fillRect(-3, 9, 6, 1.6);
+    });
+    const coach = draw(16, 22, (g) => {
+      const body2 = new Path2D();
+      body2.roundRect(-5, 2, 10, 18, 2.5);
+      g.translate(8, 0);
+      outline(g, body2);
+      g.fillStyle = green;
+      g.fill(body2);
+      g.fillStyle = yellow;
+      for (const y of [5.5, 10.2, 14.9]) g.fillRect(-2.5, y, 5, 1.6);
+    });
+    return { cluster, loco, coach };
   }
   function MapMarkers({ type, ...rest } = {}) {
     return type === "train" ? trainMarker(rest) : mapLabel(rest);

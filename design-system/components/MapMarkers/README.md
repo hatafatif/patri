@@ -11,7 +11,7 @@ Everything drawn on the map: the followed train's marker, the label cards, and t
 - For anything outside the map. Hard-coded map colours in `map.js` should move to `mapPaint()`.
 
 ## Rules
-- The Home and Station maps show stations, plus a small marker for every running train (`trainDot`); tapping one opens its Train page. Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
+- The Home and Station maps show stations on the rail network (`railNetwork`, from OpenStreetMap). Running trains are yellow count pills when zoomed out (`trainImages().cluster`; a tap zooms in) and a locomotive pulling a coach when zoomed in (`trainImages().loco` and `.coach`, each turned to the track, so the train bends on curves); tapping one opens its Train page. Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
 - The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
 - The Train map shows that one train, followed.
 
