@@ -23,14 +23,15 @@
 //                               stations mode (Home, Search, From → To, Station): every station a small dot, the major
 //                               cities bigger and labelled, running trains, the rail network, selected ids drawn as selected with a mapLabel 'selected'.
 //                               fit: 'country' | 'selected' | 'keep'; applied only when key changes.
-//   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow, lastSeen? })
-//                               train mode (Train page, All stops): the route from the stop coordinates, done solid and
+//   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow, lastSeen?, track? })
+//                               train mode (Train page, All stops): the route along track (track.js) or, without one,
+//                               straight between the stop coordinates, done solid and
 //                               ahead dashed, the trainMarker at position, mapLabel 'next' and 'yourstop'. A new key fits
 //                               the train (follow) or the whole route; later calls update in place. With no position,
 //                               lastSeen { lat, lon, label } puts a faded (stale) trainMarker there; it is never followed.
 //   setFollow(on)               keep the train centred in the visible area
 //   showWholeRoute()            fit every stop into the visible area and stop following
-//   showReplay({ key, stops })  replay mode: the whole route (dashed) fitted in view and no other markers; the page then
+//   showReplay({ key, stops, track? })  replay mode: the whole route (dashed, along track when given) fitted in view and no other markers; the page then
 //                               drives the trains with setReplayFrame
 //   setReplayFrame(trains)      [{ id, lat, lon, facing, label, trail }]; one trainMarker per id and a fading trail
 //                               ([lon, lat] pairs ending at the train); called every animation frame
@@ -47,6 +48,7 @@ import { haversineKm } from './eta.js';
 import { t } from './i18n.js';
 import { styleFor, maskLayers, loadPakistan, STYLES, MAJORS } from './mapstyle.js';
 import { lockToPakistan } from './maplock.js';
+import { splitTrack } from './track.js';
 
 const PAKISTAN = [[60.8, 23.6], [77.9, 37.1]];
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -55,6 +57,7 @@ const REACHES = [8, 2, 0.5]; // km of track read for the heading, by zoom step (
 const hoverable = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 const line = pts => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: pts.map(p => [p.lon, p.lat]) } });
+const coords = pts => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: pts } }); // pts are [lon, lat]
 const points = list => ({
   type: 'FeatureCollection',
   features: list.map(p => ({ type: 'Feature', properties: p.props || {}, geometry: { type: 'Point', coordinates: [p.lon, p.lat] } })),
@@ -86,8 +89,8 @@ const put = (id, value) => { data[id] = value; map?.getSource(id)?.setData(value
 // overlay lost to a style change) is not lost.
 let mode = null; // 'stations' | 'train' | 'replay' | null
 let sIntent = null; // { key, stations, selected, fit }
-let tIntent = null; // { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen }
-let rIntent = null; // { key, stops }
+let tIntent = null; // { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen, track }
+let rIntent = null; // { key, stops, track }
 let located_ = null; // station id picked by locate(), kept until the stations key changes
 let stationSig = '', byId = new Map(), allStations = [];
 let fitPending = false; // a fit is waiting for the container to have a size
@@ -367,8 +370,10 @@ function drawTrain(keyChanged) {
   const facing = pos && nextStop && nextStop.lon < pos.lon ? 'left' : 'right';
   const done = live ? [...cut, live] : passedIdx >= 0 ? cut : [];
   const rest = live ? [live, ...after] : passedIdx >= 0 ? [...cut.slice(-1), ...after] : pts;
-  put('route-done', done.length > 1 ? line(done) : EMPTY);
-  put('route-ahead', rest.length > 1 ? line(rest) : EMPTY);
+  const { track } = tIntent;
+  const split = track ? splitTrack(track, passedIdx, live || null) : { done, rest };
+  put('route-done', split.done.length > 1 ? (track ? coords : line)(split.done) : EMPTY);
+  put('route-ahead', split.rest.length > 1 ? (track ? coords : line)(split.rest) : EMPTY);
   put('route-stops', points(pts.map(s => ({ ...s, props: { passed: all.indexOf(s) <= passedIdx } }))));
   put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY); put('rail-network', EMPTY);
   stationSig = '';
@@ -439,7 +444,8 @@ function leaveReplay() {
 
 function drawReplay(keyChanged) {
   const stops = rIntent.stops.map(sane).filter(Boolean);
-  put('route-ahead', stops.length > 1 ? line(stops) : EMPTY);
+  const route = rIntent.track ? rIntent.track.line : stops, draw = rIntent.track ? coords : line;
+  put('route-ahead', route.length > 1 ? draw(route) : EMPTY);
   put('route-done', EMPTY);
   put('route-stops', points(stops.map(s => ({ ...s, props: { passed: false } }))));
   put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY); put('rail-network', EMPTY);
@@ -651,18 +657,18 @@ export function showStations({ key, stations = [], selected = [], fit = 'keep' }
   sync();
 }
 
-export function showTrain({ key, stops = [], passedIdx = -1, position = null, marker = '', next, mine, follow = false, lastSeen = null } = {}) {
+export function showTrain({ key, stops = [], passedIdx = -1, position = null, marker = '', next, mine, follow = false, lastSeen = null, track = null } = {}) {
   const changed = !(mode === 'train' && tIntent && tIntent.key === key);
   mode = 'train';
-  tIntent = { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen };
+  tIntent = { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen, track };
   if (changed) keyDirty = true;
   sync();
 }
 
-export function showReplay({ key, stops = [] } = {}) {
+export function showReplay({ key, stops = [], track = null } = {}) {
   const changed = !(mode === 'replay' && rIntent && rIntent.key === key);
   mode = 'replay';
-  rIntent = { key, stops };
+  rIntent = { key, stops, track };
   if (changed) keyDirty = true;
   sync();
 }
