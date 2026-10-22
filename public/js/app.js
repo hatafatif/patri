@@ -184,7 +184,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---- Routing.
 //   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=]
-//   #/train/<n>/stops[?pick=1]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
+//   #/train/<n>/stops[?pick=1]  #/train/<n>/replay[?days=7|30|90]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
 export function parse(hash = location.hash) {
   const h = hash.replace(/^#/, '');
   if (/^\d+$/.test(h)) return { view: 'train', params: { number: Number(h) }, legacy: `#/train/${h}` };
@@ -196,7 +196,11 @@ export function parse(hash = location.hash) {
   const id = x => (x && x !== '-' ? x : null);
   if (parts[0] === 'trip') return { view: 'trip', params: { from: id(parts[1]), to: id(parts[2]), day: q.get('day') === 'tomorrow' ? 'tomorrow' : 'today' } };
   if (parts[0] === 'train' && parts[1]) {
-    return { view: 'train', params: { number: Number(parts[1]), stops: parts[2] === 'stops', pick: q.get('pick') === '1', run: q.get('run') } };
+    const days = Number(q.get('days'));
+    return { view: 'train', params: {
+      number: Number(parts[1]), stops: parts[2] === 'stops', pick: q.get('pick') === '1', run: q.get('run'),
+      replay: parts[2] === 'replay', days: [7, 30, 90].includes(days) ? days : 7,
+    } };
   }
   if (parts[0] === 'station') return { view: 'station', params: { id: parts[1] || null, view: q.get('view') === 'timetable' ? 'timetable' : 'next' } };
   return { view: 'home', params: {} };

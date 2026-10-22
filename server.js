@@ -9,7 +9,8 @@
 //   DATA_DIR      where trains.db lives (default ./data)
 //   KEEP_DAYS     how long positions are kept (store.js, default 14)
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  enable push alerts (push.js); without them /api/push-key is 503
-// Besides history, this serves GET /api/lastseen (each train's last recorded position), GET /api/push-key,
+// Besides history, this serves GET /api/replay (recorded runs of a train and its return train, thinned),
+// GET /api/lastseen (each train's last recorded position), GET /api/push-key,
 // and POST /api/watch and /api/unwatch (push alerts for one train, checked in alerts.js after every
 // recorded position). POST bodies are JSON up to 8 KB.
 // GET /healthz (no key) reports feed state, run count and last update.
@@ -120,11 +121,25 @@ socket.on('disconnect', reason => {
 socket.on('connect_error', e => console.log('Live feed connection error:', e.message));
 onPositions(socket, (id, pos) => update(id, pos));
 
+// Replay reads scan up to 90 days of positions, so they're kept 10 minutes (at most 20 entries, oldest dropped).
+const replayCache = new Map(); // "7,8|7" -> { at, body }
+function replay(trains, days) {
+  const key = `${trains.join(',')}|${days}`;
+  const hit = replayCache.get(key);
+  if (hit && Date.now() - hit.at < 10 * 60e3) return hit.body;
+  const body = store.replay(trains, days);
+  replayCache.delete(key);
+  replayCache.set(key, { at: Date.now(), body });
+  if (replayCache.size > 20) replayCache.delete(replayCache.keys().next().value);
+  return body;
+}
+
 const route = createRoutes(timetable, {
   snapshot: () => [...latest.values()],
   runsFor,
   history: run => store.history(run),
   lastSeen: () => store.lastSeen(),
+  replay,
   pushKey: () => pusher.enabled ? [200, { publicKey: pusher.publicKey }] : [503, { error: 'Alerts are not configured' }],
   watch(w) {
     if (!pusher.enabled) return [503, { error: 'Alerts are not configured' }];

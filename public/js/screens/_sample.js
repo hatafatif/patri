@@ -170,6 +170,7 @@ const trainSample = {
   live: 'on',
   train: T[28],
   stops: STOPS,
+  gps: true,
   run: { speed: 105, late: LATE, updatedAt: 779, date: '2026-10-18', gps: true },
   now: 780,
   ests,
@@ -209,5 +210,25 @@ const station = {
   map: { hover: { key: 'khanewal', station: S.khanewal } },
 };
 
+// ---------- Journey replay: the train sample plus a ready replay (about 5 days recorded, one not) ----------
+// The replay texts are plain English here: samples hold data, and the view localises them with t().
+const REPLAY_FROM = DAY0 - 4 * 86400e3 + 7 * 3600e3;
+const REPLAY_TO = DAY0 + 20 * 3600e3;
+const replaySample = {
+  ...trainSample,
+  replay: {
+    state: 'ready',
+    days: 7,
+    periods: [7, 30, 90].map(n => ({ value: String(n), label: `${n} days`, href: `#/train/28/replay?days=${n}` })),
+    bar: {
+      playing: true, at: DAY0 - 86400e3 + 15 * 3600e3, from: REPLAY_FROM, to: REPLAY_TO,
+      days: [0, 1, 2, 3, 4].map(i => ({ start: DAY0 - (4 - i) * 86400e3, recorded: i !== 2 })),
+      time: 'Sat 17 Oct · 3:00 PM', speed: '96 km/h', label: 'Replay time',
+    },
+    since: 'Recorded since Wed 14 Oct',
+    returnName: '27 UP Shalimar Express',
+  },
+};
+
 /** The samples, one per screen. StopsScreen takes samples.train. */
-export const samples = freeze({ home, search, route: routeSample, train: trainSample, station });
+export const samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, station });

@@ -1,6 +1,7 @@
 // The JSON API, shared by the local server (server.js) and the Vercel function (api/index.js).
 // `source` supplies the live data: snapshot() -> every current run, runsFor(train) -> that train's
-// runs, history(run) -> recorded positions and station passes. The alerts parts are optional:
+// runs, history(run) -> recorded positions and station passes. Optional parts: replay(trains, days) ->
+// the recorded runs of those trains, thinned (a source without it answers 503), and the alerts ones:
 // lastSeen() -> { train: last position }, pushKey() -> [status, body], watch(clean) and
 // unwatch(endpoint, train) -> [status, body]. A source without them answers as "no alerts here".
 // route(name, query) handles GET; route.post(name, body) handles POST (watch, unwatch).
@@ -8,6 +9,7 @@ const TIMETABLE = 'public, s-maxage=3600, stale-while-revalidate=86400'; // chan
 const LIVE = 'public, s-maxage=15, stale-while-revalidate=30';
 // History only grows; a minute's staleness is fine and lets one recorder read serve everyone on that train.
 const HISTORY = 'public, s-maxage=60, stale-while-revalidate=300';
+const REPLAY = 'public, s-maxage=1800, stale-while-revalidate=86400'; // thinned runs of the last 7-90 days; half an hour behind is fine
 const LASTSEEN = 'public, s-maxage=300, stale-while-revalidate=600';
 const PUSHKEY = 'public, s-maxage=86400';
 const NO_ALERTS = [503, { error: 'Alerts are not available' }];
@@ -71,6 +73,13 @@ function createRoutes(timetable, source) {
     switch (name) {
       case 'lastseen':
         return [200, source.lastSeen ? await source.lastSeen() : {}, LASTSEEN];
+      case 'replay': {
+        if (!source.replay) return [503, { error: 'Replay is not available' }];
+        const trains = (q.get('trains') || '').split(',').map(Number);
+        const days = Number(q.get('days'));
+        const ok = trains.length <= 2 && trains.every(n => timetable.byNumber.has(n)) && [7, 30, 90].includes(days);
+        return ok ? [200, await source.replay(trains, days), REPLAY] : [400, { error: 'Bad replay request' }];
+      }
       case 'push-key': {
         if (!source.pushKey) return NO_ALERTS;
         const [status, body] = await source.pushKey();

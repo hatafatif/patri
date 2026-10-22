@@ -1,0 +1,24 @@
+<!-- @dsCard group="Inputs" height=640 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
+<div id="root" style="display:grid;gap:16px;padding:16px;background:var(--ground);max-width:390px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    const DAY = 86400e3;
+    // 7 to 14 Oct 2026, Pakistan time. Day 0 starts at 00:00 PKT (19:00 UTC the evening before).
+    const day0 = Date.UTC(2026, 9, 6, 19);
+    const from = day0 + 4 * 3600e3, to = day0 + 7 * DAY + 20 * 3600e3;
+    const days = gaps => Array.from({ length: 8 }, (_, i) => ({ start: day0 + i * DAY, recorded: !gaps.includes(i) }));
+    const bar = (extra, wrapAttrs) => '<div ' + (wrapAttrs || '') + '>' + P.Card({ tone: 'plain', body: P.ReplayBar(Object.assign({ from: from, to: to, days: days([]), label: 'Replay time' }, extra)) }) + '</div>';
+    const row = (label, html) => '<div><div style="font:var(--t-label);letter-spacing:var(--t-label-tracking);text-transform:uppercase;color:var(--ink-muted);margin-block-end:4px">' + label + '</div>' + html + '</div>';
+    root.innerHTML =
+      row('Playing', bar({ playing: true, at: day0 + 4 * DAY + 15 * 3600e3 + 40 * 60e3, time: 'Sun 11 Oct · 3:40 PM', speed: '92 km/h' })) +
+      row('Paused', bar({ playing: false, at: day0 + 2 * DAY + 9 * 3600e3, time: 'Wed 9 Oct · 9:00 AM', speed: '74 km/h' })) +
+      row('Some days unrecorded', bar({ playing: false, days: days([1, 2, 5]), at: day0 + 3 * DAY + 2 * 3600e3, time: 'Thu 10 Oct · 2:00 AM', speed: 'Between journeys' })) +
+      row('Disabled', bar({ playing: false, disabled: true, at: from, time: 'Tue 7 Oct · 4:00 AM' })) +
+      row('Urdu (right-to-left)', bar({ playing: false, at: day0 + 4 * DAY + 15 * 3600e3 + 40 * 60e3, time: '11 اکتوبر · 3:40 PM', speed: '92 کلومیٹر فی گھنٹہ', label: 'ری پلے کا وقت' }, 'lang="ur" dir="rtl"'));
+    P.bindReplayBar(root, {});
+  })();
+</script>

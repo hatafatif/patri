@@ -78,6 +78,7 @@ The registry of every frontend component. **Build UI only from these.** If none 
 | 24 | Card | shell | Right now, About this train |
 | 25 | PageHeader | shell | Train page, Station page, All stops |
 | 26 | Photo | data | Train page: About this train; Station page |
+| 27 | ReplayBar | input | Train page › Journey replay |
 
 ## Specs
 
@@ -256,10 +257,12 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
   - rail: `map-rail`;
   - route done: `sabz-700`, width 5, with a white casing;
   - route ahead: `sabz-700`, dashed.
+  - replay trail: `zard-500`, width 5, over a `sabz-900` casing, width 9, both fading to transparent at the tail (a `line-gradient`; the source needs `lineMetrics`).
 **Rules:**
 - Home and Station maps show **stations, plus a small marker for every running train** (`mapPaint().trainDot`; tapping or clicking one opens its Train page). Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
 - The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
 - The Train map shows that one train, followed.
+- The Journey replay map shows the train's route, dashed, with a `trainMarker` and a fading trail for every replayed run on the move (`showReplay` and `setReplayFrame` in `map.js`).
 
 ### 23. Button
 **Props:** `label`, `href?`, `variant: 'primary' | 'secondary' | 'link'`, `icon?` (trailing; any key in the icon set, such as `chevronEnd`, which flips in right-to-left, or `bell`), `full?`.
@@ -299,6 +302,20 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Markup:** a `<figure>` with an `<img>` and a `<figcaption>`. The caption is left out when there is no credit.
 **Rules:** only freely licensed photos (CC BY, CC BY-SA, CC0, public domain), always credited. No photo is better than a wrong one.
 
+### 27. ReplayBar
+**What it is:** the playback control for the journey replay, a time-lapse of a train's recorded journeys on the map. It sits inside a Card in the panel. Approved on 2026-10-22.
+**Props:** `playing`, `at` (the replay's current time, epoch ms), `from`, `to` (epoch ms), `days?` (`{ start, recorded }[]`: one tick per day), `time` (already localised readout of `at`, such as "Tue 14 Oct · 3:40 PM"), `speed?` (already localised, such as "92 km/h" or "Between journeys"), `label` (already localised aria-label for the range, such as "Replay time"), `disabled?`, `className?`.
+**Look:** a 44px round play/pause button filled `sabz-700` with a `surface` icon, beside a column of three rows.
+- Ticks: one per day, 2px by 8px, `sabz-700` for a recorded day and `line` for an unrecorded one, lined up with the thumb's travel.
+- Track: a native range input with a 4px `line` track and a 20px thumb styled like the map's train dot (`zard-500` fill, 2px `sabz-900` ring).
+- Readout: the time in body-strong, and the speed at the inline end in caption style, `ink-muted`. In Urdu they become `urdu-strong` and `urdu-caption`.
+**Behaviour:**
+- The range counts whole minutes from `from` to `to`. `bindReplayBar(root, { onToggle, onScrub })` calls `onToggle()` for the button and `onScrub(at)` (epoch ms) when the range moves.
+- `syncReplayBar(root, { at, time, speed, playing })` updates the bar in place and only touches what changed, so it can run every frame.
+- A tick marks where a day starts, so days that start before `from` or after `to` get none. `disabled` greys the button and the range with the `line` and `ink-muted` tokens.
+**Markup:** a `<div>` with `data-from` and `data-to`, a `<button>` (aria-label "Play" or "Pause"), the ticks (`aria-hidden`) and an `<input type="range">` with the label as its aria-label and the time as its aria-valuetext. Time and speed are in `<bdi>`.
+**Right-to-left:** the range and the ticks run from the right and mirror together (logical `inset-inline-start`). The play and pause icons are media icons and don't mirror.
+
 ## Screens
 
 The app's pages, built from the components above. **Views render their pages through these templates; they don't assemble components themselves.**
@@ -318,7 +335,7 @@ The app's pages, built from the components above. **Views render their pages thr
     - `expanded` is for showcase frames only: the map keeps a band at the top and the panel opens in full.
     - `standin: false` leaves the map area empty, so a view can mount MapLibre in `.p-screen__backdrop`.
 - **Layout helpers** in `_layout.js`, besides the wrappers: `mapButton(action)` (a floating IconButton for `zoomIn`, `zoomOut`, `layers`, `locate` or `wholeRoute`), `backButton(href, variant)` (the app goes back in history when it can, else follows `href`) and `notice(text)` (a polite live region holding a neutral StatusChip, for feedback such as "Link copied"; always rendered, empty when there is nothing to say).
-- **Behaviour:** `bindScreen(root, handlers)` wires every component inside a rendered screen and returns `unbind()`. Every handler is optional: `data` (feeds the speed chart readout), `onLang`, `onSnap`, `onSearch`, `onClear`, `onSegment`, `onPickFrom`, `onPickTo`, `onSwap`, `onFollow`, `onShare`, `onChangeStop`, `onFollowing` and `onMap(action)`.
+- **Behaviour:** `bindScreen(root, handlers)` wires every component inside a rendered screen and returns `unbind()`. Every handler is optional: `data` (feeds the speed chart readout), `onLang`, `onSnap`, `onSearch`, `onClear`, `onSegment`, `onPickFrom`, `onPickTo`, `onSwap`, `onFollow`, `onShare`, `onChangeStop`, `onFollowing`, `onMap(action)`, `onReplayToggle` and `onReplayScrub(ms)`.
 - **In the app:** each view in `public/js/views/` builds a screen's data from the live API and calls `paint(html, handlers)` from `public/js/app.js`. The first paint of a page is fresh; later ones morph the DOM in place (`public/js/render.js`), so the panel's snap, scroll, focus and the MapLibre map survive live updates.
 - **The rule:** a screen is composed **only** from registered components, plus layout markup from `_layout.js`. If a page needs a visual piece no component provides, propose a new component (see the top of this file). Don't add markup or CSS to the screen.
 
@@ -329,6 +346,7 @@ The app's pages, built from the components above. **Views render their pages thr
 | RouteScreen | Search › Plan a trip: trains you can still board | phone |
 | TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with Change stop and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
 | StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey button, then the upcoming stops as links) | phone |
+| ReplayScreen | Train page › Journey replay (`#/train/<n>/replay`): a time-lapse of the train's recorded journeys and its return train's on the map, with a period switch (7, 30 or 90 days), the ReplayBar and a hint; loading, empty and failed notes | phone |
 | StationScreen | Station page: the board of next trains, or with the "Next trains / Timetable" switch (SegmentedControl, `?view=timetable`) the whole day's timetable (a Photo of the city above it when there is one) | phone, web |
 
 - **Library:** each screen has a showcase page in `design-system/components/<Name>Screen[Web]/` (group "Screens").
