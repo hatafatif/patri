@@ -250,6 +250,7 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Exports:**
 - `trainMarker({ label, facing?, stale? })`: `facing` is `'left'` or `'right'` (default) and mirrors the locomotive. `stale: true` adds `p-trainmarker--stale` (its badge and label at opacity .55): the train is drawn where it was last seen, not where it is. a DOM-marker HTML string. A 40px `zard-500` badge with a 3px `sabz-900` ring and a halo, holding the little green locomotive (`trainIcon`, 28px wide), plus a `sabz-900` label with `zard-500` text ("28 DN · 105 km/h").
 - `mapLabel({ title, sub?, kind: 'next' | 'yourstop' | 'selected' | 'hover' })`: label cards. `next` and `hover` are `surface` with a 1.5px `sabz-700` border; `yourstop` and `selected` are `sabz-900` with yellow text. Every kind uses `shadow-float`.
+- `trainImages()`: async, resolves to `{ cluster, loco, coach }` ImageData for `map.addImage(name, image, { pixelRatio: 2 })`. `cluster` is a `zard-500` pill with a `sabz-900` ring and locomotive glyph, 50x26, with room on its right for the count. `loco` is a top-down locomotive (16x22, anchor at the bottom, the coupling) and `coach` the coach behind it (16x22, anchor at the top). Rotate the loco to the track ahead and the coach to the track behind (`track.js` `headingsAt`) and the train bends at the coupling on a curve.
 - `mapPaint()`: reads the tokens with `getComputedStyle` and returns MapLibre paint values:
   - station dot: `map-station` (sabz-700), radius 2.5;
   - major city: `surface` fill, `ink` stroke 2, radius 5.5, labelled;
@@ -257,9 +258,11 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
   - rail: `map-rail`;
   - route done: `sabz-700`, width 5, with a white casing;
   - route ahead: `sabz-700`, dashed.
+  - rail network (`railNetwork`): `sabz-700` at 55%, 1.2px at zoom 5 widening to 4px at zoom 12, under the stations;
+  - `trainClusterText`: the count on a cluster pill, `sabz-900`;
   - replay trail: `zard-500`, width 5, over a `sabz-900` casing, width 9, both fading to transparent at the tail (a `line-gradient`; the source needs `lineMetrics`).
 **Rules:**
-- Home and Station maps show **stations, plus a small marker for every running train** (`mapPaint().trainDot`; tapping or clicking one opens its Train page). Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
+- The overview maps (Home, Search, Plan a trip, Station) draw the rail network (OpenStreetMap, `public/data/rail.json`). Running trains show as yellow count pills at zoom 6 and below (a tap zooms in), and as a locomotive and coach following the track when zoomed in (a tap opens the train's page). Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
 - The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
 - The Train map shows that one train, followed.
 - The Journey replay map shows the train's route, dashed, with a `trainMarker` and a fading trail for every replayed run on the move (`showReplay` and `setReplayFrame` in `map.js`).

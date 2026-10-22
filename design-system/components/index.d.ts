@@ -173,8 +173,6 @@ export interface MapPaintResult {
   majorCity: Record<string, unknown>;
   /** A zard-500 fill inside a sabz-700 ring. */
   selectedStation: Record<string, unknown>;
-  /** A running train on the Home and Station maps: a zard-500 dot with a sabz-900 ring, radius 5. */
-  trainDot: Record<string, unknown>;
   /** Rail lines with no train selected, map-rail. */
   rail: Record<string, unknown>;
   /** The white casing under the route done, width 8. */
@@ -187,6 +185,10 @@ export interface MapPaintResult {
   replayTrail: Record<string, unknown>;
   /** Under replayTrail: sabz-900, width 9, fading the same way, so the yellow reads on the light map like the marker's ring. */
   replayTrailCasing: Record<string, unknown>;
+  /** The rail lines trains run on, under the stations on the overview maps: sabz-700 at 55%, 1.2px at zoom 5 widening to 4px at zoom 12. */
+  railNetwork: Record<string, unknown>;
+  /** The count on a trainImages().cluster pill: sabz-900. */
+  trainClusterText: Record<string, unknown>;
   /** Text paint for major city labels: ink with a surface halo. */
   cityLabel: Record<string, unknown>;
   /** Land fill, map-land. */
@@ -874,6 +876,7 @@ export interface PatriApi {
   mapPaint(): MapPaintResult;
   statusTone(lateMin: number | null | undefined, opts?: { gps?: boolean }): 'ontime' | 'late' | 'early' | 'nogps';
   syncReplayBar(...args: any[]): any;
+  trainImages(...args: any[]): any;
   trainMarker(props: TrainMarkerProps): string;
   screens: PatriScreens;
   samples: PatriSamples;

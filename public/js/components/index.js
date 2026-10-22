@@ -21,7 +21,7 @@ export { SectionHeader } from './SectionHeader.js';                             
 export { DetailGrid } from './DetailGrid.js';                                    // 19
 export { LinkRow } from './LinkRow.js';                                          // 20
 export { SpeedChart, bindSpeedChart } from './SpeedChart.js';                    // 21
-export { MapMarkers, trainMarker, mapLabel, mapPaint } from './MapMarkers.js';   // 22
+export { MapMarkers, trainMarker, mapLabel, mapPaint, trainImages } from './MapMarkers.js';   // 22
 export { Button } from './Button.js';                                            // 23
 export { Card } from './Card.js';                                                // 24
 export { PageHeader, bindPageHeader } from './PageHeader.js';                  // 25

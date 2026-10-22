@@ -174,7 +174,9 @@ export function mapTrains() {
   for (const r of state.runs.values()) {
     const info = state.byNumber.get(r.train);
     if (r.suspect || !info || !(Date.now() - r.updatedAt < FRESH_MS) || !Number.isFinite(r.lat) || !Number.isFinite(r.lon)) continue;
-    out.push({ number: r.train, lat: r.lat, lon: r.lon, title: `${trainNo(info)} ${trainTitle(info)}` });
+    const next = state.stationById.get(String(r.nextStation));
+    const toward = next && Number.isFinite(next.lat) && Number.isFinite(next.lon) ? [next.lon, next.lat] : null;
+    out.push({ number: r.train, lat: r.lat, lon: r.lon, title: `${trainNo(info)} ${trainTitle(info)}`, toward });
   }
   return out;
 }
