@@ -151,6 +151,8 @@ export interface TrainMarkerProps {
   label: string;
   /** Which way the locomotive points, so it can face the way the train travels on the map. Default 'right'. */
   facing?: 'left' | 'right';
+  /** true fades the marker (class p-trainmarker--stale): the train is shown where it was last seen, not where it is. Default false. */
+  stale?: boolean;
 }
 
 /** A label card on the map: the next stop, your stop, the selected station or the one under the pointer. (MapMarkers.js) */
@@ -271,6 +273,37 @@ export interface PhotoProps {
   href?: string;
   /** Extra classes, so a composing component can hook its own styles. */
   className?: string;
+}
+
+/** The playback control for a time-lapse of recorded journeys: a play/pause button, a scrubber with one tick per day, and the time with the speed. (ReplayBar.js) */
+export interface ReplayBarProps {
+  playing: boolean;
+  /** The replay's current time, epoch ms. */
+  at: number;
+  /** Start of the replay, epoch ms. */
+  from: number;
+  /** End of the replay, epoch ms. */
+  to: number;
+  /** One tick per day: the day's start (epoch ms) and whether anything was recorded that day. */
+  days?: { start: number, recorded: boolean }[];
+  /** Already localised readout of `at`, e.g. "Tue 14 Oct · 3:40 PM". */
+  time: string;
+  /** Already localised, e.g. "92 km/h", or a short phrase such as "Between journeys". */
+  speed?: string;
+  /** Already localised aria-label for the range, e.g. "Replay time". */
+  label: string;
+  /** Default false. */
+  disabled?: boolean;
+  /** Extra classes, so a composing component can hook its own styles. */
+  className?: string;
+}
+
+/** Handlers for bindReplayBar. (ReplayBar.js) */
+export interface ReplayBarHandlers {
+  /** The play/pause button was pressed. */
+  onToggle?: () => void;
+  /** The range moved; called with the chosen replay time, epoch ms. */
+  onScrub?: (at: number) => void;
 }
 
 /** The search box for a train name, number, station or city. With a route it also shows a "From → To" link beside the field. (SearchField.js) */
@@ -464,6 +497,8 @@ export interface HomeTrain {
   where: ScreenWhere | null;
   /** run.lateBy in minutes; null when unknown. */
   late: number | null;
+  /** Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line. */
+  lastSeen?: string;
   /** false when the train has no GPS. */
   gps?: boolean;
   /** Adds ?run= to the train link. */
@@ -472,7 +507,7 @@ export interface HomeTrain {
   yourStop?: { station: ScreenStation, est: number, scheduled?: boolean };
 }
 
-/** Search › From → To: the Panel at full height with a back button and the mode switch, the From and To fields with swap, a Today | Tomorrow switch, then the direct trains leaving From next and those already on the way (views/trip.js, /api/trip). Either station may be null (the field shows its placeholder; the day switch and the lists are left out and a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note. (screens/RouteScreen.js) */
+/** Search › From → To: the Panel at full height with a back button and the mode switch, the From and To fields with swap, a Today | Tomorrow switch, then the direct trains still to leave From (views/trip.js, /api/trip). Either station may be null (the field shows its placeholder; the day switch and the lists are left out and a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note. (screens/RouteScreen.js) */
 export interface RouteScreenData {
   from: ScreenStation | null;
   to: ScreenStation | null;
@@ -488,8 +523,6 @@ export interface RouteScreenData {
   now: number;
   /** Trains still to leave From, in departure order. */
   leaving: RouteTrip[];
-  /** Trains that have left From for To, in departure order. Empty on Tomorrow. */
-  onTheWay: RouteTrip[];
 }
 
 /** One direct train: a /api/trip row with the train resolved. (screens/RouteScreen.js) */
@@ -554,6 +587,8 @@ export interface SearchTrain {
   late: number | null;
   /** false when the train has no GPS. */
   gps?: boolean;
+  /** Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line. */
+  lastSeen?: string;
   /** Whether it is in My trains (the star). */
   followed: boolean;
   /** Adds ?run= to the train link. */
@@ -578,6 +613,12 @@ export interface StationScreenData {
   rows: StationRow[];
   /** The board hasn't arrived yet: a loading note instead of the list. */
   loading?: boolean;
+  /** Which list the switch shows. Default 'next'. */
+  view?: 'next' | 'timetable';
+  /** The whole day's trains through the station, in scheduled-time order (never by lateness). Used when view is 'timetable'. */
+  timetable?: TimetableRow[];
+  /** The timetable hasn't arrived yet: a loading note instead of the list. */
+  loadingTimetable?: boolean;
   /** Short feedback under the header, already localised, such as "Link copied". It sits in a polite live region. */
   notice?: string;
   /** A photo of the station's city, when there is one. */
@@ -609,6 +650,24 @@ export interface StationRow {
   kmAway?: number | null;
   /** Standing at the platform now. */
   atPlatform?: boolean;
+  /** Short "Last seen 3 h ago", already localised, for a train with no live location. Appended to the sub line. */
+  lastSeen?: string;
+}
+
+/** One train in the day's timetable: a /api/timetable row with the train resolved. (screens/StationScreen.js) */
+export interface TimetableRow {
+  train: ScreenTrain;
+  kind: 'starts' | 'passes' | 'ends';
+  origin: ScreenStation;
+  dest: ScreenStation;
+  /** Scheduled time here, minutes after midnight (0 to 1439). */
+  time: number;
+  /** Delay in minutes, only for a train running towards this station; otherwise omitted. */
+  late?: number | null;
+  /** Whether the train has GPS (with late). */
+  gps?: boolean;
+  /** The live run, when there is one. */
+  runId?: string | null;
 }
 
 /** The Train page: the map following the train, and the Panel with the PageHeader, the Current status card (speed, delay, next stop and arrival as big figures, when it last reported), the Journey card (first stop, the stop it is at or heading for, last stop, progress, See all stops), speed so far, About this train and the return train. Web: the same content in the sidebar, the speed chart docked along the bottom of the map. The same data renders StopsScreen. With `run` null (no live run now, or a train without GPS) the page is in timetable mode: a Current status card with a "Timetable" or "No GPS" chip, a Journey card with the first and last stop at their scheduled times, About this train and the return train; no speed card. With no `stops` yet it shows the header and a loading note. (screens/TrainScreen.js) */
@@ -646,6 +705,10 @@ export interface TrainScreenData {
   runId?: string;
   /** Suspect runs that are not shown: a note and a "Show anyway" link to href. */
   hiddenRuns?: { count: number, href: string };
+  /** Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip. */
+  lastSeen?: string;
+  /** The Alerts card: off (a Notify me button to the stop picker), on (for stopName, or the whole journey; Change stop and Turn off), or a note saying why not. Without it there is no card. */
+  alerts?: { state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string };
   /** The MapToggle's state. Default true. */
   following?: boolean;
   /** Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives. */
@@ -763,6 +826,7 @@ export interface PatriApi {
   PageHeader(props: PageHeaderProps): string;
   Panel(props: PanelProps): string;
   Photo(props: PhotoProps): string;
+  ReplayBar(props: ReplayBarProps): string;
   SearchField(props: SearchFieldProps): string;
   SectionHeader(props: SectionHeaderProps): string;
   SegmentedControl(props: SegmentedControlProps): string;
@@ -779,6 +843,7 @@ export interface PatriApi {
   bindMapToggle(root: Element, handlers?: MapToggleHandlers): () => void;
   bindPageHeader(root: Element, handlers?: PageHeaderHandlers): () => void;
   bindPanel(root: Element, handlers?: PanelHandlers): () => void;
+  bindReplayBar(root: Element, handlers?: ReplayBarHandlers): () => void;
   bindSearchField(root: Element, handlers?: SearchFieldHandlers): () => void;
   bindSegmentedControl(root: Element, handlers?: SegmentedControlHandlers): () => void;
   bindSpeedChart(root: Element, points: [number, number][]): () => void;
@@ -787,6 +852,7 @@ export interface PatriApi {
   mapLabel(props: MapLabelProps): string;
   mapPaint(): MapPaintResult;
   statusTone(lateMin: number | null | undefined, opts?: { gps?: boolean }): 'ontime' | 'late' | 'early' | 'nogps';
+  syncReplayBar(...args: any[]): any;
   trainMarker(props: TrainMarkerProps): string;
   screens: PatriScreens;
   samples: PatriSamples;

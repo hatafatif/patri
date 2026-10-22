@@ -5,7 +5,7 @@ import {
   SegmentedControl, bindSegmentedControl, StationFields, bindStationFields, IconButton, FollowButton, bindFollowButton,
   MapToggle, bindMapToggle, TrainBadge, StatusChip, StatusStrip, TrainCard, TrainRow, DepartureRow, StopTimeline,
   bindStopTimeline, JourneyProgress, SectionHeader, DetailGrid, LinkRow, SpeedChart, bindSpeedChart, MapMarkers,
-  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, Photo, bindPageHeader, statusTone,
+  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, Photo, bindPageHeader, ReplayBar, bindReplayBar, syncReplayBar, statusTone,
 } from './components/index.js';
 import { t, setLang, getLang, applyLang, clockMin, dur, delayText, pktMidnight, esc } from './i18n.js';
 
@@ -270,6 +270,12 @@ function specimens(col) {
       FollowButton({ followed: true, name: st('multan'), label: { off: t('saveStation', { name: st('multan') }), on: t('saved') } }),
     )),
     spec('MapToggle', 'on · off', wrap(MapToggle({ on: true, label: t('following') }), MapToggle({ on: false, label: t('following') })), { cls: 'g-stage--map' }),
+    spec('ReplayBar', 'paused · playing · unrecorded days · disabled', stack(
+      Card({ tone: 'plain', body: replayBar({ playing: false }) }),
+      Card({ tone: 'plain', body: replayBar({ playing: true, at: REPLAY.from + 5.4 * DAY, speed: t('kmh', { n: 92 }) }) }),
+      Card({ tone: 'plain', body: replayBar({ playing: false, gaps: [1, 2, 4, 6], at: REPLAY.from + 3.2 * DAY, speed: t('replayIdle') }) }),
+      Card({ tone: 'plain', body: replayBar({ playing: false, disabled: true }) }),
+    )),
     spec('Button', 'primary · secondary · link', wrap(
       Button({ label: t('seeAllStops'), variant: 'primary' }),
       Button({ label: t('chooseStop'), variant: 'secondary' }),
@@ -339,6 +345,21 @@ function specimens(col) {
   return shell + inputs + data + map;
 }
 
+// A week of replay ending at the PKT midnight before today; the days with an index in `gaps` have no recording.
+const DAY = 86400e3;
+const REPLAY = { from: midnight - 8 * DAY + 4 * 3600e3, to: midnight - DAY + 20 * 3600e3 };
+const WEEKDAYS = { en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ur: ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'] };
+const MONTHS = { en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], ur: ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'] };
+const replayTime = at => {
+  const d = new Date(at + 5 * 3600e3); // Pakistan time, read as UTC
+  return `${WEEKDAYS[getLang()][d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[getLang()][d.getUTCMonth()]} · ${clockMin(d.getUTCHours() * 60 + d.getUTCMinutes())}`;
+};
+function replayBar({ playing, at = REPLAY.from + 2.5 * DAY + 11 * 3600e3, gaps = [], speed = t('kmh', { n: 74 }), disabled = false }) {
+  const days = [];
+  for (let start = REPLAY.from - 4 * 3600e3, i = 0; start < REPLAY.to; start += DAY, i++) days.push({ start, recorded: !gaps.includes(i) });
+  return ReplayBar({ playing, at, from: REPLAY.from, to: REPLAY.to, days, time: replayTime(at), speed, label: t('replayTime'), disabled });
+}
+
 const chips = dot => [
   StatusChip({ tone: 'late', text: t('late', { d: dur(30) }), dot }),
   StatusChip({ tone: 'ontime', text: t('onTime'), dot }),
@@ -389,6 +410,12 @@ function render() {
       bindStopTimeline(col),
       bindSpeedChart(col, SPEED_POINTS),
     );
+    // Each replay bar plays and scrubs on its own, so the specimens can be tried.
+    for (const bar of col.querySelectorAll('.p-replaybar')) {
+      const state = { at: Number(bar.querySelector('.p-replaybar__range').value) * 60000 + REPLAY.from, playing: bar.querySelector('.p-replaybar__play').dataset.state === 'playing' };
+      const show = () => syncReplayBar(bar, { ...state, time: replayTime(state.at), speed: bar.querySelector('.p-replaybar__speed').textContent });
+      unbinds.push(bindReplayBar(bar, { onToggle: () => { state.playing = !state.playing; show(); }, onScrub: at => { state.at = at; show(); } }));
+    }
   }
 }
 

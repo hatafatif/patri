@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"},{"name":"ReplayBar"}]} */
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -25,6 +25,7 @@
     PageHeader: () => PageHeader,
     Panel: () => Panel,
     Photo: () => Photo,
+    ReplayBar: () => ReplayBar,
     SearchField: () => SearchField,
     SectionHeader: () => SectionHeader,
     SegmentedControl: () => SegmentedControl,
@@ -41,6 +42,7 @@
     bindMapToggle: () => bindMapToggle,
     bindPageHeader: () => bindPageHeader,
     bindPanel: () => bindPanel,
+    bindReplayBar: () => bindReplayBar,
     bindSearchField: () => bindSearchField,
     bindSegmentedControl: () => bindSegmentedControl,
     bindSpeedChart: () => bindSpeedChart,
@@ -49,6 +51,7 @@
     mapLabel: () => mapLabel,
     mapPaint: () => mapPaint,
     statusTone: () => statusTone,
+    syncReplayBar: () => syncReplayBar,
     trainMarker: () => trainMarker
   });
 
@@ -209,7 +212,7 @@
       returnTrain: "Return train",
       edit: "Edit",
       trainOrStation: "Train or station",
-      fromTo: "From \u2192 To",
+      fromTo: "Plan a trip",
       trainHereKm: "Train here \xB7 {km} km to {station}",
       leftAt: "Left {station} {time}",
       kmOf: "{done} of {total} km",
@@ -305,7 +308,38 @@
       currentStop: "Current stop",
       speedLabel: "Speed",
       delayLabel: "Delay",
-      arrivalLabel: "Arrival"
+      arrivalLabel: "Arrival",
+      // Alerts (push notifications) and last seen
+      alertsHeader: "Alerts",
+      notifyMe: "Notify me",
+      alertsOn: "Alerts on",
+      alertsFor: "For {station}",
+      alertsWholeTrip: "For the whole journey",
+      alertsWhat: "You\u2019ll hear when it leaves, 15 min before your stop, if the delay changes a lot, and when it arrives.",
+      alertsChooseStop: "Choose your stop for alerts",
+      alertsSkipStop: "Whole journey, no stop",
+      alertsOff: "Turn off",
+      alertsChange: "Change stop",
+      alertsBlocked: "Notifications are blocked for Patri in your browser settings.",
+      alertsUnsupported: "This browser can\u2019t show notifications. On iPhone, add Patri to your Home Screen first.",
+      alertsNoLive: "Alerts need live location, and this train has none right now.",
+      alertsFailed: "Couldn\u2019t turn on alerts. Try again.",
+      lastSeen: "Last seen near {station} \xB7 {ago}",
+      lastSeenShort: "Last seen {ago}",
+      // Journey replay (recorded days played back on the map)
+      replay: "Replay past journeys",
+      replayTitle: "Journey replay",
+      replayWith: "With the return train, {name}",
+      replayPeriod: "Replay period",
+      nDays: "{n} days",
+      replayTime: "Replay time",
+      play: "Play",
+      pause: "Pause",
+      replayIdle: "Between journeys",
+      replaySince: "Recorded since {date}",
+      replayHint: "Sped up: the whole period plays in about a minute.",
+      replayEmpty: "Nothing recorded for this train yet. Patri keeps the last 90 days.",
+      replayFailed: "The replay isn\u2019t available right now."
     },
     ur: {
       appTitle: "\u067E\u0679\u0691\u06CC",
@@ -462,7 +496,7 @@
       returnTrain: "\u0648\u0627\u067E\u0633\u06CC \u06A9\u06CC \u0679\u0631\u06CC\u0646",
       edit: "\u062A\u0631\u0645\u06CC\u0645 \u06A9\u0631\u06CC\u06BA",
       trainOrStation: "\u0679\u0631\u06CC\u0646 \u06CC\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
-      fromTo: "\u06A9\u06C1\u0627\u06BA \u0633\u06D2 \u2190 \u06A9\u06C1\u0627\u06BA \u062A\u06A9",
+      fromTo: "\u0633\u0641\u0631 \u06A9\u0627 \u0645\u0646\u0635\u0648\u0628\u06C1",
       trainHereKm: "\u0679\u0631\u06CC\u0646 \u06CC\u06C1\u0627\u06BA \u06C1\u06D2 \xB7 {station} \u062A\u06A9 {km} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631",
       leftAt: "{station} \u0633\u06D2 {time} \u067E\u0631 \u0631\u0648\u0627\u0646\u06C1",
       kmOf: "{total} \u0645\u06CC\u06BA \u0633\u06D2 {done} \u06A9\u0644\u0648\u0645\u06CC\u0679\u0631",
@@ -558,7 +592,38 @@
       currentStop: "\u0645\u0648\u062C\u0648\u062F\u06C1 \u0627\u0633\u0679\u06CC\u0634\u0646",
       speedLabel: "\u0631\u0641\u062A\u0627\u0631",
       delayLabel: "\u062A\u0627\u062E\u06CC\u0631",
-      arrivalLabel: "\u0622\u0645\u062F"
+      arrivalLabel: "\u0622\u0645\u062F",
+      // Alerts (push notifications) and last seen
+      alertsHeader: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A",
+      notifyMe: "\u0645\u062C\u06BE\u06D2 \u0627\u0637\u0644\u0627\u0639 \u062F\u06CC\u06BA",
+      alertsOn: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u06C1\u06CC\u06BA",
+      alertsFor: "{station} \u06A9\u06D2 \u0644\u06CC\u06D2",
+      alertsWholeTrip: "\u067E\u0648\u0631\u06D2 \u0633\u0641\u0631 \u06A9\u06D2 \u0644\u06CC\u06D2",
+      alertsWhat: "\u0679\u0631\u06CC\u0646 \u06A9\u06CC \u0631\u0648\u0627\u0646\u06AF\u06CC\u060C \u0622\u067E \u06A9\u06D2 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0633\u06D2 15 \u0645\u0646\u0679 \u067E\u06C1\u0644\u06D2\u060C \u062A\u0627\u062E\u06CC\u0631 \u0645\u06CC\u06BA \u0628\u0691\u06CC \u062A\u0628\u062F\u06CC\u0644\u06CC \u0627\u0648\u0631 \u067E\u06C1\u0646\u0686\u0646\u06D2 \u067E\u0631 \u0622\u067E \u06A9\u0648 \u0627\u0637\u0644\u0627\u0639 \u0645\u0644\u06D2 \u06AF\u06CC\u06D4",
+      alertsChooseStop: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0627\u067E\u0646\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA",
+      alertsSkipStop: "\u067E\u0648\u0631\u0627 \u0633\u0641\u0631\u060C \u06A9\u0648\u0626\u06CC \u0627\u0633\u0679\u06CC\u0634\u0646 \u0646\u06C1\u06CC\u06BA",
+      alertsOff: "\u0628\u0646\u062F \u06A9\u0631\u06CC\u06BA",
+      alertsChange: "\u0627\u0633\u0679\u06CC\u0634\u0646 \u0628\u062F\u0644\u06CC\u06BA",
+      alertsBlocked: "\u0622\u067E \u06A9\u06D2 \u0628\u0631\u0627\u0624\u0632\u0631 \u06A9\u06CC \u0633\u06CC\u0679\u0646\u06AF\u0632 \u0645\u06CC\u06BA \u067E\u0679\u0691\u06CC \u06A9\u06CC \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0628\u0646\u062F \u06C1\u06CC\u06BA\u06D4",
+      alertsUnsupported: "\u06CC\u06C1 \u0628\u0631\u0627\u0624\u0632\u0631 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0646\u06C1\u06CC\u06BA \u062F\u06A9\u06BE\u0627 \u0633\u06A9\u062A\u0627\u06D4 \u0622\u0626\u06CC \u0641\u0648\u0646 \u067E\u0631 \u067E\u06C1\u0644\u06D2 \u067E\u0679\u0691\u06CC \u06A9\u0648 \u06C1\u0648\u0645 \u0627\u0633\u06A9\u0631\u06CC\u0646 \u067E\u0631 \u0634\u0627\u0645\u0644 \u06A9\u0631\u06CC\u06BA\u06D4",
+      alertsNoLive: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0644\u0627\u0626\u06CC\u0648 \u0645\u0642\u0627\u0645 \u0636\u0631\u0648\u0631\u06CC \u06C1\u06D2\u060C \u062C\u0648 \u0627\u0633 \u0648\u0642\u062A \u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA\u06D4",
+      alertsFailed: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u06CC\u06BA\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06A9\u0631\u06CC\u06BA\u06D4",
+      lastSeen: "{station} \u06A9\u06D2 \u0642\u0631\u06CC\u0628 \u0622\u062E\u0631\u06CC \u0628\u0627\u0631 \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC \xB7 {ago}",
+      lastSeenShort: "\u0622\u062E\u0631\u06CC \u0628\u0627\u0631 {ago} \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC",
+      // Journey replay (recorded days played back on the map)
+      replay: "\u067E\u0686\u06BE\u0644\u06D2 \u0633\u0641\u0631 \u062F\u0648\u0628\u0627\u0631\u06C1 \u062F\u06CC\u06A9\u06BE\u06CC\u06BA",
+      replayTitle: "\u0633\u0641\u0631 \u06A9\u0627 \u0631\u06CC \u067E\u0644\u06D2",
+      replayWith: "\u0648\u0627\u067E\u0633\u06CC \u06A9\u06CC \u0679\u0631\u06CC\u0646 {name} \u06A9\u06D2 \u0633\u0627\u062A\u06BE",
+      replayPeriod: "\u0631\u06CC \u067E\u0644\u06D2 \u06A9\u0627 \u062F\u0648\u0631\u0627\u0646\u06CC\u06C1",
+      nDays: "{n} \u062F\u0646",
+      replayTime: "\u0631\u06CC \u067E\u0644\u06D2 \u06A9\u0627 \u0648\u0642\u062A",
+      play: "\u0686\u0644\u0627\u0626\u06CC\u06BA",
+      pause: "\u0631\u0648\u06A9\u06CC\u06BA",
+      replayIdle: "\u0633\u0641\u0631 \u06A9\u06D2 \u062F\u0631\u0645\u06CC\u0627\u0646",
+      replaySince: "{date} \u0633\u06D2 \u0631\u06CC\u06A9\u0627\u0631\u0688 \u0634\u062F\u06C1",
+      replayHint: "\u062A\u06CC\u0632 \u0631\u0641\u062A\u0627\u0631: \u067E\u0648\u0631\u0627 \u062F\u0648\u0631\u0627\u0646\u06CC\u06C1 \u062A\u0642\u0631\u06CC\u0628\u0627\u064B \u0627\u06CC\u06A9 \u0645\u0646\u0679 \u0645\u06CC\u06BA \u0686\u0644\u062A\u0627 \u06C1\u06D2\u06D4",
+      replayEmpty: "\u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u0627\u0628\u06BE\u06CC \u06A9\u0648\u0626\u06CC \u0631\u06CC\u06A9\u0627\u0631\u0688 \u0646\u06C1\u06CC\u06BA\u06D4 \u067E\u0679\u0691\u06CC \u067E\u0686\u06BE\u0644\u06D2 90 \u062F\u0646 \u06A9\u0627 \u0631\u06CC\u06A9\u0627\u0631\u0688 \u0631\u06A9\u06BE\u062A\u06CC \u06C1\u06D2\u06D4",
+      replayFailed: "\u0631\u06CC \u067E\u0644\u06D2 \u0627\u0633 \u0648\u0642\u062A \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA\u06D4"
     }
   };
   var MONTHS = {
@@ -616,6 +681,7 @@
   // public/js/components/_shared.js
   var trainIcon = () => '<svg class="p-train" viewBox="0 0 40 22" aria-hidden="true" focusable="false"><rect class="p-train__roof" x="9" y="2.2" width="8" height="2.2" rx="1"/><path class="p-train__body" d="M5 4h20.5c1.4 0 2.8.6 3.8 1.7l5.6 6.1c.7.8 1.1 1.8 1.1 2.8V16.5H3V6a2 2 0 0 1 2-2z"/><path class="p-train__window" d="M25.2 6.4h.6c.9 0 1.7.4 2.3 1l3.4 3.8h-6.3z"/><rect class="p-train__window" x="6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__window" x="13.6" y="6.4" width="5.2" height="3.6" rx="1"/><rect class="p-train__stripe" x="3" y="12.2" width="33" height="1.8"/><circle class="p-train__lamp" cx="34.3" cy="15" r="0.9"/><rect class="p-train__frame" x="4" y="16.3" width="31" height="1.6" rx=".8"/><circle class="p-train__wheel" cx="8.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="13.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="25.5" cy="18.8" r="2.1"/><circle class="p-train__wheel" cx="30.5" cy="18.8" r="2.1"/></svg>';
   var icon = {
+    bell: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9M10 20.5a2 2 0 0 0 4 0"/></svg>',
     train: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 10h14M9 13.5h.01M15 13.5h.01M8 21l2-4M16 21l-2-4"/></svg>',
     station: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
     trip: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6.5a3.5 3.5 0 0 0 0-7h-5a3.5 3.5 0 0 1 0-7H16"/></svg>',
@@ -626,6 +692,9 @@
     swap: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M7 4 4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
     stop: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="7" y="6" width="3.5" height="12" rx="1"/><rect x="13.5" y="6" width="3.5" height="12" rx="1"/></svg>',
+    // Media icons: they don't mirror in right-to-left, so no p-flip.
+    play: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><rect x="7" y="6" width="3.5" height="12" rx="1"/><rect x="13.5" y="6" width="3.5" height="12" rx="1"/></svg>',
     clock: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
     flag: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4M6 4h11l-2 4 2 4H6"/></svg>',
     signalOff: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 5.2-2.8M19 12.5a10 10 0 0 0-2.3-1.7M12 20h.01"/></svg>',
@@ -1153,8 +1222,8 @@
   }
 
   // public/js/components/MapMarkers.js
-  function trainMarker({ label = "", facing = "right" } = {}) {
-    return `<div class="${cx("p-trainmarker", facing === "left" && "p-trainmarker--left")}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
+  function trainMarker({ label = "", facing = "right", stale = false } = {}) {
+    return `<div class="${cx("p-trainmarker", facing === "left" && "p-trainmarker--left", stale && "p-trainmarker--stale")}"><span class="p-trainmarker__dot">${trainIcon()}</span><span class="p-trainmarker__label">${bdi(label)}</span></div>`;
   }
   function mapLabel({ title = "", sub, kind = "next" } = {}) {
     const k = ["next", "yourstop", "selected", "hover"].includes(kind) ? kind : "next";
@@ -1246,6 +1315,63 @@
     return `<figure class="${cx("p-photo", className)}"><img class="p-photo__img" src="${esc(src)}" alt="${esc(alt)}" width="800" height="450" loading="lazy" decoding="async">${credit ? `<figcaption class="p-photo__credit">${line}</figcaption>` : ""}</figure>`;
   }
 
+  // public/js/components/ReplayBar.js
+  var MIN = 6e4;
+  function ReplayBar({ playing = false, at: at3, from, to, days = [], time: time2 = "", speed = "", label = "", disabled = false, className } = {}) {
+    const span = to - from;
+    const max = Math.max(0, Math.round(span / MIN));
+    const value = Math.min(max, Math.max(0, Math.round((at3 - from) / MIN)));
+    const off = disabled ? " disabled" : "";
+    const ticks = span > 0 ? days.filter((d2) => d2.start <= to).map((d2) => {
+      const f = Math.min(1, Math.max(0, (d2.start - from) / span));
+      return `<span class="${cx("p-replaybar__tick", !d2.recorded && "p-replaybar__tick--empty")}" style="--f:${+f.toFixed(5)}"></span>`;
+    }).join("") : "";
+    const name = playing ? t("pause") : t("play");
+    return `<div class="${cx("p-replaybar", className)}" data-from="${esc(from)}" data-to="${esc(to)}"><button type="button" class="p-replaybar__play" data-state="${playing ? "playing" : "paused"}" aria-label="${esc(name)}"${off}>${playing ? icon.pause : icon.play}</button><div class="p-replaybar__main"><div class="p-replaybar__ticks" aria-hidden="true">${ticks}</div><input type="range" class="p-replaybar__range" min="0" max="${max}" step="1" value="${value}" aria-label="${esc(label)}" aria-valuetext="${esc(time2)}"${off}><div class="p-replaybar__readout"><span class="p-replaybar__time">${time2 ? bdi(time2) : ""}</span><span class="p-replaybar__speed">${speed ? bdi(speed) : ""}</span></div></div></div>`;
+  }
+  function bindReplayBar(root, { onToggle, onScrub } = {}) {
+    const onClick = (e) => {
+      const btn = e.target.closest?.(".p-replaybar__play");
+      if (!btn || !root.contains(btn) || btn.disabled) return;
+      onToggle?.();
+    };
+    const onInput = (e) => {
+      const range = e.target.closest?.(".p-replaybar__range");
+      if (!range || !root.contains(range)) return;
+      const from = Number(range.closest(".p-replaybar").dataset.from);
+      onScrub?.(from + Number(range.value) * MIN);
+    };
+    root.addEventListener("click", onClick);
+    root.addEventListener("input", onInput);
+    return () => {
+      root.removeEventListener("click", onClick);
+      root.removeEventListener("input", onInput);
+    };
+  }
+  function setText(el, text) {
+    if (!el || el.textContent === text) return;
+    el.innerHTML = text ? bdi(text) : "";
+  }
+  function syncReplayBar(root, { at: at3, time: time2 = "", speed = "", playing = false } = {}) {
+    const bar = root?.matches?.(".p-replaybar") ? root : root?.querySelector?.(".p-replaybar");
+    if (!bar) return;
+    const range = bar.querySelector(".p-replaybar__range");
+    if (range) {
+      const value = String(Math.min(Number(range.max), Math.max(0, Math.round((at3 - Number(bar.dataset.from)) / MIN))));
+      if (range.value !== value) range.value = value;
+      if (range.getAttribute("aria-valuetext") !== time2) range.setAttribute("aria-valuetext", time2);
+    }
+    setText(bar.querySelector(".p-replaybar__time"), time2);
+    setText(bar.querySelector(".p-replaybar__speed"), speed ?? "");
+    const btn = bar.querySelector(".p-replaybar__play");
+    const state = playing ? "playing" : "paused";
+    if (btn && btn.dataset.state !== state) {
+      btn.dataset.state = state;
+      btn.innerHTML = playing ? icon.pause : icon.play;
+      btn.setAttribute("aria-label", playing ? t("pause") : t("play"));
+    }
+  }
+
   // public/js/screens/index.js
   var screens_exports = {};
   __export(screens_exports, {
@@ -1264,7 +1390,9 @@
     const expanded = !web && options.expanded;
     const sheetSnap = options.snap || (expanded ? "full" : snap);
     const pill = !web && back;
-    const startHtml = (pill ? IconButton({ icon: "back", label: back.label, href: back.href, variant: "float", text: true, className: "p-screen__back" }) : "") + start;
+    const backPill = pill ? IconButton({ icon: "back", label: back.label, href: back.href, variant: "float", text: true, className: "p-screen__back" }) : "";
+    const searchBtn = pill ? IconButton({ icon: "search", label: t("search"), href: "#/search", variant: "float", className: "p-screen__search" }) : "";
+    const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${searchBtn}</div>` : "") + start;
     const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top", pill && "p-screen--back"].filter(Boolean).join(" ");
     return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (startHtml ? `<div class="p-screen__controls p-screen__controls--start">${startHtml}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label })}</div></div>`;
   }
@@ -1301,6 +1429,7 @@
       bindMapToggle(root, { onToggle: o.onFollowing }),
       bindStopTimeline(root, { onChangeStop: o.onChangeStop }),
       bindPageHeader(root, { onFollow: o.onFollow, onShare: o.onShare }),
+      bindReplayBar(root, { onToggle: o.onReplayToggle, onScrub: o.onReplayScrub }),
       bindLanguageToggle(root, { onChange: (lang2) => o.onLang?.(lang2) })
     ];
     for (const btn of root.querySelectorAll(".p-followbutton")) {
@@ -1580,7 +1709,7 @@
     const lang2 = getLang();
     const appBar = AppBar({ live: data.live, lang: lang2 });
     const href = (h2) => `#/train/${h2.train.number}${h2.runId ? `?run=${h2.runId}` : ""}`;
-    const where = (h2) => h2.where ? whereText(h2.where) : t("notRunningNow");
+    const where = (h2) => (h2.where ? whereText(h2.where) : t("notRunningNow")) + (h2.lastSeen && !h2.where ? ` \xB7 ${h2.lastSeen}` : "");
     const status = (h2) => delayStatus(h2.late, { gps: h2.gps });
     const mine = data.myTrains.map((h2) => TrainCard({
       href: href(h2),
@@ -1629,13 +1758,13 @@
     const mode = pick ? "" : SegmentedControl({
       label: t("searchBy"),
       value: "search",
-      options: [{ value: "search", label: t("trainOrStation"), href: "#/search" }, { value: "trip", label: t("fromTo"), href: "#/trip" }]
+      options: [{ value: "search", label: t("search"), href: "#/search" }, { value: "trip", label: t("fromTo"), href: "#/trip" }]
     });
     const rows = data.trains.map((h) => TrainRow({
       href: `#/train/${h.train.number}${h.runId ? `?run=${h.runId}` : ""}`,
       badge: badgeOf(h.train),
       name: trainTitle(h.train),
-      sub: route(h.from, h.to),
+      sub: route(h.from, h.to) + (h.lastSeen && h.late == null ? ` \xB7 ${h.lastSeen}` : ""),
       status: delayStatus(h.late, { gps: h.gps }),
       match: data.query,
       follow: { followed: h.followed }
@@ -1689,24 +1818,16 @@
         status: known ? delayStatus(r.late, { gps: r.gps }) : r.gps === false ? delayStatus(null, { gps: false }) : { tone: "neutral", text: tomorrow ? t("timetable") : t("inTime", { d: dur(r.dep - now) }) }
       });
     });
-    const onTheWay = data.onTheWay.map((r) => DepartureRow({
-      href: link(r),
-      train: trainOf(r),
-      time: { caption: t("leftCaption"), expected: time(r.dep) },
-      sub: t("arrives", { time: r.late != null ? approx(r.arr + r.late) : time(r.arr) }),
-      status: delayStatus(r.late, { gps: r.gps })
-    }));
-    const modeOptions = [{ value: "search", label: t("trainOrStation"), href: "#/search" }, { value: "trip", label: t("fromTo"), href: "#/trip" }];
+    const modeOptions = [{ value: "search", label: t("search"), href: "#/search" }, { value: "trip", label: t("fromTo"), href: "#/trip" }];
     const mode = SegmentedControl({ label: t("searchBy"), value: "trip", options: modeOptions });
     const both = !!(from && to);
     let content = [];
     if (!both) content = [note(t("pickBoth"))];
     else if (data.loading) content = [note(t("loading"))];
-    else if (!leaving.length && !onTheWay.length) content = [note(t("noTrips"))];
+    else if (!leaving.length) content = [note(t("noTrips"))];
     else {
       if (tomorrow) content.push(note(t("timetableTimes")));
       if (leaving.length) content.push(section(SectionHeader({ label: t("leavingNext", { station: place2(from) }), count: leaving.length }), list(...leaving)));
-      if (onTheWay.length) content.push(section(SectionHeader({ label: t("onTheWay"), count: onTheWay.length }), list(...onTheWay)));
     }
     const days = both ? SegmentedControl({
       label: t("dayChoice"),
@@ -1831,7 +1952,7 @@
       return Card({
         tone: "key",
         header: t("rightNow"),
-        body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? "noLiveRun" : "noGpsTrain")))
+        body: stack(row(StatusChip(delayStatus(null, { gps }))), note(t(gps ? "noLiveRun" : "noGpsTrain")), data.lastSeen ? note(data.lastSeen) : "")
       });
     }
     const st = run.status;
@@ -1867,6 +1988,25 @@
         note(t("updated", { ago: ago < 1 ? t("justNow") : t("ago", { d: dur(ago) }) }))
       )
     });
+  }
+  function alertsCard(data) {
+    const a = data.alerts;
+    if (!a) return "";
+    const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
+    let content;
+    if (a.state === "off") {
+      content = stack(note(t("alertsWhat")), Button({ label: t("notifyMe"), icon: "bell", href: pick, variant: "secondary", full: true }));
+    } else if (a.state === "on") {
+      content = stack(
+        note(`${t("alertsOn")} \xB7 ${a.stopName ? t("alertsFor", { station: a.stopName }) : t("alertsWholeTrip")}`),
+        row(Button({ label: t("alertsChange"), href: pick, variant: "link" }), Button({ label: t("alertsOff"), variant: "link", className: "p-alerts-off" }))
+      );
+    } else {
+      const key = { blocked: "alertsBlocked", unsupported: "alertsUnsupported", nolive: "alertsNoLive" }[a.state];
+      if (!key) return "";
+      content = note(t(key));
+    }
+    return Card({ header: t("alertsHeader"), body: content });
   }
   function journeyCard(data, d2) {
     const { train: train2, run } = data;
@@ -1986,7 +2126,7 @@
     const wholeRoute = mapButton("wholeRoute");
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     const status = data.notice != null ? notice(data.notice) : "";
-    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
+    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), alertsCard(data), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
     if (!web) {
       return frame({
         name: "train",
@@ -2014,6 +2154,8 @@
   function rowsOf(data, d2) {
     const { stops, run, train: train2 } = data;
     const { passedIdx, nextIdx, lastIdx, haltOf: haltOf2 } = d2;
+    const pick = !!data.pick;
+    const hrefOf = (s) => `#/train/${train2.number}?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
     const halt = (s) => {
       const h = haltOf2(s);
       return h ? t("halt", { d: dur(h) }) : "";
@@ -2034,9 +2176,10 @@
       }
       const tm = d2.both(i);
       const time_ = tm ? { time: tm } : {};
-      if (i === lastIdx) out.push({ kind: "final", name, sub: join2(t("end"), km(s.km)), ...time_ });
-      else if (run && i === nextIdx) out.push({ kind: "next", name, sub: join2(t("nextStop"), km(s.km), halt(s)), ...time_ });
-      else out.push({ kind: "stop", name, sub: join2(i === 0 ? t("start") : "", km(s.km), halt(s)), ...time_ });
+      const link = pick ? { href: hrefOf(s) } : {};
+      if (i === lastIdx) out.push({ kind: "final", name, sub: join2(t("end"), km(s.km)), ...time_, ...link });
+      else if (run && i === nextIdx) out.push({ kind: "next", name, sub: join2(t("nextStop"), km(s.km), halt(s)), ...time_, ...link });
+      else out.push({ kind: "stop", name, sub: join2(i === 0 ? t("start") : "", km(s.km), halt(s)), ...time_, ...link });
     });
     return out;
   }
@@ -2044,7 +2187,8 @@
     const web = options.layout === "web";
     const d2 = derive(data);
     const { train: train2, run, stops } = data;
-    const title = t("allStopsN", { n: stops.length });
+    const pick = !!data.pick;
+    const title = pick ? t("alertsChooseStop") : t("allStopsN", { n: stops.length });
     const header2 = PageHeader({
       title,
       subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
@@ -2055,6 +2199,8 @@
       data.notice != null ? notice(data.notice) : "",
       ...d2.first ? [
         row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false }))),
+        pick ? note(t("pickStopHint")) : "",
+        pick ? Button({ label: t("alertsSkipStop"), variant: "secondary", full: true, className: "p-alerts-whole" }) : "",
         !run ? note(t("timetableTimes")) : "",
         StopTimeline({ mode: "full", rows: rowsOf(data, d2), legend: !!run })
       ] : [note(t("loading"))]
@@ -2088,6 +2234,7 @@
     const name = place2(station2);
     const selected = { title: name };
     const hover = web && data.map?.hover ? { key: data.map.hover.key, title: place2(data.map.hover.station), sub: t("clickForStation") } : void 0;
+    const timetableView = data.view === "timetable";
     const age = now - updatedAt < 1 ? t("justNow") : t("ago", { d: dur(now - updatedAt) });
     const panel = body(
       PageHeader({
@@ -2102,7 +2249,15 @@
       }),
       notice(data.notice),
       data.photo ? Photo(data.photo) : "",
-      data.loading ? note(t("loading")) : section(
+      SegmentedControl({
+        label: t("stationBoard"),
+        value: timetableView ? "timetable" : "next",
+        options: [
+          { value: "next", label: t("nextTrains"), href: `#/station/${station2.id}` },
+          { value: "timetable", label: t("timetable"), href: `#/station/${station2.id}?view=timetable` }
+        ]
+      }),
+      timetableView ? timetableSection(data) : data.loading ? note(t("loading")) : section(
         row(fill(SectionHeader({ label: t("nextTrains"), count: rows.length })), StatusChip({ tone: "neutral", text: t("updated", { ago: age }) })),
         rows.length ? list(...rows.map((r) => boardRow(r, station2, data.now))) : note(t("noTrainsSoon"))
       )
@@ -2118,8 +2273,27 @@
       body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + panel : panel
     });
   }
+  function timetableSection(data) {
+    if (data.loadingTimetable) return note(t("loading"));
+    const rows = data.timetable || [];
+    return section(
+      SectionHeader({ label: t("timetable"), count: rows.length }),
+      note(t("tripsCount", { n: rows.length })),
+      list(...rows.map((r) => {
+        const { train: train2, kind, origin, dest, time: at3, late, gps, runId } = r;
+        const sub = kind === "starts" ? t("startsHereTo", { x: place2(dest) }) : kind === "ends" ? t("arrivesFrom", { x: place2(origin) }) : t("toStation", { x: place2(dest) });
+        return DepartureRow({
+          href: `#/train/${train2.number}${runId ? `?run=${runId}` : ""}`,
+          time: { expected: time(at3) },
+          train: { number: train2.label, direction: train2.up ? "up" : "dn", name: trainTitle(train2) },
+          sub,
+          ...late != null ? { status: delayStatus(late, { gps }) } : {}
+        });
+      }))
+    );
+  }
   function boardRow(r, station2, now) {
-    const { train: train2, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform } = r;
+    const { train: train2, kind, origin, dest, sched, est, late, gps, runId, kmAway, atPlatform, lastSeen } = r;
     const moved = est !== sched;
     let when;
     if (atPlatform) when = { expected: time(est, now) };
@@ -2130,6 +2304,7 @@
     if (kind === "starts") sub = t("startsHereTo", { x: place2(dest) });
     else if (kind === "ends") sub = t("arrivesFrom", { x: place2(origin) });
     else sub = t("toStation", { x: place2(dest) }) + (kmAway != null ? ` \xB7 ${t("kmAway", { km: kmAway })}` : "");
+    if (lastSeen && (late == null || gps === false)) sub += ` \xB7 ${lastSeen}`;
     let status;
     if (atPlatform) status = { tone: late == null ? "ontime" : statusTone(late), text: t("atPlatform") };
     else if (gps === false) status = delayStatus(null, { gps: false });

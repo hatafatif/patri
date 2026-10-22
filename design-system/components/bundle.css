@@ -1227,6 +1227,9 @@
 }
 .p-trainmarker__dot .p-train { inline-size: 28px; block-size: 15px; }
 .p-trainmarker--left .p-train { scale: -1 1; }
+/* MapLibre sets opacity on the marker element itself, so fade its two parts. */
+.p-trainmarker--stale .p-trainmarker__dot,
+.p-trainmarker--stale .p-trainmarker__label { opacity: .55; }
 .p-trainmarker__label {
   flex: none;
   margin-inline-start: var(--space-3);
@@ -1402,6 +1405,109 @@
 
 [lang="ur"] .p-photo__credit { font: var(--t-urdu-caption); letter-spacing: normal; }
 
+/* ---------- 27. ReplayBar ---------- */
+.p-replaybar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+/* The play/pause button: a round 44px disc. Media icons don't mirror in right-to-left. */
+.p-replaybar__play {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--sabz-700);
+  color: var(--surface);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.p-replaybar__play svg { display: block; }
+.p-replaybar__play:not(:disabled):hover { background: var(--sabz-900); }
+.p-replaybar__main { flex: 1; min-inline-size: 0; }
+/* The day ticks sit just above the thumb's travel: the 10px offset is half the 20px thumb. */
+.p-replaybar__ticks {
+  position: relative;
+  block-size: 8px;
+  margin-block-start: var(--space-2);
+  margin-block-end: calc(-1 * var(--space-2));
+  pointer-events: none;
+}
+.p-replaybar__tick {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: calc(10px + (100% - 20px) * var(--f));
+  inline-size: 2px;
+  block-size: 8px;
+  margin-inline-start: -1px;
+  background: var(--sabz-700);
+}
+.p-replaybar__tick--empty { background: var(--line); }
+
+/* The scrubber: a native range, so keyboard and screen readers work. 44px tall to be easy to grab. */
+.p-replaybar__range {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--tap);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.p-replaybar__range::-webkit-slider-runnable-track { block-size: 4px; border-radius: var(--radius-round); background: var(--line); }
+.p-replaybar__range::-moz-range-track { block-size: 4px; border-radius: var(--radius-round); background: var(--line); }
+.p-replaybar__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: -8px;
+  border: var(--border-rule) solid var(--sabz-900);
+  border-radius: var(--radius-round);
+  background: var(--zard-500);
+}
+.p-replaybar__range::-moz-range-thumb {
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  border: var(--border-rule) solid var(--sabz-900);
+  border-radius: var(--radius-round);
+  background: var(--zard-500);
+}
+.p-replaybar__range:focus-visible { outline: none; }
+.p-replaybar__range:focus-visible::-webkit-slider-thumb { outline: 3px solid var(--focus); outline-offset: 2px; }
+.p-replaybar__range:focus-visible::-moz-range-thumb { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.p-replaybar__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: var(--space-3);
+  margin-block-start: calc(-1 * var(--space-2));
+}
+.p-replaybar__time { flex: none; white-space: nowrap; font: var(--t-body-strong); letter-spacing: var(--t-body-strong-tracking); }
+.p-replaybar__speed { margin-inline-start: auto; text-align: end; color: var(--ink-muted); font: var(--t-caption); letter-spacing: var(--t-caption-tracking); }
+
+/* Disabled: greyed with the line and muted ink tokens, no hover. */
+.p-replaybar__play:disabled { background: var(--line); color: var(--ink-muted); cursor: not-allowed; }
+.p-replaybar__range:disabled { cursor: not-allowed; }
+.p-replaybar__range:disabled::-webkit-slider-thumb { border-color: var(--ink-muted); background: var(--line); }
+.p-replaybar__range:disabled::-moz-range-thumb { border-color: var(--ink-muted); background: var(--line); }
+.p-replaybar__play:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+[lang="ur"] .p-replaybar__time { font: var(--t-urdu-strong); letter-spacing: normal; }
+[lang="ur"] .p-replaybar__speed { font: var(--t-urdu-caption); letter-spacing: normal; }
+
 /* Patri screens: layout for the templates in public/js/screens/.
  * Layout only: wrappers, flex and grid, and spacing from the tokens. Every visual piece is a registered
  * component (components.css); the preview-only map stand-in has its own file (map-standin.css).
@@ -1452,6 +1558,7 @@
   flex-direction: column;
   gap: var(--space-2);
 }
+.p-screen__controls-row { display: flex; gap: var(--space-2); align-items: center; }
 .p-screen__controls--start { inset-inline-start: var(--space-3); align-items: flex-start; }
 .p-screen__controls--end { inset-inline-end: var(--space-3); align-items: flex-end; }
 /* Phone: the Home/Back pill floats above the panel; at full snap the panel stops below it (12px + 44px pill + 12px). */
