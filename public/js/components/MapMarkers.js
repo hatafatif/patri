@@ -24,6 +24,14 @@ export function mapLabel({ title = '', sub, kind = 'next' } = {}) {
   return `<div class="${cx('p-maplabel', `p-maplabel--${k}`)}"><span class="p-maplabel__title">${bdi(title)}</span>${sub ? `<span class="p-maplabel__sub">${bdi(sub)}</span>` : ''}</div>`;
 }
 
+// A token's hex colour (#rgb or #rrggbb) as rgba(), for a fade to transparent.
+function withAlpha(hex, a) {
+  let h = String(hex).trim().replace('#', '');
+  if (h.length === 3) h = [...h].map(c => c + c).join('');
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
 /**
  * MapLibre paint values read from the design tokens when called, so a token change reaches the map. Pass them as the paint of a layer: station and majorCity to circle layers, rail, routeDone, routeDoneCasing, routeAhead and border to line layers, land and water to fill layers, cityLabel to a symbol layer.
  * @typedef {object} MapPaintResult
@@ -35,6 +43,7 @@ export function mapLabel({ title = '', sub, kind = 'next' } = {}) {
  * @property {Record<string, unknown>} routeDoneCasing - The white casing under the route done, width 8.
  * @property {Record<string, unknown>} routeDone - The route the train has covered: sabz-700, width 5.
  * @property {Record<string, unknown>} routeAhead - The route still to run: sabz-700, width 3, dashed.
+ * @property {Record<string, unknown>} replayTrail - The fading trail behind a replayed train: zard-500, width 5, a line-gradient from transparent (tail) to opaque (train); the source needs lineMetrics.
  * @property {Record<string, unknown>} cityLabel - Text paint for major city labels: ink with a surface halo.
  * @property {Record<string, unknown>} land - Land fill, map-land.
  * @property {Record<string, unknown>} water - Water fill, map-water.
@@ -52,6 +61,7 @@ export function mapPaint() {
     routeDoneCasing: { 'line-color': v('surface'), 'line-width': 8 },
     routeDone: { 'line-color': v('sabz-700'), 'line-width': 5 },
     routeAhead: { 'line-color': v('sabz-700'), 'line-width': 3, 'line-dasharray': [2, 2] },
+    replayTrail: { 'line-width': 5, 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, withAlpha(v('zard-500'), 0), 1, v('zard-500')] },
     cityLabel: { 'text-color': v('ink'), 'text-halo-color': v('surface'), 'text-halo-width': 1.5 },
     land: { 'fill-color': v('map-land') },
     water: { 'fill-color': v('map-water') },
