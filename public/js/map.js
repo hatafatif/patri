@@ -16,11 +16,12 @@
 //   onUserMove(fn)              the rider dragged, pinched or zoomed the map (Following turns off)
 //   onStationClick(fn(id))      a station dot was tapped
 //   onTrainClick(fn(number))    a running-train dot was tapped
-//   setTrains(list)             [{ number, lat, lon, title }], title already localised; drawn as small yellow dots
-//                               in stations mode only (hover shows the title), empty in train mode
+//   setTrains(list)             [{ number, lat, lon, title, toward? }], title already localised, toward the next station
+//                               as [lon, lat]; drawn in stations mode only: yellow count pills at zoom <= 6, a locomotive
+//                               and coach along the track when zoomed in (hover shows the title), empty in train mode
 //   showStations({ key, stations, selected?, fit? })
 //                               stations mode (Home, Search, From → To, Station): every station a small dot, the major
-//                               cities bigger and labelled, running trains as small dots, selected ids drawn as selected with a mapLabel 'selected'.
+//                               cities bigger and labelled, running trains, the rail network, selected ids drawn as selected with a mapLabel 'selected'.
 //                               fit: 'country' | 'selected' | 'keep'; applied only when key changes.
 //   showTrain({ key, stops, passedIdx, position, marker, next?, mine?, follow, lastSeen? })
 //                               train mode (Train page, All stops): the route from the stop coordinates, done solid and
@@ -40,6 +41,8 @@
 // { id, name, nameUr, lat, lon }; stops are the same, in route order.
 /* global maplibregl */
 import { mapPaint, mapLabel, trainMarker } from './components/index.js';
+import { trainImages } from './components/MapMarkers.js';
+import { loadNetwork, headingsAt, bearing } from './track.js';
 import { stationName } from './names.js';
 import { haversineKm } from './eta.js';
 import { t } from './i18n.js';
@@ -49,6 +52,7 @@ import { lockToPakistan } from './maplock.js';
 const PAKISTAN = [[60.8, 23.6], [77.9, 37.1]];
 const EMPTY = { type: 'FeatureCollection', features: [] };
 const TWEEN_MS = 900;
+const REACHES = [8, 2, 0.5]; // km of track read for the heading, by zoom step (map.js layers: below 9, 9-11, above 11)
 const hoverable = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 const line = pts => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: pts.map(p => [p.lon, p.lat]) } });
@@ -75,7 +79,7 @@ try {
 let styleInfo = null;
 
 // Overlay data survives a change of base style, which wipes sources and layers.
-const SOURCES = ['route-ahead', 'route-done', 'replay-trail', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains'];
+const SOURCES = ['route-ahead', 'route-done', 'replay-trail', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains', 'rail-network'];
 const data = Object.fromEntries(SOURCES.map(id => [id, EMPTY]));
 const put = (id, value) => { data[id] = value; map?.getSource(id)?.setData(value); };
 
@@ -95,6 +99,7 @@ let lastFitSig = '', refitTimer = 0, hasFitted = false;
 let moveHandler = () => {}, clickHandler = () => {}, trainClickHandler = () => {};
 let trainList = [];
 let hovered = null;
+let network = null; // the rail network, once loaded
 
 export const ready = () => readyPromise;
 
@@ -232,12 +237,20 @@ async function addOverlays() {
   for (const [id, src] of Object.entries(mask.sources)) map.addSource(id, src);
   // The fade goes under the sea and the outline over it, so the sea shows through but Pakistan's border stays on top.
   mask.layers.forEach(l => map.addLayer(l, l.id === 'pk-mask' ? styleInfo.maskBelow : (styleInfo.outlineBelow ?? styleInfo.maskBelow)));
-  for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: data[id], ...(id === 'replay-trail' && { lineMetrics: true }) });
+  for (const id of SOURCES) {
+    const extra = id === 'replay-trail' ? { lineMetrics: true } : id === 'trains' ? { cluster: true, clusterMaxZoom: 6, clusterRadius: 36 } : {};
+    map.addSource(id, { type: 'geojson', data: data[id], ...extra });
+  }
+  const imgs = await trainImages();
+  for (const [name, img] of [['train-cluster', imgs.cluster], ['train-loco', imgs.loco], ['train-coach', imgs.coach]]) {
+    if (!map.hasImage(name)) map.addImage(name, img, { pixelRatio: 2 });
+  }
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const ring = p.station['circle-color'];
   const surface = p.cityLabel['text-halo-color'];
   const grow = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 4, a, 9, b, 13, c];
 
+  map.addLayer({ id: 'rail-network', type: 'line', source: 'rail-network', paint: p.railNetwork, layout: round });
   map.addLayer({ id: 'route-ahead', type: 'line', source: 'route-ahead', paint: p.routeAhead, layout: { 'line-join': 'round' } });
   map.addLayer({ id: 'route-done-casing', type: 'line', source: 'route-done', paint: p.routeDoneCasing, layout: round });
   map.addLayer({ id: 'route-done', type: 'line', source: 'route-done', paint: p.routeDone, layout: round });
@@ -251,7 +264,6 @@ async function addOverlays() {
   const fadeIn = ['interpolate', ['linear'], ['zoom'], 7.5, 0, 8.5, 1];
   map.addLayer({ id: 'stations', type: 'circle', source: 'stations', minzoom: 7.5, paint: { ...p.station, 'circle-radius': grow(2, 3, 4.5), 'circle-stroke-color': surface, 'circle-stroke-width': 1, 'circle-opacity': fadeIn, 'circle-stroke-opacity': fadeIn } });
   map.addLayer({ id: 'majors', type: 'circle', source: 'majors', paint: { ...p.majorCity, 'circle-radius': grow(4.5, 5.5, 7) } });
-  map.addLayer({ id: 'trains', type: 'circle', source: 'trains', paint: { ...p.trainDot, 'circle-radius': grow(4, 5.5, 7) } });
   if (styleName === 'sabz') {
     // Latin glyphs only; MapLibre can't shape Urdu here, so city labels are English in both languages.
     map.addLayer({
@@ -264,9 +276,20 @@ async function addOverlays() {
     });
   }
   map.addLayer({ id: 'stations-selected', type: 'circle', source: 'stations-selected', paint: p.selectedStation });
+  // Trains: count pills while zoomed out, a coach and the locomotive pulling it when zoomed in (coach first, so the loco is on top).
+  const single = ['!', ['has', 'point_count']];
+  const place_ = { 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 7, 0.9, 10, 1.1, 13, 1.4] };
+  const heading = k => ['step', ['zoom'], ['get', `${k}0`], 9, ['get', `${k}1`], 11, ['get', `${k}2`]];
+  map.addLayer({
+    id: 'trains-cluster', type: 'symbol', source: 'trains', filter: ['has', 'point_count'],
+    layout: { 'icon-image': 'train-cluster', 'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['Noto Sans Bold'], 'text-size': 12.5, 'text-offset': [0.75, 0], 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'text-allow-overlap': true, 'text-ignore-placement': true },
+    paint: p.trainClusterText,
+  });
+  map.addLayer({ id: 'trains-coach', type: 'symbol', source: 'trains', filter: single, layout: { ...place_, 'icon-image': 'train-coach', 'icon-anchor': 'top', 'icon-rotate': heading('b') } });
+  map.addLayer({ id: 'trains-loco', type: 'symbol', source: 'trains', filter: single, layout: { ...place_, 'icon-image': 'train-loco', 'icon-anchor': 'bottom', 'icon-rotate': heading('a') } });
   // Invisible and wide, so a finger hits a station.
   map.addLayer({ id: 'stations-hit', type: 'circle', source: 'stations', minzoom: 8, paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
-  map.addLayer({ id: 'trains-hit', type: 'circle', source: 'trains', paint: { 'circle-radius': 14, 'circle-color': ring, 'circle-opacity': 0 } });
+  map.addLayer({ id: 'trains-hit', type: 'circle', source: 'trains', filter: ['!', ['has', 'point_count']], paint: { 'circle-radius': 14, 'circle-color': ring, 'circle-opacity': 0 } });
   map.addLayer({ id: 'majors-hit', type: 'circle', source: 'majors', paint: { 'circle-radius': 16, 'circle-color': ring, 'circle-opacity': 0 } });
 }
 
@@ -290,6 +313,7 @@ function drawStations() {
   const sel = selectedStations();
   put('stations-selected', points(sel));
   put('trains', trainPoints());
+  put('rail-network', railLines());
   put('route-ahead', EMPTY); put('route-done', EMPTY); put('route-stops', EMPTY);
   dropMarkers(slot => slot.startsWith('sel:') || slot === 'hover');
   for (const [slot, m] of markers) if (slot.startsWith('sel:') && !sel.some(s => `sel:${s.id}` === slot)) { m.marker.remove(); markers.delete(slot); }
@@ -298,7 +322,19 @@ function drawStations() {
   if (hovered?.startsWith('train:') && !trainList.some(x => `train:${x.number}` === hovered)) hideHover();
 }
 
-const trainPoints = () => points(trainList.map(sane).filter(Boolean).map(x => ({ ...x, props: { number: String(x.number), title: x.title || '' } })));
+const railLines = () => (network ? { type: 'FeatureCollection', features: network.lines.map(l => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: l } })) } : EMPTY);
+
+// a0..a2: the track ahead of the train and b0..b2 the track behind, at the three reaches; without track, straight at the next station.
+function headingProps(x) {
+  const at = [x.lon, x.lat], toward = Array.isArray(x.toward) ? x.toward : null;
+  const hs = network ? headingsAt(network, at, toward, REACHES) : null;
+  const fallback = toward ? bearing(at, toward) : 0;
+  const props = {};
+  REACHES.forEach((_, i) => { props[`a${i}`] = hs ? hs[i].ahead : fallback; props[`b${i}`] = hs ? hs[i].behind : fallback; });
+  return props;
+}
+
+const trainPoints = () => points(trainList.map(sane).filter(Boolean).map(x => ({ ...x, props: { number: String(x.number), title: x.title || '', ...headingProps(x) } })));
 
 const nameClean = s => String(s ?? '').replace(/\s+/g, ' ').trim();
 
@@ -335,7 +371,7 @@ function drawTrain(keyChanged) {
   put('route-done', done.length > 1 ? line(done) : EMPTY);
   put('route-ahead', rest.length > 1 ? line(rest) : EMPTY);
   put('route-stops', points(pts.map(s => ({ ...s, props: { passed: all.indexOf(s) <= passedIdx } }))));
-  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY);
+  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY); put('rail-network', EMPTY);
   stationSig = '';
   hideHover();
   dropMarkers(slot => slot === 'train' || slot === 'next' || slot === 'mine');
@@ -407,7 +443,7 @@ function drawReplay(keyChanged) {
   put('route-ahead', stops.length > 1 ? line(stops) : EMPTY);
   put('route-done', EMPTY);
   put('route-stops', points(stops.map(s => ({ ...s, props: { passed: false } }))));
-  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY);
+  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY); put('rail-network', EMPTY);
   stationSig = '';
   hideHover();
   dropMarkers(slot => slot.startsWith('replay:'));
@@ -436,7 +472,7 @@ function sync() {
   } else if (mode === 'replay') {
     drawReplay(keyChanged);
   } else {
-    for (const id of ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains']) put(id, EMPTY);
+    for (const id of ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains', 'rail-network']) put(id, EMPTY);
     stationSig = '';
     dropMarkers();
   }
@@ -451,8 +487,15 @@ function hideHover() {
   if (map) map.getCanvas().style.cursor = '';
 }
 
+async function zoomCluster(id, at) {
+  try {
+    const zoom = await map.getSource('trains').getClusterExpansionZoom(id);
+    map.easeTo({ center: at, zoom: Math.min(zoom + 0.5, 16), essential: true });
+  } catch {}
+}
+
 function nearestAt(point) {
-  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['trains-hit', 'stations-hit', 'majors-hit'] });
+  const fs = map.queryRenderedFeatures([[point.x - 16, point.y - 16], [point.x + 16, point.y + 16]], { layers: ['trains-cluster', 'trains-hit', 'stations-hit', 'majors-hit'] });
   let best = null, bd = Infinity;
   for (const f of fs) {
     const p = map.project(f.geometry.coordinates);
@@ -460,6 +503,7 @@ function nearestAt(point) {
     if (d < bd) { bd = d; best = f; }
   }
   if (!best || bd > 18 * 18) return null;
+  if (best.layer.id === 'trains-cluster') return { kind: 'cluster', id: best.properties.cluster_id, at: best.geometry.coordinates };
   return best.layer.id === 'trains-hit' ? { kind: 'train', id: best.properties.number, title: best.properties.title, at: best.geometry.coordinates } : { kind: 'station', id: best.properties.id };
 }
 
@@ -474,6 +518,7 @@ function bindEvents() {
     if (mode !== 'stations') return;
     const hit = nearestAt(e.point);
     if (!hit) return;
+    if (hit.kind === 'cluster') return zoomCluster(hit.id, hit.at);
     if (hit.kind === 'train') trainClickHandler(hit.id); else clickHandler(hit.id);
   });
   if (hoverable()) {
@@ -485,6 +530,7 @@ function bindEvents() {
       if (!hit) return hideHover();
       hovered = key;
       map.getCanvas().style.cursor = 'pointer';
+      if (hit.kind === 'cluster') { const m = markers.get('hover'); if (m) { m.marker.remove(); markers.delete('hover'); } return; }
       if (hit.kind === 'train') {
         place('hover', hit.at, mapLabel({ title: hit.title, sub: t('clickForTrain'), kind: 'hover' }), { anchor: 'bottom', offset: [0, -12], z: 5 });
         return;
@@ -507,7 +553,7 @@ export async function initMap(el) {
     center: [69.3, 30.4],
     zoom: 4.4,
     minZoom: 3,
-    attributionControl: { compact: true, customAttribution: 'Relief: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>' },
+    attributionControl: { compact: true, customAttribution: ['Relief: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>', 'Rail lines © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'] },
     dragRotate: false,
     pitchWithRotate: false,
     touchPitch: false,
@@ -517,6 +563,7 @@ export async function initMap(el) {
   // The compact attribution opens expanded and covers the south of the map on a phone; start it closed (the ⓘ opens it).
   map.once('load', () => map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
   bindEvents();
+  loadNetwork().then(net => { network = net; if (loaded && mode === 'stations') { put('trains', trainPoints()); put('rail-network', railLines()); } });
   // The container can be sized after the map exists (the panel lays out late on phones): refit once it has real size.
   new ResizeObserver(() => { map.resize(); scheduleRefit(); }).observe(el);
   await new Promise(resolve => map.once('style.load', resolve));
