@@ -29,6 +29,10 @@
 //                               lastSeen { lat, lon, label } puts a faded (stale) trainMarker there; it is never followed.
 //   setFollow(on)               keep the train centred in the visible area
 //   showWholeRoute()            fit every stop into the visible area and stop following
+//   showReplay({ key, stops })  replay mode: the whole route (dashed) fitted in view and no other markers; the page then
+//                               drives the trains with setReplayFrame
+//   setReplayFrame(trains)      [{ id, lat, lon, facing, label, trail }]; one trainMarker per id and a fading trail
+//                               ([lon, lat] pairs ending at the train); called every animation frame
 //   clear()                     remove every overlay
 //
 // Notes: the city labels drawn by MapLibre itself stay in English in both languages (it cannot shape Urdu without
@@ -71,15 +75,16 @@ try {
 let styleInfo = null;
 
 // Overlay data survives a change of base style, which wipes sources and layers.
-const SOURCES = ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains'];
+const SOURCES = ['route-ahead', 'route-done', 'replay-trail', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains'];
 const data = Object.fromEntries(SOURCES.map(id => [id, EMPTY]));
 const put = (id, value) => { data[id] = value; map?.getSource(id)?.setData(value); };
 
 // What the views last asked for. Everything is drawn from these, so a call made before the map loads (or an
 // overlay lost to a style change) is not lost.
-let mode = null; // 'stations' | 'train' | null
+let mode = null; // 'stations' | 'train' | 'replay' | null
 let sIntent = null; // { key, stations, selected, fit }
 let tIntent = null; // { key, stops, passedIdx, position, marker, next, mine, follow, lastSeen }
+let rIntent = null; // { key, stops }
 let located_ = null; // station id picked by locate(), kept until the stations key changes
 let stationSig = '', byId = new Map(), allStations = [];
 let fitPending = false; // a fit is waiting for the container to have a size
@@ -132,7 +137,7 @@ function target() {
     if (!pts.length) return { bounds: PAKISTAN, maxZoom: 7 };
     return pts.length === 1 ? { center: [pts[0].lon, pts[0].lat], zoom: 10 } : { bounds: boundsOf(pts), maxZoom: 11 };
   }
-  const stops = (tIntent?.stops || []).map(sane).filter(Boolean);
+  const stops = ((mode === 'replay' ? rIntent : tIntent)?.stops || []).map(sane).filter(Boolean);
   if (camera.type === 'train' && tIntent?.position) return { center: [tIntent.position.lon, tIntent.position.lat], zoom: camera.zoom || 9 };
   if (camera.type === 'route' || camera.type === 'train') {
     if (stops.length) return stops.length === 1 ? { center: [stops[0].lon, stops[0].lat], zoom: 9 } : { bounds: boundsOf(stops), maxZoom: 10 };
@@ -227,7 +232,7 @@ async function addOverlays() {
   for (const [id, src] of Object.entries(mask.sources)) map.addSource(id, src);
   // The fade goes under the sea and the outline over it, so the sea shows through but Pakistan's border stays on top.
   mask.layers.forEach(l => map.addLayer(l, l.id === 'pk-mask' ? styleInfo.maskBelow : (styleInfo.outlineBelow ?? styleInfo.maskBelow)));
-  for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: data[id] });
+  for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: data[id], ...(id === 'replay-trail' && { lineMetrics: true }) });
   const round = { 'line-cap': 'round', 'line-join': 'round' };
   const ring = p.station['circle-color'];
   const surface = p.cityLabel['text-halo-color'];
@@ -236,6 +241,7 @@ async function addOverlays() {
   map.addLayer({ id: 'route-ahead', type: 'line', source: 'route-ahead', paint: p.routeAhead, layout: { 'line-join': 'round' } });
   map.addLayer({ id: 'route-done-casing', type: 'line', source: 'route-done', paint: p.routeDoneCasing, layout: round });
   map.addLayer({ id: 'route-done', type: 'line', source: 'route-done', paint: p.routeDone, layout: round });
+  map.addLayer({ id: 'replay-trail', type: 'line', source: 'replay-trail', paint: p.replayTrail, layout: round });
   map.addLayer({
     id: 'route-stops', type: 'circle', source: 'route-stops',
     paint: { 'circle-radius': 3.5, 'circle-color': ['case', ['get', 'passed'], p.routeDone['line-color'], surface], 'circle-stroke-color': ['case', ['get', 'passed'], surface, ring], 'circle-stroke-width': 1.5 },
@@ -367,10 +373,55 @@ function drawTrain(keyChanged) {
   } else if (!follow && camera?.type === 'train') camera = null;
 }
 
+// ---- Replay -------------------------------------------------------------------------------------------------
+
+const TRAIL_MS = 80; // setData on a line-metrics source is costly; the trail refreshes at most this often
+let trailPending = null, trailTimer = 0, trailAt = 0;
+
+function flushTrail() {
+  trailTimer = 0;
+  if (!trailPending) return;
+  const fc = trailPending;
+  trailPending = null;
+  trailAt = performance.now();
+  if (loaded && mode === 'replay') put('replay-trail', fc);
+}
+
+function queueTrail(fc) {
+  trailPending = fc;
+  if (trailTimer) return;
+  const wait = TRAIL_MS - (performance.now() - trailAt);
+  if (wait <= 0) flushTrail(); else trailTimer = setTimeout(flushTrail, wait);
+}
+
+// Leaving replay (or any redraw outside it): no trail, no replay markers, nothing queued.
+function leaveReplay() {
+  clearTimeout(trailTimer);
+  trailTimer = 0; trailPending = null;
+  if (data['replay-trail'] !== EMPTY) put('replay-trail', EMPTY);
+}
+
+function drawReplay(keyChanged) {
+  const stops = rIntent.stops.map(sane).filter(Boolean);
+  put('route-ahead', stops.length > 1 ? line(stops) : EMPTY);
+  put('route-done', EMPTY);
+  put('route-stops', points(stops.map(s => ({ ...s, props: { passed: false } }))));
+  put('stations', EMPTY); put('majors', EMPTY); put('stations-selected', EMPTY); put('trains', EMPTY);
+  stationSig = '';
+  hideHover();
+  dropMarkers(slot => slot.startsWith('replay:'));
+  if (keyChanged) {
+    userMoved = false;
+    camera = { type: 'route' };
+    applyCamera(600);
+  } else if (fitPending) applyCamera(0);
+}
+
 function sync() {
   if (!loaded) return;
   const keyChanged = keyDirty;
   keyDirty = false;
+  if (mode !== 'replay') leaveReplay();
   if (mode === 'stations') {
     drawStations();
     if (keyChanged) {
@@ -381,6 +432,8 @@ function sync() {
   } else if (mode === 'train') {
     drawTrain(keyChanged);
     if (fitPending && !keyChanged) applyCamera(0);
+  } else if (mode === 'replay') {
+    drawReplay(keyChanged);
   } else {
     for (const id of ['route-ahead', 'route-done', 'route-stops', 'stations', 'majors', 'stations-selected', 'trains']) put(id, EMPTY);
     stationSig = '';
@@ -559,6 +612,36 @@ export function showTrain({ key, stops = [], passedIdx = -1, position = null, ma
   sync();
 }
 
+export function showReplay({ key, stops = [] } = {}) {
+  const changed = !(mode === 'replay' && rIntent && rIntent.key === key);
+  mode = 'replay';
+  rIntent = { key, stops };
+  if (changed) keyDirty = true;
+  sync();
+}
+
+export function setReplayFrame(trains) {
+  if (mode !== 'replay' || !loaded) return;
+  const list = Array.isArray(trains) ? trains : [];
+  const ids = new Set(list.map(x => `replay:${x.id}`));
+  for (const [slot, m] of markers) if (slot.startsWith('replay:') && !ids.has(slot)) { m.marker.remove(); markers.delete(slot); }
+  const trails = [];
+  for (const x of list) {
+    const slot = `replay:${x.id}`, at = [x.lon, x.lat], label = x.label || '', facing = x.facing === 'left' ? 'left' : 'right';
+    let m = markers.get(slot);
+    if (!m) {
+      m = place(slot, at, trainMarker({ label, facing }), { anchor: 'center', offset: [0, 0], z: 4, root: true });
+      m.label = label; m.facing = facing;
+    } else {
+      m.marker.setLngLat(at);
+      if (m.label !== label) { m.label = label; const b = m.marker.getElement().querySelector('.p-trainmarker__label bdi'); if (b) b.textContent = label; }
+      if (m.facing !== facing) { m.facing = facing; m.marker.getElement().classList.toggle('p-trainmarker--left', facing === 'left'); }
+    }
+    if (Array.isArray(x.trail) && x.trail.length >= 2) trails.push({ type: 'Feature', properties: { id: String(x.id) }, geometry: { type: 'LineString', coordinates: x.trail } });
+  }
+  queueTrail({ type: 'FeatureCollection', features: trails });
+}
+
 export function setFollow(on) {
   if (!tIntent) return;
   tIntent.follow = !!on;
@@ -578,6 +661,6 @@ export function showWholeRoute() {
 }
 
 export function clear() {
-  mode = null; sIntent = null; tIntent = null; located_ = null; camera = null; fitPending = false; keyDirty = false;
+  mode = null; sIntent = null; tIntent = null; rIntent = null; located_ = null; camera = null; fitPending = false; keyDirty = false;
   sync();
 }
