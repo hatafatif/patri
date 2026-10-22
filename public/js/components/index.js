@@ -26,6 +26,7 @@ export { Button } from './Button.js';                                           
 export { Card } from './Card.js';                                                // 24
 export { PageHeader, bindPageHeader } from './PageHeader.js';                  // 25
 export { Photo } from './Photo.js';                                              // 26
+export { ReplayBar, bindReplayBar, syncReplayBar } from './ReplayBar.js';        // 27
 
 // The one rule for a train's status.
 export { statusTone } from './_shared.js';

@@ -3,7 +3,7 @@
 // piece comes from a registered component.
 import {
   Panel, bindPanel, bindSearchField, bindSegmentedControl, bindStationFields, bindFollowButton,
-  bindMapToggle, bindStopTimeline, bindSpeedChart, bindLanguageToggle, bindPageHeader, IconButton, StatusChip,
+  bindMapToggle, bindStopTimeline, bindSpeedChart, bindLanguageToggle, bindPageHeader, bindReplayBar, IconButton, StatusChip,
 } from '../components/index.js';
 import { esc } from '../components/_shared.js';
 import { t } from '../i18n.js';
@@ -130,6 +130,7 @@ export function bindScreen(root, o = {}) {
     bindMapToggle(root, { onToggle: o.onFollowing }),
     bindStopTimeline(root, { onChangeStop: o.onChangeStop }),
     bindPageHeader(root, { onFollow: o.onFollow, onShare: o.onShare }),
+    bindReplayBar(root, { onToggle: o.onReplayToggle, onScrub: o.onReplayScrub }),
     bindLanguageToggle(root, { onChange: lang => o.onLang?.(lang) }),
   ];
   // Stars in rows; a PageHeader binds its own star, so it is skipped here.

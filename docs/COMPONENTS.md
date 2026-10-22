@@ -78,6 +78,7 @@ The registry of every frontend component. **Build UI only from these.** If none 
 | 24 | Card | shell | Right now, About this train |
 | 25 | PageHeader | shell | Train page, Station page, All stops |
 | 26 | Photo | data | Train page: About this train; Station page |
+| 27 | ReplayBar | input | Train page › Journey replay |
 
 ## Specs
 
@@ -298,6 +299,20 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Behaviour:** the image loads lazily and its 16:9 box is reserved, so nothing shifts. With an `href`, the credit is an underlined link that opens in a new tab (`rel="noopener"`).
 **Markup:** a `<figure>` with an `<img>` and a `<figcaption>`. The caption is left out when there is no credit.
 **Rules:** only freely licensed photos (CC BY, CC BY-SA, CC0, public domain), always credited. No photo is better than a wrong one.
+
+### 27. ReplayBar
+**What it is:** the playback control for the journey replay, a time-lapse of a train's recorded journeys on the map. It sits inside a Card in the panel. Approved on 2026-10-22.
+**Props:** `playing`, `at` (the replay's current time, epoch ms), `from`, `to` (epoch ms), `days?` (`{ start, recorded }[]`: one tick per day), `time` (already localised readout of `at`, such as "Tue 14 Oct · 3:40 PM"), `speed?` (already localised, such as "92 km/h" or "Between journeys"), `label` (already localised aria-label for the range, such as "Replay time"), `disabled?`, `className?`.
+**Look:** a 44px round play/pause button filled `sabz-700` with a `surface` icon, beside a column of three rows.
+- Ticks: one per day, 2px by 8px, `sabz-700` for a recorded day and `line` for an unrecorded one, lined up with the thumb's travel.
+- Track: a native range input with a 4px `line` track and a 20px thumb styled like the map's train dot (`zard-500` fill, 2px `sabz-900` ring).
+- Readout: the time in body-strong, and the speed at the inline end in caption style, `ink-muted`. In Urdu they become `urdu-strong` and `urdu-caption`.
+**Behaviour:**
+- The range counts whole minutes from `from` to `to`. `bindReplayBar(root, { onToggle, onScrub })` calls `onToggle()` for the button and `onScrub(at)` (epoch ms) when the range moves.
+- `syncReplayBar(root, { at, time, speed, playing })` updates the bar in place and only touches what changed, so it can run every frame.
+- A day before `from` is clamped to the start and a day after `to` is skipped. `disabled` greys the button and the range with the `line` and `ink-muted` tokens.
+**Markup:** a `<div>` with `data-from` and `data-to`, a `<button>` (aria-label "Play" or "Pause"), the ticks (`aria-hidden`) and an `<input type="range">` with the label as its aria-label and the time as its aria-valuetext. Time and speed are in `<bdi>`.
+**Right-to-left:** the range and the ticks run from the right and mirror together (logical `inset-inline-start`). The play and pause icons are media icons and don't mirror.
 
 ## Screens
 
