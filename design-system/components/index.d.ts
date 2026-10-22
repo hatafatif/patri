@@ -183,6 +183,8 @@ export interface MapPaintResult {
   routeDone: Record<string, unknown>;
   /** The route still to run: sabz-700, width 3, dashed. */
   routeAhead: Record<string, unknown>;
+  /** The fading trail behind a replayed train: zard-500, width 5, a line-gradient from transparent (tail) to opaque (train); the source needs lineMetrics. */
+  replayTrail: Record<string, unknown>;
   /** Text paint for major city labels: ink with a surface halo. */
   cityLabel: Record<string, unknown>;
   /** Land fill, map-land. */

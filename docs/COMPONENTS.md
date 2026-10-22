@@ -257,10 +257,12 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
   - rail: `map-rail`;
   - route done: `sabz-700`, width 5, with a white casing;
   - route ahead: `sabz-700`, dashed.
+  - replay trail: `zard-500`, width 5, fading to transparent at its tail (a `line-gradient`; the source needs `lineMetrics`).
 **Rules:**
 - Home and Station maps show **stations, plus a small marker for every running train** (`mapPaint().trainDot`; tapping or clicking one opens its Train page). Major cities are bigger and labelled at every zoom. The other stations appear as small dots once the map is zoomed in (they fade in from about zoom 7.5 to 8.5). Tapping a station opens its Station page.
 - The Sabz base style is a terrain relief (`public/data/relief.webp`, built by `npm run relief` from `scripts/build-relief.py` with the `map-relief-*` tokens) under water, rails and labels, with the neighbours faded in `map-outside` and the Arabian Sea in `map-water`.
 - The Train map shows that one train, followed.
+- The Journey replay map shows the train's route, dashed, with a `trainMarker` and a fading trail for every replayed run on the move (`showReplay` and `setReplayFrame` in `map.js`).
 
 ### 23. Button
 **Props:** `label`, `href?`, `variant: 'primary' | 'secondary' | 'link'`, `icon?` (trailing; any key in the icon set, such as `chevronEnd`, which flips in right-to-left, or `bell`), `full?`.

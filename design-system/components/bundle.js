@@ -1229,6 +1229,12 @@
     const k = ["next", "yourstop", "selected", "hover"].includes(kind) ? kind : "next";
     return `<div class="${cx("p-maplabel", `p-maplabel--${k}`)}"><span class="p-maplabel__title">${bdi(title)}</span>${sub ? `<span class="p-maplabel__sub">${bdi(sub)}</span>` : ""}</div>`;
   }
+  function withAlpha(hex, a) {
+    let h = String(hex).trim().replace("#", "");
+    if (h.length === 3) h = [...h].map((c) => c + c).join("");
+    const n = parseInt(h, 16);
+    return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, ${a})`;
+  }
   function mapPaint() {
     const css = getComputedStyle(document.documentElement);
     const v = (name) => css.getPropertyValue(`--${name}`).trim();
@@ -1241,6 +1247,7 @@
       routeDoneCasing: { "line-color": v("surface"), "line-width": 8 },
       routeDone: { "line-color": v("sabz-700"), "line-width": 5 },
       routeAhead: { "line-color": v("sabz-700"), "line-width": 3, "line-dasharray": [2, 2] },
+      replayTrail: { "line-width": 5, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("zard-500"), 0), 1, v("zard-500")] },
       cityLabel: { "text-color": v("ink"), "text-halo-color": v("surface"), "text-halo-width": 1.5 },
       land: { "fill-color": v("map-land") },
       water: { "fill-color": v("map-water") },
