@@ -6,6 +6,7 @@ import { bindScreen } from './screens/index.js';
 import { paint as paintInto } from './render.js';
 import * as map from './map.js';
 import { registerWorker } from './alerts.js';
+import { pageview } from './analytics.js';
 import { trainNo, trainTitle } from './screens/_format.js';
 import home from './views/home.js';
 import search from './views/search.js';
@@ -268,6 +269,7 @@ function route() {
   current = { name: view, view: VIEWS[view], params };
   freshNext = true;
   current.view.mount(params);
+  pageview(hash, view, params);
 }
 
 // ---- Start.
