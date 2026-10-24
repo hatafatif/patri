@@ -168,7 +168,7 @@ async function poll() {
     if (!document.hidden) pollTimer = setTimeout(poll, POLL_MS);
   }
 }
-/** Running trains for the map: number, position and a localised title. Never filtered or sorted by lateness. */
+/** Running trains for the map: number, run, position and a localised title. Never filtered or sorted by lateness. */
 export function mapTrains() {
   const out = [];
   for (const r of state.runs.values()) {
@@ -176,7 +176,7 @@ export function mapTrains() {
     if (r.suspect || !info || !(Date.now() - r.updatedAt < FRESH_MS) || !Number.isFinite(r.lat) || !Number.isFinite(r.lon)) continue;
     const next = state.stationById.get(String(r.nextStation));
     const toward = next && Number.isFinite(next.lat) && Number.isFinite(next.lon) ? [next.lon, next.lat] : null;
-    out.push({ number: r.train, lat: r.lat, lon: r.lon, title: `${trainNo(info)} ${trainTitle(info)}`, toward });
+    out.push({ number: r.train, run: r.id, lat: r.lat, lon: r.lon, title: `${trainNo(info)} ${trainTitle(info)}`, toward });
   }
   return out;
 }
@@ -187,7 +187,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---- Routing.
 //   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=]
-//   #/train/<n>/stops[?pick=1]  #/train/<n>/replay[?days=7|30|90]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
+//   #/train/<n>/stops[?pick=1&run=]  #/train/<n>/replay[?days=7|30|90&run=]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
 export function parse(hash = location.hash) {
   const h = hash.replace(/^#/, '');
   if (/^\d+$/.test(h)) return { view: 'train', params: { number: Number(h) }, legacy: `#/train/${h}` };

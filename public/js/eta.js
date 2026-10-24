@@ -36,6 +36,40 @@ function etaToMs(hhmm, near) {
   return ms;
 }
 
+const NEAR_KM = 0.5;      // the recorded track is "at" a station within this, ~1-2 min off the recorded pass
+const ROUGH_KM = 2;       // farther than this, the track says nothing about the station
+const GAP_MS = 45 * 60e3; // a longer silence in the track hides when the train got there (or left)
+
+/**
+ * When the train was at stop i, a stop it has passed. A recorded pass is exact. Without one, the recorded
+ * track: the first moment near the stop (the last, for the first stop, as it left), unless the recording
+ * was silent just before (after) it. Failing both, the timetable plus the delay recorded at the next stop
+ * on, else the delay now: a guess, so approx is true.
+ */
+function passedTime(stops, i, run, positions, passes) {
+  const s = stops[i];
+  const pass = passes.find(x => x.station === s.id);
+  if (pass) return { passedMs: pass.at, approx: false };
+  if (s.lat && s.lon) {
+    const near = p => (Math.abs(p[1] - s.lat) < 0.03 && Math.abs(p[2] - s.lon) < 0.03 ? haversineKm({ lat: p[1], lon: p[2] }, s) : Infinity);
+    const heard = (a, b) => !!positions[a] && !!positions[b] && positions[b][0] - positions[a][0] <= GAP_MS;
+    if (i === 0) {
+      // Gone from the first stop: the last point near it, provided a later point is clear of it.
+      const j = positions.findLastIndex(p => near(p) < NEAR_KM * 2);
+      if (j >= 0 && heard(j, j + 1) && positions.slice(j + 1).some(p => near(p) > ROUGH_KM)) return { passedMs: positions[j][0], approx: false };
+    } else {
+      let k = positions.findIndex(x => near(x) < NEAR_KM);
+      if (k < 0) for (let x = 0; x < positions.length; x++) if (near(positions[x]) < ROUGH_KM && (k < 0 || near(positions[x]) < near(positions[k]))) k = x;
+      if (k >= 0 && heard(k - 1, k)) return { passedMs: positions[k][0], approx: false };
+    }
+  }
+  const sched = s.dep != null && (i === 0 || s.arr == null) ? s.dep : s.arr;
+  if (sched == null) return { passedMs: null, approx: false };
+  const later = stops.slice(i + 1).map(x => passes.find(y => y.station === x.id)).find(Boolean);
+  const late = later?.late ?? run.lateBy ?? 0;
+  return { passedMs: run.date + (sched + late) * 60e3, approx: true };
+}
+
 // Estimated time at every stop. Two estimates, and the later one wins:
 //  - timetable: the scheduled time plus the current delay (trains rarely make time up);
 //  - distance: km to go at the recent average speed, plus 2 min per stop on the way. Only used
@@ -44,12 +78,11 @@ function etaToMs(hhmm, near) {
 export function estimates(stops, run, positions = [], passes = [], now = Date.now()) {
   const p = progress(stops, run);
   const speed = recentSpeed(positions, now);
-  const passedAt = new Map(passes.map(x => [x.station, x.at]));
   let extra = 0;
   return stops.map((s, i) => {
     const sched = s.arr ?? s.dep;
     const schedMs = sched == null ? null : run.date + sched * 60e3;
-    if (i <= p.passedIdx) return { i, passed: true, schedMs, passedMs: passedAt.get(s.id) ?? null };
+    if (i <= p.passedIdx) return { i, passed: true, schedMs, ...passedTime(stops, i, run, positions, passes) };
     const km = p.kmTo(i);
     if (schedMs == null) return { i, passed: false, schedMs, estMs: null, km, speed };
     let timetable = schedMs + run.lateBy * 60e3;

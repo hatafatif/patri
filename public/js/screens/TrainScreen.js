@@ -26,7 +26,7 @@ import { trainMap } from './_map-standin.js';
  * @property {TrainRun | null} run - The live run, or null for timetable mode.
  * @property {boolean} [gps=true] - Whether the train has GPS at all. Only read when run is null: it picks "no live run" or "no GPS" and the chip.
  * @property {number} [now] - Minutes after midnight on the run's first day. Needed with a run.
- * @property {{ passed: boolean, est?: number, at?: number }[]} [ests] - One per stop, as eta.js estimates() gives them, in minutes: passed stops show their timetable time (at, when known, is when the train passed); the rest have an expected time (est may be missing). Needed with a run.
+ * @property {{ passed: boolean, est?: number, at?: number, approx?: boolean }[]} [ests] - One per stop, as eta.js estimates() gives them, in minutes: a passed stop shows when the train was there (at; approx when that is only a guess from the timetable and the delay), or its timetable time without at; the rest have an expected time (est may be missing). Needed with a run.
  * @property {{ passedIdx: number, nextIdx: number, kmDone: number, kmToNext: number }} [progress] - eta.js progress(): the last stop passed (-1 before departure), the next stop (-1 once arrived or unknown), km run so far and km to the next stop. Needed with a run.
  * @property {string} [myStop] - The rider's stop id.
  * @property {boolean} followed - Whether the train is in My trains.
@@ -86,6 +86,13 @@ export function derive(data) {
   const { nextIdx, passedIdx } = progress;
   const mineIdx = data.myStop ? stops.findIndex(s => s.id === data.myStop) : -1;
   const est = i => (ests[i]?.est != null && !ests[i].passed ? ests[i].est : null);
+  /** A passed stop: when the train was there ({ at, approx }), else its timetable time, or null. */
+  const behind = i => {
+    const e = ests[i];
+    if (e?.passed && e.at != null) return { at: e.at, approx: !!e.approx };
+    const s = schedOf(stops[i]);
+    return s != null ? { at: s, approx: false } : null;
+  };
   const inTime = i => (est(i) != null ? t('inTime', { d: dur(est(i) - now) }) : '');
   /** The expected time alone ("~1:20 PM"), or the scheduled time when there is no estimate. */
   const exp = i => (est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : undefined);
@@ -116,7 +123,7 @@ export function derive(data) {
     next: stops[nextIdx], prev: stops[passedIdx], mine: mineIdx >= 0 ? stops[mineIdx] : null,
     totalKm: last?.km ?? 0,
     nextHalt: haltOf(stops[nextIdx]),
-    haltOf, schedOf, inTime, exp, both, trainText,
+    haltOf, schedOf, inTime, exp, both, behind, trainText,
   };
 }
 
@@ -226,9 +233,11 @@ function alertsCard(data) {
 function journeyCard(data, d) {
   const { train, run } = data;
   const { stops, lastIdx, passedIdx, progress, ref } = d;
-  const stopsHref = `#/train/${train.number}/stops`;
+  // Both keep the run on show, so their back links return to it.
+  const keepRun = data.runId ? `?run=${encodeURIComponent(data.runId)}` : '';
+  const stopsHref = `#/train/${train.number}/stops${keepRun}`;
   const seeAll = Button({ label: t('seeAllStopsN', { n: stops.length }), href: stopsHref, variant: 'primary', icon: 'chevronEnd', full: true });
-  const replay = data.gps ? Button({ label: t('replay'), href: `#/train/${train.number}/replay`, variant: 'secondary', icon: 'play', full: true }) : '';
+  const replay = data.gps ? Button({ label: t('replay'), href: `#/train/${train.number}/replay${keepRun}`, variant: 'secondary', icon: 'play', full: true }) : '';
   const more = n => (n > 0 ? [{ kind: 'more', name: t('moreStops', { n }), href: stopsHref }] : []);
 
   if (!run) {
@@ -248,9 +257,11 @@ function journeyCard(data, d) {
   }
 
   const st = run.status;
-  // A stop behind the train: when it passed (recorded, else the timetable), with its day.
-  const passedAt = i => data.ests?.[i]?.at ?? d.schedOf(stops[i]);
-  const behind = i => (passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {});
+  // A stop behind the train: when it was there (else the timetable), with its day.
+  const behind = i => {
+    const b = d.behind(i);
+    return b ? { time: { expected: (b.approx ? dayApprox : dayTime)(b.at, ref) } } : {};
+  };
   // A stop ahead: the expected time with its day, and the countdown.
   const ahead = i => {
     const e = d.est(i), s = d.schedOf(stops[i]);

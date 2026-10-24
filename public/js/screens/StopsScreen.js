@@ -2,7 +2,7 @@
 import { t, getLang, dur } from '../i18n.js';
 import { AppBar, PageHeader, StatusChip, StopTimeline, Button } from '../components/index.js';
 import { frame, body, row, note, notice } from './_layout.js';
-import { place, trainTitle, trainNo, route, time, km, delayStatus } from './_format.js';
+import { place, trainTitle, trainNo, route, time, approx, km, delayStatus } from './_format.js';
 import { derive, trainMapFor } from './TrainScreen.js';
 
 /**
@@ -30,8 +30,12 @@ function rowsOf(data, d) {
     const name = place(s);
     const passed = run && i <= passedIdx;
     if (passed) {
-      const sched = d.schedOf(s);
-      const at = sched != null ? { time: { expected: time(sched, d.ref) } } : {};
+      // When it was there, and the timetable time struck through when that differs.
+      const b = d.behind(i), sched = d.schedOf(s);
+      const at = b ? { time: {
+        expected: (b.approx ? approx : time)(b.at, d.ref),
+        ...(sched != null && Math.round(b.at) !== sched ? { scheduled: time(sched, d.ref) } : {}),
+      } } : {};
       const kmText = i === 0 ? join(t('start'), km(0)) : i === passedIdx ? join(km(s.km), t('lastPassed')) : km(s.km);
       out.push({ kind: 'passed', name, sub: kmText, ...at });
       if (i === passedIdx) out.push({ kind: 'train', name: d.trainText(true) });
@@ -75,13 +79,13 @@ export function StopsScreen(data, options = {}) {
     ] : [note(t('loading'))]),
   );
   const map = options.standin === false ? '' : trainMapFor(data, web ? 'web' : 'phone');
+  const backHref = `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`;
   if (!web) {
-    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content,
-      back: { href: `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, label: t('back') } });
+    return frame({ name: 'stops', options, snap: 'full', label: title, map, body: content, back: { href: backHref, label: t('back') } });
   }
   return frame({
     name: 'stops', options, snap: 'full', label: title,
     map,
-    body: AppBar({ live: data.live, lang: getLang(), back: { href: `#/train/${train.number}`, label: trainTitle(train) } }) + content,
+    body: AppBar({ live: data.live, lang: getLang(), back: { href: backHref, label: trainTitle(train) } }) + content,
   });
 }

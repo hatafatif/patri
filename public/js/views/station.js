@@ -143,7 +143,7 @@ export default {
     v = { id, view: params.view === 'timetable' ? 'timetable' : 'next', board: null, fetchedAt: 0, notice: '', timer: 0, live: 0, noticeTimer: 0 };
     map.showStations({ key: `station:${id}`, stations: state.stations, selected: [id], fit: 'selected' });
     map.onStationClick(other => { if (v && other !== v.id) navigate(`#/station/${other}`); });
-    map.onTrainClick(n => navigate(`#/train/${n}`));
+    map.onTrainClick((n, run) => navigate(`#/train/${n}${run ? `?run=${encodeURIComponent(run)}` : ''}`));
     render();
     loadPhotos().then(() => { if (v) render(); });
     load();

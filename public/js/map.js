@@ -15,8 +15,8 @@
 //                               fly to the station nearest the rider and select it; keep the view when it fails
 //   onUserMove(fn)              the rider dragged, pinched or zoomed the map (Following turns off)
 //   onStationClick(fn(id))      a station dot was tapped
-//   onTrainClick(fn(number))    a running-train dot was tapped
-//   setTrains(list)             [{ number, lat, lon, title, toward? }], title already localised, toward the next station
+//   onTrainClick(fn(number, run))  a running-train dot was tapped; run is that dot's run id (one train can have two on the move)
+//   setTrains(list)             [{ number, run?, lat, lon, title, toward? }], title already localised, toward the next station
 //                               as [lon, lat]; drawn in stations mode only: yellow count pills at zoom <= 6, a locomotive
 //                               and coach along the track when zoomed in (hover shows the title), empty in train mode
 //   showStations({ key, stations, selected?, fit? })
@@ -321,7 +321,7 @@ function drawStations() {
   for (const [slot, m] of markers) if (slot.startsWith('sel:') && !sel.some(s => `sel:${s.id}` === slot)) { m.marker.remove(); markers.delete(slot); }
   for (const s of sel) place(`sel:${s.id}`, [s.lon, s.lat], mapLabel({ title: nameOf(s), kind: 'selected' }), { anchor: 'bottom', offset: [0, -14], z: 3 });
   if (hovered && sel.some(s => `station:${s.id}` === hovered)) hideHover();
-  if (hovered?.startsWith('train:') && !trainList.some(x => `train:${x.number}` === hovered)) hideHover();
+  if (hovered?.startsWith('train:') && !trainList.some(x => `train:${x.run || x.number}` === hovered)) hideHover();
 }
 
 const railLines = () => (network ? { type: 'FeatureCollection', features: network.lines.map(l => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: l } })) } : EMPTY);
@@ -336,7 +336,7 @@ function headingProps(x) {
   return props;
 }
 
-const trainPoints = () => points(trainList.map(sane).filter(Boolean).map(x => ({ ...x, props: { number: String(x.number), title: x.title || '', ...headingProps(x) } })));
+const trainPoints = () => points(trainList.map(sane).filter(Boolean).map(x => ({ ...x, props: { number: String(x.number), run: x.run || '', title: x.title || '', ...headingProps(x) } })));
 
 const nameClean = s => String(s ?? '').replace(/\s+/g, ' ').trim();
 
@@ -509,7 +509,7 @@ function nearestAt(point) {
   }
   if (!best || bd > 18 * 18) return null;
   if (best.layer.id === 'trains-cluster') return { kind: 'cluster', id: best.properties.cluster_id, at: best.geometry.coordinates };
-  return best.layer.id === 'trains-hit' ? { kind: 'train', id: best.properties.number, title: best.properties.title, at: best.geometry.coordinates } : { kind: 'station', id: best.properties.id };
+  return best.layer.id === 'trains-hit' ? { kind: 'train', id: best.properties.number, run: best.properties.run || null, title: best.properties.title, at: best.geometry.coordinates } : { kind: 'station', id: best.properties.id };
 }
 
 function bindEvents() {
@@ -524,13 +524,13 @@ function bindEvents() {
     const hit = nearestAt(e.point);
     if (!hit) return;
     if (hit.kind === 'cluster') return zoomCluster(hit.id, hit.at);
-    if (hit.kind === 'train') trainClickHandler(hit.id); else clickHandler(hit.id);
+    if (hit.kind === 'train') trainClickHandler(hit.id, hit.run); else clickHandler(hit.id);
   });
   if (hoverable()) {
     map.on('mousemove', e => {
       if (mode !== 'stations') return;
       const hit = nearestAt(e.point);
-      const key = hit && `${hit.kind}:${hit.id}`;
+      const key = hit && `${hit.kind}:${hit.run || hit.id}`;
       if (key === hovered) return;
       if (!hit) return hideHover();
       hovered = key;

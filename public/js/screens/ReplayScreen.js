@@ -14,7 +14,7 @@ import { trainMapFor } from './TrainScreen.js';
  * @typedef {object} ReplayData
  * @property {'loading' | 'ready' | 'empty' | 'failed'} state
  * @property {7 | 30 | 90} days - The period shown.
- * @property {{ value: string, label: string, href: string }[]} periods - The SegmentedControl's options ("7 days", ...), each a link to #/train/N/replay?days=n.
+ * @property {{ value: string, label: string, href: string }[]} periods - The SegmentedControl's options ("7 days", ...), each a link to #/train/N/replay?days=n (keeping &run=, so Back returns to that run).
  * @property {import('../components/ReplayBar.js').ReplayBarProps} [bar] - Needed when state is 'ready'.
  * @property {string} [since] - Already localised, e.g. "Recorded since Tue 21 Oct". Needed when state is 'ready'.
  * @property {string} [returnName] - The return train, e.g. "8 DN Tezgam". Shown in the subtitle when given.
@@ -44,7 +44,7 @@ export function ReplayScreen(data, options = {}) {
     }),
   );
   const map = options.standin === false ? '' : trainMapFor(data, web ? 'web' : 'phone');
-  const backHref = `#/train/${train.number}`;
+  const backHref = `#/train/${train.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`;
   if (!web) {
     return frame({ name: 'replay', options, snap: 'half', label: title, map, body: content, back: { href: backHref, label: t('back') } });
   }
