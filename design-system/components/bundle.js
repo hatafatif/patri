@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"},{"name":"ReplayBar"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"},{"name":"ReplayBar"},{"name":"ToggleRow"}]} */
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -34,6 +34,7 @@
     StatusChip: () => StatusChip,
     StatusStrip: () => StatusStrip,
     StopTimeline: () => StopTimeline,
+    ToggleRow: () => ToggleRow,
     TrainBadge: () => TrainBadge,
     TrainCard: () => TrainCard,
     TrainRow: () => TrainRow,
@@ -48,6 +49,7 @@
     bindSpeedChart: () => bindSpeedChart,
     bindStationFields: () => bindStationFields,
     bindStopTimeline: () => bindStopTimeline,
+    bindToggleRow: () => bindToggleRow,
     mapLabel: () => mapLabel,
     mapPaint: () => mapPaint,
     statusTone: () => statusTone,
@@ -316,15 +318,39 @@
       alertsOn: "Alerts on",
       alertsFor: "For {station}",
       alertsWholeTrip: "For the whole journey",
-      alertsWhat: "You\u2019ll hear when it leaves, 15 min before your stop, if the delay changes a lot, and when it arrives.",
+      alertsWhat: "Choose your station, then when to hear: before it gets there, when it arrives or leaves, and if the delay changes.",
       alertsChooseStop: "Choose your stop for alerts",
       alertsSkipStop: "Whole journey, no stop",
       alertsOff: "Turn off",
-      alertsChange: "Change stop",
+      alertsChange: "Change",
       alertsBlocked: "Notifications are blocked for Patri in your browser settings.",
       alertsUnsupported: "This browser can\u2019t show notifications. On iPhone, add Patri to your Home Screen first.",
       alertsNoLive: "Alerts need live location, and this train has none right now.",
       alertsFailed: "Couldn\u2019t turn on alerts. Try again.",
+      // The Alerts page (#/train/<n>/alerts): which alerts a rider wants for one run, and the card's summary of them
+      alertsYourStation: "Your station",
+      alertsAt: "At {station}",
+      alertsWholeJourney: "Whole journey",
+      alertBefore: "Before it gets there",
+      alertReach: "When it arrives",
+      alertLeave: "When it leaves",
+      alertStart: "When it starts from {station}",
+      alertEnd: "When it reaches {station}",
+      alertDelay: "If it runs 15 min later or earlier",
+      alertExpected: "Expected {time}",
+      alertDueLeave: "Due to leave {time}",
+      alertNowLate: "Now {d} late",
+      alertNowEarly: "Now {d} early",
+      alertNowOnTime: "Now on time",
+      alertMinutes: "How long before",
+      alertsTurnOn: "Turn on alerts",
+      alertsSave: "Save changes",
+      alertsTurnOff: "Turn off alerts",
+      alertsPickOne: "Choose at least one alert.",
+      alertsEndNote: "Alerts end with this journey.",
+      alertShortBefore: "{d} before",
+      alertShortStart: "When it starts",
+      alertShortDelay: "Delay changes",
       lastSeen: "Last seen near {station} \xB7 {ago}",
       lastSeenShort: "Last seen {ago}",
       // Journey replay (recorded days played back on the map)
@@ -600,15 +626,39 @@
       alertsOn: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u06C1\u06CC\u06BA",
       alertsFor: "{station} \u06A9\u06D2 \u0644\u06CC\u06D2",
       alertsWholeTrip: "\u067E\u0648\u0631\u06D2 \u0633\u0641\u0631 \u06A9\u06D2 \u0644\u06CC\u06D2",
-      alertsWhat: "\u0679\u0631\u06CC\u0646 \u06A9\u06CC \u0631\u0648\u0627\u0646\u06AF\u06CC\u060C \u0622\u067E \u06A9\u06D2 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0633\u06D2 15 \u0645\u0646\u0679 \u067E\u06C1\u0644\u06D2\u060C \u062A\u0627\u062E\u06CC\u0631 \u0645\u06CC\u06BA \u0628\u0691\u06CC \u062A\u0628\u062F\u06CC\u0644\u06CC \u0627\u0648\u0631 \u067E\u06C1\u0646\u0686\u0646\u06D2 \u067E\u0631 \u0622\u067E \u06A9\u0648 \u0627\u0637\u0644\u0627\u0639 \u0645\u0644\u06D2 \u06AF\u06CC\u06D4",
+      alertsWhat: "\u0627\u067E\u0646\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA\u060C \u067E\u06BE\u0631 \u0628\u062A\u0627\u0626\u06CC\u06BA \u06A9\u0628 \u0627\u0637\u0644\u0627\u0639 \u0686\u0627\u06C1\u06CC\u06D2: \u067E\u06C1\u0646\u0686\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2\u060C \u067E\u06C1\u0646\u0686\u0646\u06D2 \u06CC\u0627 \u0631\u0648\u0627\u0646\u06AF\u06CC \u067E\u0631\u060C \u0627\u0648\u0631 \u062A\u0627\u062E\u06CC\u0631 \u0628\u062F\u0644\u0646\u06D2 \u067E\u0631\u06D4",
       alertsChooseStop: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0627\u067E\u0646\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA",
       alertsSkipStop: "\u067E\u0648\u0631\u0627 \u0633\u0641\u0631\u060C \u06A9\u0648\u0626\u06CC \u0627\u0633\u0679\u06CC\u0634\u0646 \u0646\u06C1\u06CC\u06BA",
       alertsOff: "\u0628\u0646\u062F \u06A9\u0631\u06CC\u06BA",
-      alertsChange: "\u0627\u0633\u0679\u06CC\u0634\u0646 \u0628\u062F\u0644\u06CC\u06BA",
+      alertsChange: "\u0628\u062F\u0644\u06CC\u06BA",
       alertsBlocked: "\u0622\u067E \u06A9\u06D2 \u0628\u0631\u0627\u0624\u0632\u0631 \u06A9\u06CC \u0633\u06CC\u0679\u0646\u06AF\u0632 \u0645\u06CC\u06BA \u067E\u0679\u0691\u06CC \u06A9\u06CC \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0628\u0646\u062F \u06C1\u06CC\u06BA\u06D4",
       alertsUnsupported: "\u06CC\u06C1 \u0628\u0631\u0627\u0624\u0632\u0631 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0646\u06C1\u06CC\u06BA \u062F\u06A9\u06BE\u0627 \u0633\u06A9\u062A\u0627\u06D4 \u0622\u0626\u06CC \u0641\u0648\u0646 \u067E\u0631 \u067E\u06C1\u0644\u06D2 \u067E\u0679\u0691\u06CC \u06A9\u0648 \u06C1\u0648\u0645 \u0627\u0633\u06A9\u0631\u06CC\u0646 \u067E\u0631 \u0634\u0627\u0645\u0644 \u06A9\u0631\u06CC\u06BA\u06D4",
       alertsNoLive: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0644\u0627\u0626\u06CC\u0648 \u0645\u0642\u0627\u0645 \u0636\u0631\u0648\u0631\u06CC \u06C1\u06D2\u060C \u062C\u0648 \u0627\u0633 \u0648\u0642\u062A \u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA\u06D4",
       alertsFailed: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u06CC\u06BA\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06A9\u0631\u06CC\u06BA\u06D4",
+      // The Alerts page (#/train/<n>/alerts): which alerts a rider wants for one run, and the card's summary of them
+      alertsYourStation: "\u0622\u067E \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      alertsAt: "{station} \u067E\u0631",
+      alertsWholeJourney: "\u067E\u0648\u0631\u0627 \u0633\u0641\u0631",
+      alertBefore: "\u067E\u06C1\u0646\u0686\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2",
+      alertReach: "\u062C\u0628 \u0679\u0631\u06CC\u0646 \u067E\u06C1\u0646\u0686\u06D2",
+      alertLeave: "\u062C\u0628 \u0679\u0631\u06CC\u0646 \u0631\u0648\u0627\u0646\u06C1 \u06C1\u0648",
+      alertStart: "\u062C\u0628 \u0679\u0631\u06CC\u0646 {station} \u0633\u06D2 \u0631\u0648\u0627\u0646\u06C1 \u06C1\u0648",
+      alertEnd: "\u062C\u0628 \u0679\u0631\u06CC\u0646 {station} \u067E\u06C1\u0646\u0686\u06D2",
+      alertDelay: "\u0627\u06AF\u0631 \u062A\u0627\u062E\u06CC\u0631 15 \u0645\u0646\u0679 \u0628\u0691\u06BE\u06D2 \u06CC\u0627 \u06A9\u0645 \u06C1\u0648",
+      alertExpected: "\u0645\u062A\u0648\u0642\u0639 {time}",
+      alertDueLeave: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u0645\u062A\u0648\u0642\u0639 {time}",
+      alertNowLate: "\u0627\u0633 \u0648\u0642\u062A {d} \u062A\u0627\u062E\u06CC\u0631",
+      alertNowEarly: "\u0627\u0633 \u0648\u0642\u062A {d} \u062C\u0644\u062F\u06CC",
+      alertNowOnTime: "\u0627\u0633 \u0648\u0642\u062A \u0628\u0631\u0648\u0642\u062A",
+      alertMinutes: "\u06A9\u062A\u0646\u06CC \u062F\u06CC\u0631 \u067E\u06C1\u0644\u06D2",
+      alertsTurnOn: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u06A9\u0631\u06CC\u06BA",
+      alertsSave: "\u062A\u0628\u062F\u06CC\u0644\u06CC\u0627\u06BA \u0645\u062D\u0641\u0648\u0638 \u06A9\u0631\u06CC\u06BA",
+      alertsTurnOff: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0628\u0646\u062F \u06A9\u0631\u06CC\u06BA",
+      alertsPickOne: "\u06A9\u0645 \u0627\u0632 \u06A9\u0645 \u0627\u06CC\u06A9 \u0627\u0637\u0644\u0627\u0639 \u0686\u0646\u06CC\u06BA\u06D4",
+      alertsEndNote: "\u06CC\u06C1 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0627\u0633 \u0633\u0641\u0631 \u06A9\u06D2 \u0633\u0627\u062A\u06BE \u062E\u062A\u0645 \u06C1\u0648 \u062C\u0627\u0626\u06CC\u06BA \u06AF\u06CC\u06D4",
+      alertShortBefore: "{d} \u067E\u06C1\u0644\u06D2",
+      alertShortStart: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u067E\u0631",
+      alertShortDelay: "\u062A\u0627\u062E\u06CC\u0631 \u0645\u06CC\u06BA \u062A\u0628\u062F\u06CC\u0644\u06CC",
       lastSeen: "{station} \u06A9\u06D2 \u0642\u0631\u06CC\u0628 \u0622\u062E\u0631\u06CC \u0628\u0627\u0631 \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC \xB7 {ago}",
       lastSeenShort: "\u0622\u062E\u0631\u06CC \u0628\u0627\u0631 {ago} \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC",
       // Journey replay (recorded days played back on the map)
@@ -1453,9 +1503,26 @@
     }
   }
 
+  // public/js/components/ToggleRow.js
+  function ToggleRow({ name = "", label = "", sub = "", checked = false, disabled = false, extra = "", className } = {}) {
+    const subId = `p-togglerow-${esc(name)}-sub`;
+    return `<div class="${cx("p-togglerow", checked && "p-togglerow--on", className)}"><label class="p-togglerow__row"><span class="p-togglerow__text"><span class="p-togglerow__label">${esc(label)}</span>${sub ? `<span class="p-togglerow__sub" id="${subId}">${esc(sub)}</span>` : ""}</span><input class="p-togglerow__input" type="checkbox" role="switch" name="${esc(name)}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}${sub ? ` aria-describedby="${subId}"` : ""}><span class="p-togglerow__switch" aria-hidden="true"><span class="p-togglerow__knob"></span></span></label>` + (checked && extra ? `<div class="p-togglerow__extra">${extra}</div>` : "") + `</div>`;
+  }
+  function bindToggleRow(root, { onToggle } = {}) {
+    const onChange = (e) => {
+      const input = e.target.closest?.(".p-togglerow__input");
+      if (!input || !root.contains(input)) return;
+      input.closest(".p-togglerow").classList.toggle("p-togglerow--on", input.checked);
+      onToggle?.(input.name, input.checked);
+    };
+    root.addEventListener("change", onChange);
+    return () => root.removeEventListener("change", onChange);
+  }
+
   // public/js/screens/index.js
   var screens_exports = {};
   __export(screens_exports, {
+    AlertsScreen: () => AlertsScreen,
     HomeScreen: () => HomeScreen,
     ReplayScreen: () => ReplayScreen,
     RouteScreen: () => RouteScreen,
@@ -1514,6 +1581,7 @@
       bindStopTimeline(root, { onChangeStop: o.onChangeStop }),
       bindPageHeader(root, { onFollow: o.onFollow, onShare: o.onShare }),
       bindReplayBar(root, { onToggle: o.onReplayToggle, onScrub: o.onReplayScrub }),
+      bindToggleRow(root, { onToggle: o.onToggle }),
       bindLanguageToggle(root, { onChange: (lang2) => o.onLang?.(lang2) })
     ];
     for (const btn of root.querySelectorAll(".p-followbutton")) {
@@ -2352,6 +2420,11 @@
       map,
       body: navBar(data.live, backHref) + content
     });
+  }
+
+  // public/js/screens/AlertsScreen.js
+  function AlertsScreen(data, options = {}) {
+    return frame({ name: "alerts", options, snap: "full", label: t("alertsHeader"), body: body(note(t("loading"))) });
   }
 
   // public/js/screens/StationScreen.js

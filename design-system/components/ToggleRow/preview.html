@@ -1,0 +1,30 @@
+<!-- @dsCard group="Inputs" height=620 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
+<div id="root" style="display:grid;gap:16px;padding:16px;background:var(--ground);max-width:390px"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    const P = window.Patri;
+    const seg = (labels, value, label) => P.SegmentedControl({ options: labels.map(l => ({ value: l, label: l })), value: value, label: label });
+    const card = (rows, attrs) => '<div ' + (attrs || '') + '>' + P.Card({ tone: 'plain', body: rows.join('') }) + '</div>';
+    const row = (label, html) => '<div><div style="font:var(--t-label);letter-spacing:var(--t-label-tracking);text-transform:uppercase;color:var(--ink-muted);margin-block-end:4px">' + label + '</div>' + html + '</div>';
+    root.innerHTML =
+      row('On, with extra, and a sub', card([
+        P.ToggleRow({ name: 'before', label: 'Before it gets there', sub: 'Expected ~4:05 PM', checked: true, extra: seg(['15 min', '30 min', '1 h'], '30 min', 'How long before') }),
+      ])) +
+      row('On · off', card([
+        P.ToggleRow({ name: 'reach', label: 'When it arrives', checked: true }),
+        P.ToggleRow({ name: 'leave', label: 'When it leaves', sub: 'Due to leave ~4:15 PM' }),
+      ])) +
+      row('Disabled', card([
+        P.ToggleRow({ name: 'locked', label: 'When it leaves', sub: 'Due to leave ~4:15 PM', disabled: true }),
+      ])) +
+      row('Urdu (right-to-left)', card([
+        P.ToggleRow({ name: 'ur', label: 'جب ٹرین پہنچے', sub: 'متوقع \u2066~4:05 PM\u2069', checked: true }),
+        P.ToggleRow({ name: 'ur2', label: 'جب ٹرین روانہ ہو', sub: 'روانگی متوقع \u2066~4:15 PM\u2069' }),
+      ], 'lang="ur" dir="rtl"'));
+    P.bindToggleRow(root, {});
+    P.bindSegmentedControl(root, {});
+  })();
+</script>
