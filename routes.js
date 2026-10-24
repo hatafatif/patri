@@ -47,11 +47,12 @@ function legacyRules(stops, stop) {
     : [{ kind: 'leave', stop: first }, { kind: 'delay' }, { kind: 'reach', stop: last }];
 }
 
-// A watch request body, checked. Returns { clean } or { error }.
+// A watch request body, checked, rules included (a body without rules gets the legacy ones). Returns { clean } or { error }.
 function validateWatch(timetable, body) {
   const bad = error => ({ error });
   if (!body || typeof body !== 'object') return bad('Bad request body');
   const { subscription, train, run, stop, lang = 'en' } = body;
+  let { rules } = body;
   const endpoint = subscription?.endpoint;
   if (typeof endpoint !== 'string' || endpoint.length > 1000) return bad('Bad endpoint');
   try {
@@ -67,7 +68,27 @@ function validateWatch(timetable, body) {
   if (typeof run !== 'string' || !run || run.length > 40 || timetable.trainForRun(run) !== train) return bad('Bad run');
   if (stop != null && (typeof stop !== 'string' || !timetable.routes.get(train).some(s => s.id === stop))) return bad('Stop is not on this train’s route');
   if (lang !== 'en' && lang !== 'ur') return bad('Bad lang');
-  return { clean: { endpoint, p256dh, auth, train, run, stop: stop ?? null, lang } };
+  const route = timetable.routes.get(train);
+  const onRoute = s => typeof s === 'string' && route.some(x => x.id === s);
+  if (rules == null) rules = legacyRules(route, stop);
+  else {
+    if (!Array.isArray(rules) || !rules.length || rules.length > MAX_RULES) return bad('Bad rules');
+    const keys = new Set(), clean = [];
+    for (const r of rules) {
+      if (!r || typeof r !== 'object' || Array.isArray(r) || !RULE_KINDS.includes(r.kind)) return bad('Bad rules');
+      const { kind } = r;
+      if (kind === 'delay' ? r.stop != null && !onRoute(r.stop) : !onRoute(r.stop)) return bad('Bad rules');
+      if (kind === 'before' ? !BEFORE_MIN.includes(r.min) : r.min != null) return bad('Bad rules');
+      if (kind === 'before' && r.stop === route[0].id) return bad('Bad rules');
+      if (kind === 'leave' && r.stop === route.at(-1).id) return bad('Bad rules');
+      const c = kind === 'before' ? { kind, stop: r.stop, min: r.min } : kind === 'delay' && r.stop == null ? { kind } : { kind, stop: r.stop };
+      if (keys.has(ruleKey(c))) return bad('Bad rules');
+      keys.add(ruleKey(c));
+      clean.push(c);
+    }
+    rules = clean;
+  }
+  return { clean: { endpoint, p256dh, auth, train, run, stop: stop ?? null, lang, rules } };
 }
 
 // Reads a JSON request body of at most MAX_BODY bytes. Rejects with an error carrying .status.

@@ -94,7 +94,7 @@ const alertsSource = useRecorder ? {
   pushKey: () => recorderForward('GET', '/api/push-key'),
   watch: clean => recorderForward('POST', '/api/watch', {
     subscription: { endpoint: clean.endpoint, keys: { p256dh: clean.p256dh, auth: clean.auth } },
-    train: clean.train, run: clean.run, stop: clean.stop, lang: clean.lang,
+    train: clean.train, run: clean.run, stop: clean.stop, lang: clean.lang, rules: clean.rules,
   }),
   unwatch: (endpoint, train) => recorderForward('POST', '/api/unwatch', { endpoint, train }),
 } : {};
