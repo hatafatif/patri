@@ -3,7 +3,7 @@
 import { AppBar, bindLanguageToggle } from './components/index.js';
 import { setLang, getLang, applyLang } from './i18n.js';
 import {
-  HomeScreen, SearchScreen, RouteScreen, TrainScreen, StopsScreen, StationScreen, bindScreen,
+  HomeScreen, SearchScreen, RouteScreen, TrainScreen, StopsScreen, AlertsScreen, StationScreen, bindScreen,
 } from './screens/index.js';
 import { samples } from './screens/_sample.js';
 
@@ -22,6 +22,10 @@ const GROUPS = [
     { layout: 'web' },
   ] },
   { name: 'Stops', screen: StopsScreen, data: samples.train, title: 'All stops', frames: [{ layout: 'phone', h: { en: 1318, ur: 1730 }, options: {} }] },
+  { name: 'Alerts', screen: AlertsScreen, data: samples.alerts, frames: [
+    { layout: 'phone', h: { en: 940, ur: 1150 }, options: {} },
+    { layout: 'web' },
+  ] },
   { name: 'Station', screen: StationScreen, data: samples.station, frames: [
     { layout: 'phone', h: 844, options: {} },
     { layout: 'web' },

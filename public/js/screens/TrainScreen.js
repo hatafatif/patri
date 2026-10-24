@@ -212,7 +212,7 @@ function statusCard(data, d) {
 }
 
 /** Alerts: push notifications for this run. The view works out the state (data.alerts); nothing without it. */
-function alertsCard(data) {
+function alertsCard(data, d) {
   const a = data.alerts;
   if (!a) return '';
   const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
@@ -220,9 +220,18 @@ function alertsCard(data) {
   if (a.state === 'off') {
     content = stack(note(t('alertsWhat')), Button({ label: t('notifyMe'), icon: 'bell', href: pick, variant: 'secondary', full: true }));
   } else if (a.state === 'on') {
+    const short = c => ({
+      before: () => t('alertShortBefore', { d: dur(c.min ?? 15) }),
+      reach: () => t('alertReach'),
+      leave: () => t('alertLeave'),
+      start: () => t('alertShortStart'),
+      delay: () => t('alertShortDelay'),
+      end: () => t('alertEnd', { station: place(d.last) }),
+    }[c.kind]?.() ?? '');
     content = stack(
       note(`${t('alertsOn')} · ${a.stopName ? t('alertsFor', { station: a.stopName }) : t('alertsWholeTrip')}`),
-      row(Button({ label: t('alertsChange'), href: pick, variant: 'link' }), Button({ label: t('alertsOff'), variant: 'link', className: 'p-alerts-off' })),
+      a.chosen?.length ? note(a.chosen.map(short).filter(Boolean).join(' · ')) : '',
+      row(Button({ label: t('alertsChange'), href: a.href || pick, variant: 'link' }), Button({ label: t('alertsOff'), variant: 'link', className: 'p-alerts-off' })),
     );
   } else {
     const key = { blocked: 'alertsBlocked', unsupported: 'alertsUnsupported', nolive: 'alertsNoLive' }[a.state];
@@ -376,7 +385,7 @@ export function TrainScreen(data, options = {}) {
   const status = data.notice != null ? notice(data.notice) : '';
   // Without the route there is nothing to show but the header and a loading note.
   const content = d.first
-    ? [header(data, d), status, runChoice(data), statusCard(data, d), alertsCard(data), journeyCard(data, d)]
+    ? [header(data, d), status, runChoice(data), statusCard(data, d), alertsCard(data, d), journeyCard(data, d)]
     : [header(data, d), status, note(t('loading'))];
 
   if (!web) {

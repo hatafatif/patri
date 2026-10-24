@@ -4,17 +4,17 @@ import { t, clock, delayText, isUrdu } from '../i18n.js';
 import { PERIODS, prepare, advance, frameAt } from '../replay.js';
 import { trainName } from '../names.js';
 import {
-  state, api, paint, layout, navigate, returnTo,
+  state, api, paint, layout, navigate, returnTo, previousHash,
   isFollowed, setFollowed, addRecentTrain,
 } from '../app.js';
-import { TrainScreen, StopsScreen, ReplayScreen } from '../screens/index.js';
+import { TrainScreen, StopsScreen, ReplayScreen, AlertsScreen } from '../screens/index.js';
 import { syncReplayBar } from '../components/index.js';
 import { place, trainNo, trainTitle, dateLabel } from '../screens/_format.js';
 import { estimates, status, progress } from '../eta.js';
 import { share } from '../share.js';
 import { loadPhotos, trainPhoto } from '../photos.js';
 import { loadLastSeen, lastSeenOf, lastSeenText, agoText } from '../lastseen.js';
-import { supported, blocked, watching, enable, disable } from '../alerts.js';
+import { supported, blocked, watching, enable, disable, rulesOfWatch, choicesOfRules, rulesOfChoices } from '../alerts.js';
 import { loadTrack } from '../track.js';
 import * as map from '../map.js';
 
@@ -128,7 +128,91 @@ function alertsOf(run) {
   const w = watching(v.number);
   if (!w) return { state: 'off' };
   const s = w.stop && v.stops.find(x => x.id === w.stop);
-  return { state: 'on', ...(s ? { stopName: place(s) } : {}) };
+  const q = [w.stop && `stop=${encodeURIComponent(w.stop)}`, run && `run=${encodeURIComponent(run.id)}`].filter(Boolean).join('&');
+  return {
+    state: 'on', ...(s ? { stopName: place(s) } : {}),
+    ...(v.stops.length ? { chosen: choicesOfRules(rulesOfWatch(w, v.stops), v.stops, w.stop) } : {}),
+    href: `#/train/${v.number}/alerts${q ? `?${q}` : ''}`,
+  };
+}
+
+// ---- Alerts page (#/train/<n>/alerts?stop=&run=)
+
+/** The rider's station on this page: the one ?stop= names if it is on the route, else null. */
+const stopOf = () => v.stops.find(x => x.id === v.params.stop) || null;
+
+/** The kinds the page offers, in its order. `c` is compute()'s result for the shown run. */
+function offeredOf(c, stop) {
+  const si = stop ? v.stops.indexOf(stop) : -1;
+  const out = [];
+  if (stop) out.push('before', 'reach');
+  if (stop && si !== v.stops.length - 1) out.push('leave');
+  if (c.st?.kind === 'wait') out.push('start');
+  out.push('delay');
+  if (!stop || si !== v.stops.length - 1) out.push('end');
+  return out;
+}
+
+/** Keeps the page's choices (v.form) for the same station; starts them from the saved watch or the defaults. */
+function ensureForm(c, stop) {
+  const id = stop?.id ?? null;
+  if (v.form && v.form.stop === id) return v.form;
+  const w = watching(v.number);
+  if (w && w.run === c.run?.id && (w.stop ?? null) === id) {
+    const chosen = choicesOfRules(rulesOfWatch(w, v.stops), v.stops, id);
+    v.form = { stop: id, on: new Set(chosen.map(x => x.kind)), minutes: chosen.find(x => x.kind === 'before')?.min ?? 15 };
+  } else {
+    v.form = { stop: id, on: new Set(id ? ['before', 'reach', 'delay'] : ['start', 'delay', 'end']), minutes: 15 };
+  }
+  return v.form;
+}
+
+/** AlertsPageData for the page: see screens/AlertsScreen.js. */
+function alertsPageOf(c) {
+  const stop = stopOf();
+  const runPart = c.run ? `run=${encodeURIComponent(c.run.id)}` : '';
+  const base = {
+    state: c.data.alerts.state, stop, first: v.stops[0], last: v.stops.at(-1),
+    pickHref: `#/train/${v.number}/stops?pick=1${runPart ? `&${runPart}` : ''}`,
+    backHref: `#/train/${v.number}${runPart ? `?${runPart}` : ''}`,
+    choices: [], minutes: 15, late: c.run ? c.run.lateBy ?? 0 : null,
+  };
+  if (base.state !== 'off' && base.state !== 'on') return base;
+  const form = ensureForm(c, stop);
+  const si = stop ? v.stops.indexOf(stop) : -1;
+  const est = i => c.data.ests?.[i]?.est;
+  const halt = s => { const h = (s.dep ?? s.arr) - (s.arr ?? s.dep); return Number.isFinite(h) ? h : 0; };
+  const atOf = kind => {
+    const e = kind === 'end' ? est(v.stops.length - 1) : kind === 'before' || kind === 'leave' ? est(si) : undefined;
+    if (e == null) return undefined;
+    return kind === 'leave' ? e + halt(v.stops[si]) : e;
+  };
+  const choices = offeredOf(c, stop).map(kind => {
+    const at = atOf(kind);
+    return { kind, on: form.on.has(kind), ...(at != null ? { at } : {}) };
+  });
+  return { ...base, choices, minutes: form.minutes, ...(v.alertsNotice ? { notice: v.alertsNotice } : {}) };
+}
+
+function renderAlerts(c, options) {
+  // Without the route there are no stations to offer: the Train page's loading note stands in.
+  const html = v.stops.length ? AlertsScreen({ ...c.data, alertsPage: alertsPageOf(c) }, options) : TrainScreen(c.data, options);
+  paint(html, {
+    ...handlers(c.data),
+    onToggle(name, checked) {
+      if (!v.form) return;
+      if (checked) v.form.on.add(name); else v.form.on.delete(name);
+      v.alertsNotice = '';
+      render();
+    },
+    onSegment(value, group) {
+      if (!group?.classList.contains('p-alerts-minutes') || !v.form) return;
+      v.form.minutes = Number(value);
+      render();
+    },
+  });
+  drawMap(c);
+  ensureHistory(c.run);
 }
 
 /** Puts the train on the map: the route, the train and the next stop. */
@@ -157,6 +241,7 @@ function render() {
   if (!v) return;
   const c = compute();
   const options = { layout: layout(), standin: false };
+  if (v.params.alerts) { renderAlerts(c, options); return; }
   if (v.params.replay) { renderReplay(c, options); return; }
   const html = v.params.stops ? StopsScreen(c.data, options) : TrainScreen(c.data, options);
   paint(html, handlers(c.data));
@@ -314,21 +399,43 @@ async function onShare() {
   else if (result === 'failed') flash(t('copyFailed'));
 }
 
-/** Taps on the alerts controls: a stop or "Whole journey" on the picker turns alerts on, "Turn off" turns them off. */
+/** Taps on the alerts controls: station links on the picker, Save and Turn off on the Alerts page, Turn off on the Train page. */
 async function onAlertsClick(e) {
   if (!v || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  const off = e.target.closest?.('.p-alerts-off');
-  const whole = e.target.closest?.('.p-alerts-whole');
-  const a = e.target.closest?.('.p-stoptimeline a[href*="?stop="]');
-  if (!off && !whole && !a) return;
+  const target = e.target;
+  const pickLink = v.params.pick && target.closest?.('a.p-stoptimeline__name[href*="/alerts"], a.p-alerts-whole');
+  if (pickLink) {
+    e.preventDefault();
+    const href = pickLink.getAttribute('href');
+    // From an Alerts page: go back to it and replace it with the new station. Otherwise replace the picker.
+    if (/^#\/train\/\d+\/alerts/.test(previousHash() || '')) returnTo(href);
+    else navigate(href, { replace: true });
+    return;
+  }
+  const save = v.params.alerts && target.closest?.('.p-alerts-save');
+  const off = target.closest?.('.p-alerts-off');
+  if (!save && !off) return;
   e.preventDefault();
   const token = v, number = v.number;
-  if (off) { await disable(number); if (v === token) render(); return; }
-  const stop = whole ? null : decodeURIComponent(new URL(a.href).hash.match(/[?&]stop=([^&]+)/)?.[1] || '') || null;
-  const runId = compute().run?.id;
+  if (off && !v.params.alerts) { await disable(number); if (v === token) render(); return; }
+  const c = compute();
+  const runId = c.run?.id;
+  const trainHash = `#/train/${number}${runId ? `?run=${encodeURIComponent(runId)}` : ''}`;
+  if (off) { await disable(number); if (v === token) returnTo(trainHash); return; }
+  if (!v.stops.length) return;
+  const stop = stopOf();
+  const form = ensureForm(c, stop);
+  const rules = rulesOfChoices({ on: form.on, minutes: form.minutes, offered: offeredOf(c, stop), stop: stop?.id ?? null, stops: v.stops });
+  if (!rules.length) {
+    v.alertsNotice = t('alertsPickOne');
+    render();
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => { if (v === token) { v.alertsNotice = ''; render(); } }, NOTICE_MS);
+    return;
+  }
   // enable() starts inside this click: the browser's permission prompt needs the tap.
-  try { await enable(number, runId, stop); after = null; } catch (err) { after = err === 'blocked' ? 'blocked' : 'failed'; console.error('alerts:', err); }
-  if (v === token) returnTo(`#/train/${number}${v.params.run ? `?run=${encodeURIComponent(v.params.run)}` : ''}`);
+  try { await enable(number, runId, stop?.id ?? null, rules); after = null; } catch (err) { after = err === 'blocked' ? 'blocked' : 'failed'; console.error('alerts:', err); }
+  if (v === token) returnTo(trainHash);
 }
 
 async function load() {
@@ -361,7 +468,7 @@ export default {
         playing: !matchMedia('(prefers-reduced-motion: reduce)').matches, raf: 0, last: 0,
       } : null,
       number: params.number, info, params, stops: same?.stops || [], track: same?.track || null, fetched: same?.fetched || [], hist: same?.hist || EMPTY,
-      loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '',
+      loadingHist: null, lastPrev: same?.lastPrev ?? null, following: true, notice: '', form: null, alertsNotice: '',
     };
     const app = document.getElementById('app');
     app.addEventListener('click', onAlertsClick);

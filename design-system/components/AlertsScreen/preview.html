@@ -1,0 +1,29 @@
+<!-- @dsCard group="Screens" height=1000 width=390 page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap">
+<div id="root" style="display:grid;gap:12px;padding:16px;background:var(--ground);inline-size:max-content"></div>
+<script>
+  // Self-contained: no globals; the root is the element just before this script.
+  (function () {
+    var root = (document.currentScript && document.currentScript.previousElementSibling) || document.getElementById('root');
+    var P = window.Patri;
+    var unbind = function () {};
+    // A phone screen: the map above, the panel at full height.
+    var heights = { en: 940, ur: 1150 };
+    function setLang(lang) { var h = document.documentElement; h.lang = lang; h.dir = lang === 'ur' ? 'rtl' : 'ltr'; }
+    function render() {
+      unbind();
+      var lang = document.documentElement.lang === 'ur' ? 'ur' : 'en';
+      var frame = 'position:relative;box-sizing:border-box;inline-size:390px;block-size:' + heights[lang] + 'px;overflow:hidden;border:var(--border-thin) solid var(--line);border-radius:var(--radius-sheet)';
+      root.innerHTML =
+        // Preview toolbar: this screen has no AppBar on the phone, so the language switch lives here.
+        '<div style="display:flex;justify-content:flex-end">' + P.LanguageToggle({ lang: lang }) + '</div>' +
+        '<div style="' + frame + '">' + P.screens.AlertsScreen(P.samples.alerts, { layout: 'phone' }) + '</div>';
+      // Not rendered on the phone layout; harmless, and keeps the preview ready if an AppBar is added.
+      root.querySelectorAll('.p-appbar__logo').forEach(function (img) { img.src = '/_blob/24c020f13cff6319d15f617e8824b35f'; });
+      unbind = P.screens.bindScreen(root, { data: P.samples.alerts, onLang: function (next) { setLang(next); render(); } });
+    }
+    // Links in the screen are placeholders: keep the preview where it is.
+    root.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a[href^="#"]')) e.preventDefault(); });
+    render();
+  })();
+</script>

@@ -1,6 +1,9 @@
 // AlertsScreen: the Train page's Alerts page, where a rider chooses which push alerts they want for one run.
-import { t } from '../i18n.js';
-import { frame, body, note } from './_layout.js';
+import { t, dur } from '../i18n.js';
+import { PageHeader, StatusChip, LinkRow, ToggleRow, SegmentedControl, SectionHeader, Button } from '../components/index.js';
+import { frame, body, row, note, notice, section, list, stack, navBar } from './_layout.js';
+import { place, trainTitle, trainNo, route, dayApprox, delayStatus } from './_format.js';
+import { derive, trainMapFor } from './TrainScreen.js';
 
 /**
  * Train page › Alerts (#/train/<n>/alerts?stop=<id>&run=<id>). The Panel at full height:
@@ -44,6 +47,63 @@ import { frame, body, note } from './_layout.js';
  * @returns {string}
  */
 export function AlertsScreen(data, options = {}) {
-  // Stub: the builder replaces this with the layout above.
-  return frame({ name: 'alerts', options, snap: 'full', label: t('alertsHeader'), body: body(note(t('loading'))) });
+  const web = options.layout === 'web';
+  const d = derive(data);
+  const { train, run } = data;
+  const a = data.alertsPage;
+  const title = t('alertsHeader');
+  const header = PageHeader({
+    title,
+    subtitle: d.first ? `${trainNo(train)} ${trainTitle(train)} · ${route(d.first, d.last)}` : `${trainNo(train)} ${trainTitle(train)}`,
+  });
+  const status = row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false })));
+  const expected = c => (c.at != null ? t('alertExpected', { time: dayApprox(c.at, d.ref) }) : undefined);
+  const lateSub = a.late == null ? undefined
+    : a.late >= 1 ? t('alertNowLate', { d: dur(a.late) })
+    : a.late <= -1 ? t('alertNowEarly', { d: dur(-a.late) })
+    : t('alertNowOnTime');
+  const minutes = SegmentedControl({
+    label: t('alertMinutes'), value: String(a.minutes),
+    options: [15, 30, 60].map(n => ({ value: String(n), label: dur(n) })),
+    className: 'p-alerts-minutes',
+  });
+  const toggle = c => {
+    const base = { name: c.kind, checked: c.on };
+    switch (c.kind) {
+      case 'before': return ToggleRow({ ...base, label: t('alertBefore'), sub: expected(c), extra: minutes });
+      case 'reach': return ToggleRow({ ...base, label: t('alertReach') });
+      case 'leave': return ToggleRow({ ...base, label: t('alertLeave'), sub: c.at != null ? t('alertDueLeave', { time: dayApprox(c.at, d.ref) }) : undefined });
+      case 'start': return ToggleRow({ ...base, label: t('alertStart', { station: place(a.first) }) });
+      case 'delay': return ToggleRow({ ...base, label: t('alertDelay'), sub: lateSub });
+      case 'end': return ToggleRow({ ...base, label: t('alertEnd', { station: place(a.last) }), sub: expected(c) });
+      default: return '';
+    }
+  };
+  const rowsOf = kinds => a.choices.filter(c => kinds.includes(c.kind)).map(toggle);
+  const atStop = a.stop ? rowsOf(['before', 'reach', 'leave']) : [];
+  const whole = rowsOf(['start', 'delay', 'end']);
+
+  let parts;
+  if (a.state === 'off' || a.state === 'on') {
+    parts = [
+      a.notice != null ? notice(a.notice) : '',
+      LinkRow({ href: a.pickHref, eyebrow: t('alertsYourStation'), label: a.stop ? place(a.stop) : t('alertsSkipStop') }),
+      atStop.length ? section(SectionHeader({ label: t('alertsAt', { station: place(a.stop) }) }), list(...atStop)) : '',
+      whole.length ? section(SectionHeader({ label: t('alertsWholeJourney') }), list(...whole)) : '',
+      stack(
+        Button({ label: t(a.state === 'on' ? 'alertsSave' : 'alertsTurnOn'), variant: 'primary', full: true, className: 'p-alerts-save' }),
+        a.state === 'on' ? Button({ label: t('alertsTurnOff'), variant: 'link', className: 'p-alerts-off' }) : '',
+        note(t('alertsEndNote')),
+      ),
+    ];
+  } else {
+    const key = { blocked: 'alertsBlocked', unsupported: 'alertsUnsupported', nolive: 'alertsNoLive' }[a.state];
+    parts = [key ? note(t(key)) : ''];
+  }
+  const content = body(header, status, ...parts);
+  const map = options.standin === false ? '' : trainMapFor(data, web ? 'web' : 'phone');
+  if (!web) {
+    return frame({ name: 'alerts', options, snap: 'full', label: title, map, body: content, back: { href: a.backHref, label: t('back') } });
+  }
+  return frame({ name: 'alerts', options, snap: 'full', label: title, map, body: navBar(data.live, a.backHref) + content });
 }

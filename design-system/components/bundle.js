@@ -2148,7 +2148,7 @@
       )
     });
   }
-  function alertsCard(data) {
+  function alertsCard(data, d2) {
     const a = data.alerts;
     if (!a) return "";
     const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
@@ -2156,9 +2156,18 @@
     if (a.state === "off") {
       content = stack(note(t("alertsWhat")), Button({ label: t("notifyMe"), icon: "bell", href: pick, variant: "secondary", full: true }));
     } else if (a.state === "on") {
+      const short = (c) => ({
+        before: () => t("alertShortBefore", { d: dur(c.min ?? 15) }),
+        reach: () => t("alertReach"),
+        leave: () => t("alertLeave"),
+        start: () => t("alertShortStart"),
+        delay: () => t("alertShortDelay"),
+        end: () => t("alertEnd", { station: place2(d2.last) })
+      })[c.kind]?.() ?? "";
       content = stack(
         note(`${t("alertsOn")} \xB7 ${a.stopName ? t("alertsFor", { station: a.stopName }) : t("alertsWholeTrip")}`),
-        row(Button({ label: t("alertsChange"), href: pick, variant: "link" }), Button({ label: t("alertsOff"), variant: "link", className: "p-alerts-off" }))
+        a.chosen?.length ? note(a.chosen.map(short).filter(Boolean).join(" \xB7 ")) : "",
+        row(Button({ label: t("alertsChange"), href: a.href || pick, variant: "link" }), Button({ label: t("alertsOff"), variant: "link", className: "p-alerts-off" }))
       );
     } else {
       const key = { blocked: "alertsBlocked", unsupported: "alertsUnsupported", nolive: "alertsNoLive" }[a.state];
@@ -2291,7 +2300,7 @@
     const wholeRoute = mapButton("wholeRoute");
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     const status = data.notice != null ? notice(data.notice) : "";
-    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), alertsCard(data), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
+    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), alertsCard(data, d2), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
     if (!web) {
       return frame({
         name: "train",
@@ -2320,7 +2329,7 @@
     const { stops, run, train: train2 } = data;
     const { passedIdx, nextIdx, lastIdx, haltOf: haltOf2 } = d2;
     const pick = !!data.pick;
-    const hrefOf = (s) => `#/train/${train2.number}?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
+    const hrefOf = (s) => `#/train/${train2.number}/alerts?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
     const halt = (s) => {
       const h = haltOf2(s);
       return h ? t("halt", { d: dur(h) }) : "";
@@ -2368,7 +2377,7 @@
       ...d2.first ? [
         row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false }))),
         pick ? note(t("pickStopHint")) : "",
-        pick ? Button({ label: t("alertsSkipStop"), variant: "secondary", full: true, className: "p-alerts-whole" }) : "",
+        pick ? Button({ label: t("alertsSkipStop"), href: `#/train/${train2.number}/alerts${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, variant: "secondary", full: true, className: "p-alerts-whole" }) : "",
         !run ? note(t("timetableTimes")) : "",
         StopTimeline({ mode: "full", rows: rowsOf(data, d2), legend: !!run })
       ] : [note(t("loading"))]
@@ -2424,7 +2433,69 @@
 
   // public/js/screens/AlertsScreen.js
   function AlertsScreen(data, options = {}) {
-    return frame({ name: "alerts", options, snap: "full", label: t("alertsHeader"), body: body(note(t("loading"))) });
+    const web = options.layout === "web";
+    const d2 = derive(data);
+    const { train: train2, run } = data;
+    const a = data.alertsPage;
+    const title = t("alertsHeader");
+    const header2 = PageHeader({
+      title,
+      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
+    });
+    const status = row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false })));
+    const expected = (c) => c.at != null ? t("alertExpected", { time: dayApprox(c.at, d2.ref) }) : void 0;
+    const lateSub = a.late == null ? void 0 : a.late >= 1 ? t("alertNowLate", { d: dur(a.late) }) : a.late <= -1 ? t("alertNowEarly", { d: dur(-a.late) }) : t("alertNowOnTime");
+    const minutes = SegmentedControl({
+      label: t("alertMinutes"),
+      value: String(a.minutes),
+      options: [15, 30, 60].map((n) => ({ value: String(n), label: dur(n) })),
+      className: "p-alerts-minutes"
+    });
+    const toggle = (c) => {
+      const base = { name: c.kind, checked: c.on };
+      switch (c.kind) {
+        case "before":
+          return ToggleRow({ ...base, label: t("alertBefore"), sub: expected(c), extra: minutes });
+        case "reach":
+          return ToggleRow({ ...base, label: t("alertReach") });
+        case "leave":
+          return ToggleRow({ ...base, label: t("alertLeave"), sub: c.at != null ? t("alertDueLeave", { time: dayApprox(c.at, d2.ref) }) : void 0 });
+        case "start":
+          return ToggleRow({ ...base, label: t("alertStart", { station: place2(a.first) }) });
+        case "delay":
+          return ToggleRow({ ...base, label: t("alertDelay"), sub: lateSub });
+        case "end":
+          return ToggleRow({ ...base, label: t("alertEnd", { station: place2(a.last) }), sub: expected(c) });
+        default:
+          return "";
+      }
+    };
+    const rowsOf2 = (kinds) => a.choices.filter((c) => kinds.includes(c.kind)).map(toggle);
+    const atStop = a.stop ? rowsOf2(["before", "reach", "leave"]) : [];
+    const whole = rowsOf2(["start", "delay", "end"]);
+    let parts;
+    if (a.state === "off" || a.state === "on") {
+      parts = [
+        a.notice != null ? notice(a.notice) : "",
+        LinkRow({ href: a.pickHref, eyebrow: t("alertsYourStation"), label: a.stop ? place2(a.stop) : t("alertsSkipStop") }),
+        atStop.length ? section(SectionHeader({ label: t("alertsAt", { station: place2(a.stop) }) }), list(...atStop)) : "",
+        whole.length ? section(SectionHeader({ label: t("alertsWholeJourney") }), list(...whole)) : "",
+        stack(
+          Button({ label: t(a.state === "on" ? "alertsSave" : "alertsTurnOn"), variant: "primary", full: true, className: "p-alerts-save" }),
+          a.state === "on" ? Button({ label: t("alertsTurnOff"), variant: "link", className: "p-alerts-off" }) : "",
+          note(t("alertsEndNote"))
+        )
+      ];
+    } else {
+      const key = { blocked: "alertsBlocked", unsupported: "alertsUnsupported", nolive: "alertsNoLive" }[a.state];
+      parts = [key ? note(t(key)) : ""];
+    }
+    const content = body(header2, status, ...parts);
+    const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
+    if (!web) {
+      return frame({ name: "alerts", options, snap: "full", label: title, map, body: content, back: { href: a.backHref, label: t("back") } });
+    }
+    return frame({ name: "alerts", options, snap: "full", label: title, map, body: navBar(data.live, a.backHref) + content });
   }
 
   // public/js/screens/StationScreen.js
@@ -2674,7 +2745,9 @@
       now: DAY0 + 780 * 6e4
     },
     details: { locomotive: "9052" },
-    returnTrain: T[27]
+    returnTrain: T[27],
+    // The Alerts card is on: for Bahawalpur, with three alerts chosen.
+    alerts: { state: "on", stopName: S.bahawalpur.name, chosen: [{ kind: "before", min: 30 }, { kind: "reach" }, { kind: "delay" }], href: `#/train/28/alerts?stop=${S.bahawalpur.id}` }
   };
   var board = (t2, kind, origin, dest, sched, est, late, gps, extra = {}) => ({ train: t2, kind, origin, dest, sched, est, late, gps, runId: null, kmAway: null, atPlatform: false, ...extra });
   var station = {
@@ -2717,7 +2790,27 @@
       returnName: "27 UP Shalimar Express"
     }
   };
-  var samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, station });
+  var alertsSample = {
+    ...trainSample,
+    alertsPage: {
+      state: "off",
+      stop: S.bahawalpur,
+      first: S.lahore,
+      last: S.karachi,
+      pickHref: "#/train/28/stops?pick=1",
+      backHref: "#/train/28",
+      choices: [
+        { kind: "before", on: true, at: 895 },
+        { kind: "reach", on: true },
+        { kind: "leave", on: false, at: 897 },
+        { kind: "delay", on: true },
+        { kind: "end", on: false, at: 1580 + LATE }
+      ],
+      minutes: 30,
+      late: LATE
+    }
+  };
+  var samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, alerts: alertsSample, station });
 
   // ds-entry.js
   var wrap = (mod) => {

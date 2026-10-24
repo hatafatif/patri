@@ -5,7 +5,7 @@ import { trainInfo, stationName } from './names.js';
 import { bindScreen } from './screens/index.js';
 import { paint as paintInto } from './render.js';
 import * as map from './map.js';
-import { registerWorker } from './alerts.js';
+import { registerWorker, relang } from './alerts.js';
 import { pageview } from './analytics.js';
 import { trainNo, trainTitle } from './screens/_format.js';
 import home from './views/home.js';
@@ -140,6 +140,7 @@ function watchDock() {
 function switchLang(lang) {
   setLang(lang); // sets <html lang dir>
   map.setLang();
+  relang().catch(() => {}); // notifications follow the app's language
   current?.view.render?.();
 }
 
@@ -187,7 +188,8 @@ document.addEventListener('visibilitychange', () => {
 
 // ---- Routing.
 //   #/  #/search[?q=&pick=from|to]  #/trip[/<from>/<to>][?day=tomorrow]  #/train/<n>[?run=]
-//   #/train/<n>/stops[?pick=1&run=]  #/train/<n>/replay[?days=7|30|90&run=]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
+//   #/train/<n>/stops[?pick=1&run=]  #/train/<n>/replay[?days=7|30|90&run=]
+//   #/train/<n>/alerts[?stop=<id>&run=]  #/station/<id>[?view=timetable].  Old links keep working: #27 is #/train/27.
 export function parse(hash = location.hash) {
   const h = hash.replace(/^#/, '');
   if (/^\d+$/.test(h)) return { view: 'train', params: { number: Number(h) }, legacy: `#/train/${h}` };
@@ -202,7 +204,7 @@ export function parse(hash = location.hash) {
     const days = Number(q.get('days'));
     return { view: 'train', params: {
       number: Number(parts[1]), stops: parts[2] === 'stops', pick: q.get('pick') === '1', run: q.get('run'),
-      replay: parts[2] === 'replay', days: [7, 30, 90].includes(days) ? days : 7,
+      replay: parts[2] === 'replay', alerts: parts[2] === 'alerts', stop: q.get('stop'), days: [7, 30, 90].includes(days) ? days : 7,
     } };
   }
   if (parts[0] === 'station') return { view: 'station', params: { id: parts[1] || null, view: q.get('view') === 'timetable' ? 'timetable' : 'next' } };
@@ -220,6 +222,8 @@ export function navigate(hash, { replace = false } = {}) {
 }
 /** True when this tab has an earlier page of the app to go back to. */
 export const canGoBack = () => trail.length > 1;
+/** The hash visited just before this one, or null. */
+export const previousHash = () => trail.at(-2) ?? null;
 /** Back in history when there is history, otherwise to fallback (Home by default), replacing this entry. */
 export function goBack(fallback = '#/') {
   if (canGoBack()) history.back();

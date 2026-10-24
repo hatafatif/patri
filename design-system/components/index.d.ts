@@ -888,6 +888,7 @@ export interface PatriSamples {
   search: SearchScreenData;
   route: RouteScreenData;
   train: TrainScreenData;
+  alerts: unknown;
   replay: unknown;
   station: StationScreenData;
 }
