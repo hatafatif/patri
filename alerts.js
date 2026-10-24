@@ -4,11 +4,16 @@
 // 15+ min) and arrived. Each event is sent at most once per watch (the `sent` table). It only ever
 // concerns the one train a person chose to watch; nothing here filters or sorts trains by lateness.
 // Texts are English or Urdu per watch. `send(watch, payload, event)` is push.js's sender.
+// The feed marks the first station passed while the train still waits there, and never marks the last
+// station passed, so leaving the first and reaching any stop also go by the distance.
+const { haversineKm } = require('./data.js');
+
 const PKT_OFFSET = 5 * 3600e3;
 const APPROACH_MIN = 15; // minutes before the stop
 const DELAY_STEP = 15; // minutes of change worth an alert
 const DELAY_GAP = 20 * 60e3; // at most one delay alert per 20 min
 const LATE_MIN = 5; // under this the train counts as on time
+const AWAY_KM = 1.5; // the train is at a station within this, and has left the first one beyond it
 
 function duration(min, lang) {
   min = Math.max(0, Math.round(min));
@@ -48,6 +53,11 @@ const TEXT = {
   },
 };
 
+/** Km from the run's position to a station, or NaN when either has no coordinates (every comparison is then false). */
+function kmFrom(run, stop) {
+  return stop && stop.lat && stop.lon && Number.isFinite(run.lat) && Number.isFinite(run.lon) ? haversineKm(run, stop) : NaN;
+}
+
 class Alerts {
   constructor({ store, timetable, send, now = Date.now }) {
     this.store = store;
@@ -79,7 +89,7 @@ class Alerts {
     const stops = this.timetable.routes.get(train) || [];
     const { prevIdx } = this.timetable.progress(stops, run);
     this.store.setLastLate(endpoint, train, run.lateBy);
-    if (prevIdx >= 0) this.store.markSent(endpoint, train, 'departed');
+    if (prevIdx >= 1 || kmFrom(run, stops[0]) > AWAY_KM) this.store.markSent(endpoint, train, 'departed');
   }
 
   check(run) {
@@ -111,9 +121,10 @@ class Alerts {
     };
 
     // Arrived ends the watch; nothing else is worth saying after it.
+    const reached = i => prevIdx >= i || kmFrom(run, stops[i]) < AWAY_KM;
     const done = stopIdx >= 0
-      ? prevIdx >= stopIdx
-      : prevIdx >= stops.length - 1 || /done|arrived|complete/i.test(String(run.status ?? ''));
+      ? reached(stopIdx)
+      : reached(stops.length - 1) || /done|arrived|complete/i.test(String(run.status ?? ''));
     if (done) {
       const st = stops[stopIdx >= 0 ? stopIdx : stops.length - 1];
       fire('arrived', tx.arrived(this.name(st, lang)), 'high');
@@ -121,7 +132,8 @@ class Alerts {
       return;
     }
 
-    if (prevIdx >= 0) fire('departed', tx.departed(this.name(stops[0], lang), late), 'normal');
+    // Left: past the next station, or moving and clear of the first one (a waiting train is already "past" it).
+    if (prevIdx >= 1 || (run.speed > 0 && kmFrom(run, stops[0]) > AWAY_KM)) fire('departed', tx.departed(this.name(stops[0], lang), late), 'normal');
 
     if (stopIdx >= 0) {
       const stop = stops[stopIdx];
