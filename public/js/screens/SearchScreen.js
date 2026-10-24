@@ -1,7 +1,7 @@
 // SearchScreen: one box for a train, station or city, with the train results and recent searches.
 import { t, isUrdu } from '../i18n.js';
 import { SearchField, SegmentedControl, SectionHeader, TrainRow, LinkRow } from '../components/index.js';
-import { frame, body, section, cards, list, stack, row, fill, note, mapButton, backButton } from './_layout.js';
+import { frame, body, section, cards, list, stack, row, fill, note, mapButton, backButton, homeButton, navBar } from './_layout.js';
 import { place, trainTitle, badgeOf, route, delayStatus, cityOf } from './_format.js';
 import { countryMap } from './_map-standin.js';
 
@@ -9,6 +9,7 @@ import { countryMap } from './_map-standin.js';
  * Search, opened from Home: the Panel at full height with a back button, the search field, the
  * Train or station | From → To switch, the matching trains, recent searches and a hint.
  * @typedef {object} SearchScreenData
+ * @property {'on' | 'reconnecting' | 'off'} [live] - The feed state, for the web sidebar's AppBar.
  * @property {string} query - The text in the search box, such as "Shalimar". Matches are highlighted in the results.
  * @property {SearchTrain[]} trains - The matching trains, in the order the search ranked them (never by lateness).
  * @property {SearchRecent[]} recent - Recent searches, newest first.
@@ -83,7 +84,7 @@ export function SearchScreen(data, options = {}) {
 
   const panel = body(
     // The search box and its mode switch sit closer together than the sections do.
-    stack(row(back, fill(field)), mode, pick ? SectionHeader({ label: data.pickLabel || '' }) : ''),
+    stack(web ? field : row(back, homeButton(), fill(field)), mode, pick ? SectionHeader({ label: data.pickLabel || '' }) : ''),
     ...(data.stationsFirst ? [foundSection, trainsSection] : [trainsSection, foundSection]),
     nothing ? note(t('noMatch', { q: data.query.trim() })) : '',
     recent.length ? section(SectionHeader({ label: t('recent') }), cards(...recent)) : '',
@@ -97,6 +98,6 @@ export function SearchScreen(data, options = {}) {
     name: 'search', options, label: t('search'),
     map: countryMap({ layout: 'web' }),
     end: mapButton('zoomIn') + mapButton('zoomOut'),
-    body: panel,
+    body: navBar(data.live, data.backHref || '#/') + panel,
   });
 }

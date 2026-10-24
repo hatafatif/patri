@@ -38,6 +38,7 @@ function data() {
   const now = trip?.now ?? 0;
   const { leaving } = trip ? split(trip.rows, now, day) : { leaving: [] };
   return {
+    live: state.live,
     from: from ? state.stationById.get(from) || null : null,
     to: to ? state.stationById.get(to) || null : null,
     date: new Date(pktMidnight() + 5 * 3600e3).toISOString().slice(0, 10),

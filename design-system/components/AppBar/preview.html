@@ -11,7 +11,7 @@
       row('Live', P.AppBar({ live: 'on', lang: 'en' })) +
       row('Reconnecting', P.AppBar({ live: 'reconnecting', lang: 'en' })) +
       row('Off', P.AppBar({ live: 'off', lang: 'en' })) +
-      row('With back link', P.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' } }));
+      row('With Back and Home', P.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' }, home: { href: '#/', label: 'Home' } }));
     // AppBar references brand/patri-logo.svg relative to the page; the library serves the logo from its assets.
     root.querySelectorAll('.p-appbar__logo').forEach(function (img) { img.src = '/_blob/24c020f13cff6319d15f617e8824b35f'; });
   })();

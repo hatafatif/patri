@@ -1,7 +1,7 @@
 // ReplayScreen: the Train page's journey replay, a time-lapse of recorded runs on the map.
-import { t, getLang } from '../i18n.js';
-import { AppBar, PageHeader, Card, SegmentedControl, ReplayBar } from '../components/index.js';
-import { frame, body, stack, note } from './_layout.js';
+import { t } from '../i18n.js';
+import { PageHeader, Card, SegmentedControl, ReplayBar } from '../components/index.js';
+import { frame, body, stack, note, navBar } from './_layout.js';
 import { trainTitle, trainNo } from './_format.js';
 import { trainMapFor } from './TrainScreen.js';
 
@@ -50,6 +50,6 @@ export function ReplayScreen(data, options = {}) {
   }
   return frame({
     name: 'replay', options, snap: 'half', label: title, map,
-    body: AppBar({ live: data.live, lang: getLang(), back: { href: backHref, label: trainTitle(train) } }) + content,
+    body: navBar(data.live, backHref) + content,
   });
 }

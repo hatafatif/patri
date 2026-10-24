@@ -65,7 +65,8 @@
   border-block-end: var(--border-rule) solid var(--rule);
 }
 .p-appbar__brand,
-.p-appbar__back {
+.p-appbar__back,
+.p-appbar__home {
   display: flex;
   align-items: center;
   flex: none;
@@ -75,11 +76,14 @@
 }
 /* The bilingual lockup (560×180) at about 137×44. It never mirrors; only its position moves to inline-start. */
 .p-appbar__logo { display: block; block-size: 44px; inline-size: auto; max-inline-size: 140px; }
-.p-appbar__back { gap: var(--space-1); font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
-.p-appbar__back:hover { color: var(--sabz-700); }
+.p-appbar__back,
+.p-appbar__home { gap: var(--space-1); font: var(--t-label); letter-spacing: var(--t-label-tracking); text-transform: uppercase; }
+.p-appbar__back:hover,
+.p-appbar__home:hover { color: var(--sabz-700); }
 .p-panel .p-appbar { position: sticky; inset-block-start: 0; z-index: 2; }
 .p-appbar__end { display: flex; align-items: center; gap: var(--space-3); min-inline-size: 0; margin-inline-start: auto; }
-[lang="ur"] .p-appbar__back { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
+[lang="ur"] .p-appbar__back,
+[lang="ur"] .p-appbar__home { font: var(--t-urdu-label); letter-spacing: normal; text-transform: none; }
 /* On narrow phones the live word gives way first, so the language toggle never leaves the bar. */
 .p-appbar__end .p-liveindicator { flex: 0 1 auto; min-inline-size: 0; }
 .p-appbar__end .p-liveindicator__text { min-inline-size: 0; overflow-x: clip; overflow-y: visible; text-overflow: ellipsis; }

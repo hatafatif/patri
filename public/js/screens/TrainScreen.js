@@ -1,10 +1,10 @@
 // TrainScreen: everything about one train, with the map following it.
-import { t, getLang, dur, delayText } from '../i18n.js';
+import { t, dur, delayText } from '../i18n.js';
 import {
-  AppBar, PageHeader, Card, StatusChip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
+  PageHeader, Card, StatusChip, StopTimeline, JourneyProgress, Button, SpeedChart, DetailGrid, LinkRow,
   MapToggle, SegmentedControl, Photo, statusTone,
 } from '../components/index.js';
-import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton } from './_layout.js';
+import { frame, body, cards, stack, row, fill, note, notice, mapButton, backButton, navBar } from './_layout.js';
 import { place, cityOf, trainTitle, trainNo, badgeOf, route, time, approx, km, kmNum, dayTime, dayApprox, dateLabel, delayStatus } from './_format.js';
 import { trainMap } from './_map-standin.js';
 
@@ -380,7 +380,7 @@ export function TrainScreen(data, options = {}) {
     return frame({
       name: 'train', options, label, snap: 'half',
       map,
-      back: { href: '#/', label: t('home') },
+      back: { href: '#/', label: t('back') },
       end: following + wholeRoute,
       body: body(...content, d.first ? speedCard(data) : '', d.first ? about(data, d) : ''),
     });
@@ -390,7 +390,7 @@ export function TrainScreen(data, options = {}) {
     map,
     end: following + wholeRoute + mapButton('zoomIn') + mapButton('zoomOut'),
     dock: d.first ? speedCard(data) : '',
-    body: AppBar({ live: data.live, lang: getLang(), back: { href: '#/', label: t('home') } })
+    body: navBar(data.live)
       + body(...content, d.first ? about(data, d) : ''),
   });
 }

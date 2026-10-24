@@ -189,11 +189,11 @@ function specimens(col) {
   const phone = col === 'phone';
   const name28 = tr('shalimar');
   const shell = group('Shell',
-    spec('AppBar', 'live on · reconnecting · off · with back', stack(
+    spec('AppBar', 'live on · reconnecting · off · with Back and Home', stack(
       AppBar({ live: 'on', lang: getLang() }),
       AppBar({ live: 'reconnecting', lang: getLang() }),
       AppBar({ live: 'off', lang: getLang() }),
-      AppBar({ live: 'on', lang: getLang(), back: { href: '#/', label: t('back') } }),
+      AppBar({ live: 'on', lang: getLang(), back: { href: '#/', label: t('back') }, home: { href: '#/', label: t('home') } }),
     ), { cls: 'g-stage--flush' }),
     spec('LanguageToggle', 'EN · اردو', wrap(LanguageToggle({ lang: 'en' }), LanguageToggle({ lang: 'ur' }))),
     spec('LiveIndicator', 'on · reconnecting · off (hidden)', wrap(

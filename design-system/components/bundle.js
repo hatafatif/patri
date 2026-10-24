@@ -703,6 +703,7 @@
     star: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.75 5.6 6.15.9-4.45 4.33 1.05 6.12L12 17.06l-5.5 2.89 1.05-6.12L3.1 9.5l6.15-.9Z"/></svg>',
     starFilled: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.75 5.6 6.15.9-4.45 4.33 1.05 6.12L12 17.06l-5.5 2.89 1.05-6.12L3.1 9.5l6.15-.9Z"/></svg>',
     close: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    home: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h4.75v-6h3.5v6h4.75V9.5"/></svg>',
     back: '<svg class="p-flip" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
     chevronEnd: '<svg class="p-flip" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
     plus: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
@@ -759,8 +760,9 @@
   }
 
   // public/js/components/AppBar.js
-  function AppBar({ live = "off", lang: lang2 = "en", back } = {}) {
-    const start = back ? `<a class="p-appbar__back" href="${esc(back.href)}">${icon.back}<span class="p-appbar__backlabel">${esc(back.label)}</span></a>` : `<a class="p-appbar__brand" href="#/"><img class="p-appbar__logo" src="${LOGO_SRC}" alt="Patri"></a>`;
+  function AppBar({ live = "off", lang: lang2 = "en", back, home: home2 } = {}) {
+    const link = (cls, icon2, l) => `<a class="p-appbar__${cls}" href="${esc(l.href)}">${icon[icon2]}<span class="p-appbar__backlabel">${esc(l.label)}</span></a>`;
+    const start = back ? link("back", "back", back) + (home2 ? link("home", "home", home2) : "") : `<a class="p-appbar__brand" href="#/"><img class="p-appbar__logo" src="${LOGO_SRC}" alt="Patri"></a>`;
     return `<header class="p-appbar">${start}<div class="p-appbar__end">${LiveIndicator({ state: live })}${LanguageToggle({ lang: lang2 })}</div></header>`;
   }
 
@@ -1248,7 +1250,7 @@
       routeDone: { "line-color": v("sabz-700"), "line-width": 5 },
       routeAhead: { "line-color": v("sabz-700"), "line-width": 3, "line-dasharray": [2, 2] },
       // Both fade in over the oldest 40% of the trail only, so the yellow never sits half-transparent on the dark casing.
-      railNetwork: { "line-color": v("sabz-700"), "line-opacity": 0.55, "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1.2, 9, 2.5, 12, 4] },
+      railNetwork: { "line-color": v("sabz-700"), "line-opacity": 0.8, "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1.4, 9, 2.8, 12, 4.5] },
       trainClusterText: { "text-color": v("sabz-900") },
       replayTrail: { "line-width": 5, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("zard-500"), 0), 0.4, v("zard-500"), 1, v("zard-500")] },
       replayTrailCasing: { "line-width": 9, "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, withAlpha(v("sabz-900"), 0), 0.4, withAlpha(v("sabz-900"), 0.9), 1, withAlpha(v("sabz-900"), 0.9)] },
@@ -1472,7 +1474,7 @@
     const pill = !web && back;
     const backPill = pill ? IconButton({ icon: "back", label: back.label, href: back.href, variant: "float", text: true, className: "p-screen__back" }) : "";
     const searchBtn = pill ? IconButton({ icon: "search", label: t("search"), href: "#/search", variant: "float", className: "p-screen__search" }) : "";
-    const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${searchBtn}</div>` : "") + start;
+    const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${homeButton("float")}${searchBtn}</div>` : "") + start;
     const cls = ["p-screen", `p-screen--${web ? "web" : "phone"}`, `p-screen--${name}`, expanded && "p-screen--expanded", !web && top && "p-screen--top", pill && "p-screen--back"].filter(Boolean).join(" ");
     return `<div class="${cls}" data-screen="${esc(name)}">` + (!web && top ? `<div class="p-screen__top">${top}</div>` : "") + `<div class="p-screen__map"><div class="p-screen__backdrop">${options.standin === false ? "" : map}</div>` + (startHtml ? `<div class="p-screen__controls p-screen__controls--start">${startHtml}</div>` : "") + (end ? `<div class="p-screen__controls p-screen__controls--end">${end}</div>` : "") + (web && dock ? `<div class="p-screen__dock">${dock}</div>` : "") + `</div><div class="p-screen__sheet">${Panel({ body: body2, snap: sheetSnap, label })}</div></div>`;
   }
@@ -1497,6 +1499,8 @@
     return IconButton({ icon: icon2, label: t(key), variant: "float", className: `p-screen__mapbtn p-screen__mapbtn--${action}` });
   }
   var backButton = (href, variant = "plain") => IconButton({ icon: "back", label: t("back"), href, variant, className: "p-screen__back" });
+  var homeButton = (variant = "plain") => IconButton({ icon: "home", label: t("home"), href: "#/", variant, className: "p-screen__home" });
+  var navBar = (live, backHref = "#/") => AppBar({ live, lang: getLang(), back: { href: backHref, label: t("back") }, home: { href: "#/", label: t("home") } });
   var notice = (text) => `<div class="p-screen__notice" role="status" aria-live="polite">${text ? StatusChip({ tone: "neutral", text }) : ""}</div>`;
   function bindScreen(root, o = {}) {
     const undo = [
@@ -1862,7 +1866,7 @@
     const nothing = data.query.trim() && !rows.length && !found.length;
     const panel = body(
       // The search box and its mode switch sit closer together than the sections do.
-      stack(row(back, fill(field2)), mode, pick ? SectionHeader({ label: data.pickLabel || "" }) : ""),
+      stack(web ? field2 : row(back, homeButton(), fill(field2)), mode, pick ? SectionHeader({ label: data.pickLabel || "" }) : ""),
       ...data.stationsFirst ? [foundSection, trainsSection] : [trainsSection, foundSection],
       nothing ? note(t("noMatch", { q: data.query.trim() })) : "",
       recent.length ? section(SectionHeader({ label: t("recent") }), cards(...recent)) : "",
@@ -1877,7 +1881,7 @@
       label: t("search"),
       map: countryMap({ layout: "web" }),
       end: mapButton("zoomIn") + mapButton("zoomOut"),
-      body: panel
+      body: navBar(data.live, data.backHref || "#/") + panel
     });
   }
 
@@ -1918,7 +1922,7 @@
       ]
     }) : "";
     const panel = body(
-      web ? mode : row(backButton("#/"), fill(mode)),
+      web ? mode : row(backButton("#/"), homeButton(), fill(mode)),
       StationFields({ from: from ? place2(from) : null, to: to ? place2(to) : null, fromLabel: t("from"), toLabel: t("to") }),
       days,
       ...content
@@ -1930,7 +1934,7 @@
       label: t("fromTo"),
       map: countryMap({ layout: "web" }),
       end: mapButton("zoomIn") + mapButton("zoomOut"),
-      body: panel
+      body: navBar(data.live) + panel
     });
   }
   function nextDay(iso) {
@@ -1951,6 +1955,12 @@
     const { nextIdx, passedIdx } = progress;
     const mineIdx = data.myStop ? stops.findIndex((s) => s.id === data.myStop) : -1;
     const est = (i) => ests2[i]?.est != null && !ests2[i].passed ? ests2[i].est : null;
+    const behind = (i) => {
+      const e = ests2[i];
+      if (e?.passed && e.at != null) return { at: e.at, approx: !!e.approx };
+      const s = schedOf(stops[i]);
+      return s != null ? { at: s, approx: false } : null;
+    };
     const inTime = (i) => est(i) != null ? t("inTime", { d: dur(est(i) - now) }) : "";
     const exp = (i) => est(i) != null ? { expected: approx(est(i), ref) } : schedOf(stops[i]) != null ? { expected: time(schedOf(stops[i]), ref) } : void 0;
     const both = (i) => {
@@ -1993,6 +2003,7 @@
       inTime,
       exp,
       both,
+      behind,
       trainText
     };
   }
@@ -2091,9 +2102,10 @@
   function journeyCard(data, d2) {
     const { train: train2, run } = data;
     const { stops, lastIdx, passedIdx, progress, ref } = d2;
-    const stopsHref = `#/train/${train2.number}/stops`;
+    const keepRun = data.runId ? `?run=${encodeURIComponent(data.runId)}` : "";
+    const stopsHref = `#/train/${train2.number}/stops${keepRun}`;
     const seeAll = Button({ label: t("seeAllStopsN", { n: stops.length }), href: stopsHref, variant: "primary", icon: "chevronEnd", full: true });
-    const replay = data.gps ? Button({ label: t("replay"), href: `#/train/${train2.number}/replay`, variant: "secondary", icon: "play", full: true }) : "";
+    const replay = data.gps ? Button({ label: t("replay"), href: `#/train/${train2.number}/replay${keepRun}`, variant: "secondary", icon: "play", full: true }) : "";
     const more = (n) => n > 0 ? [{ kind: "more", name: t("moreStops", { n }), href: stopsHref }] : [];
     if (!run) {
       const stopRow = (kind, label, s, at3) => ({ kind, label, name: place2(s), ...at3 != null ? { time: { expected: time(at3) } } : {} });
@@ -2110,8 +2122,10 @@
       });
     }
     const st = run.status;
-    const passedAt = (i) => data.ests?.[i]?.at ?? d2.schedOf(stops[i]);
-    const behind = (i) => passedAt(i) != null ? { time: { expected: dayTime(passedAt(i), ref) } } : {};
+    const behind = (i) => {
+      const b = d2.behind(i);
+      return b ? { time: { expected: (b.approx ? dayApprox : dayTime)(b.at, ref) } } : {};
+    };
     const ahead = (i) => {
       const e = d2.est(i), s = d2.schedOf(stops[i]);
       const expected = e != null ? dayApprox(e, ref) : s != null ? dayTime(s, ref) : null;
@@ -2217,7 +2231,7 @@
         label,
         snap: "half",
         map,
-        back: { href: "#/", label: t("home") },
+        back: { href: "#/", label: t("back") },
         end: following + wholeRoute,
         body: body(...content, d2.first ? speedCard(data) : "", d2.first ? about(data, d2) : "")
       });
@@ -2229,7 +2243,7 @@
       map,
       end: following + wholeRoute + mapButton("zoomIn") + mapButton("zoomOut"),
       dock: d2.first ? speedCard(data) : "",
-      body: AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + body(...content, d2.first ? about(data, d2) : "")
+      body: navBar(data.live) + body(...content, d2.first ? about(data, d2) : "")
     });
   }
 
@@ -2250,8 +2264,11 @@
       const name = place2(s);
       const passed = run && i <= passedIdx;
       if (passed) {
-        const sched = d2.schedOf(s);
-        const at3 = sched != null ? { time: { expected: time(sched, d2.ref) } } : {};
+        const b = d2.behind(i), sched = d2.schedOf(s);
+        const at3 = b ? { time: {
+          expected: (b.approx ? approx : time)(b.at, d2.ref),
+          ...sched != null && Math.round(b.at) !== sched ? { scheduled: time(sched, d2.ref) } : {}
+        } } : {};
         const kmText = i === 0 ? join2(t("start"), km(0)) : i === passedIdx ? join2(km(s.km), t("lastPassed")) : km(s.km);
         out.push({ kind: "passed", name, sub: kmText, ...at3 });
         if (i === passedIdx) out.push({ kind: "train", name: d2.trainText(true) });
@@ -2289,16 +2306,9 @@
       ] : [note(t("loading"))]
     );
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
+    const backHref = `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`;
     if (!web) {
-      return frame({
-        name: "stops",
-        options,
-        snap: "full",
-        label: title,
-        map,
-        body: content,
-        back: { href: `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, label: t("back") }
-      });
+      return frame({ name: "stops", options, snap: "full", label: title, map, body: content, back: { href: backHref, label: t("back") } });
     }
     return frame({
       name: "stops",
@@ -2306,7 +2316,7 @@
       snap: "full",
       label: title,
       map,
-      body: AppBar({ live: data.live, lang: getLang(), back: { href: `#/train/${train2.number}`, label: trainTitle(train2) } }) + content
+      body: navBar(data.live, backHref) + content
     });
   }
 
@@ -2330,7 +2340,7 @@
       })
     );
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
-    const backHref = `#/train/${train2.number}`;
+    const backHref = `#/train/${train2.number}${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`;
     if (!web) {
       return frame({ name: "replay", options, snap: "half", label: title, map, body: content, back: { href: backHref, label: t("back") } });
     }
@@ -2340,7 +2350,7 @@
       snap: "half",
       label: title,
       map,
-      body: AppBar({ live: data.live, lang: getLang(), back: { href: backHref, label: trainTitle(train2) } }) + content
+      body: navBar(data.live, backHref) + content
     });
   }
 
@@ -2385,9 +2395,9 @@
       label: name,
       snap: "half",
       map: stationMap({ layout: web ? "web" : "phone", selected, ...hover ? { hover } : {} }),
-      back: { href: "#/", label: t("home") },
+      back: { href: "#/", label: t("back") },
       end: web ? mapButton("zoomIn") + mapButton("zoomOut") + mapButton("layers") : "",
-      body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: "#/", label: t("home") } }) + panel : panel
+      body: web ? navBar(data.live) + panel : panel
     });
   }
   function timetableSection(data) {
@@ -2510,6 +2520,7 @@
     map: { hover: { key: "lahore", station: S.lahore } }
   };
   var search = {
+    live: "on",
     query: "Shalimar",
     trains: [
       { train: T[28], from: S.lahore, to: S.karachi, late: 30, gps: true, followed: true, runId: "281810" },
@@ -2521,6 +2532,7 @@
     ]
   };
   var routeSample = {
+    live: "on",
     from: S.lahore,
     to: S.karachi,
     date: "2026-10-18",

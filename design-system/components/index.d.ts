@@ -5,7 +5,7 @@
 // window.Patri.<Name>(props) for an HTML string and window.Patri.bind<Name>(root, handlers)
 // for behaviour; each bind returns an unbind function. Text props arrive already localised.
 
-/** The top bar: the bilingual logo (or a back link), then the live indicator and the language switch at the end. The logo is the file brand/patri-logo.svg, relative to the page, about 132×44. (AppBar.js) */
+/** The top bar: the bilingual logo (or Back and Home links), then the live indicator and the language switch at the end. The logo is the file brand/patri-logo.svg, relative to the page, about 132×44. (AppBar.js) */
 export interface AppBarProps {
   /** The LiveIndicator state. Default 'off'. */
   live?: 'on' | 'reconnecting' | 'off';
@@ -13,6 +13,8 @@ export interface AppBarProps {
   lang?: 'en' | 'ur';
   /** When present, a back link replaces the logo. The label is already localised. */
   back?: { href: string, label: string };
+  /** A Home link after the back link (with back only). The label is already localised. */
+  home?: { href: string, label: string };
 }
 
 /** The text button: primary for the main action, secondary next to it, link for inline actions such as "Change". (Button.js) */
@@ -185,7 +187,7 @@ export interface MapPaintResult {
   replayTrail: Record<string, unknown>;
   /** Under replayTrail: sabz-900, width 9, fading the same way, so the yellow reads on the light map like the marker's ring. */
   replayTrailCasing: Record<string, unknown>;
-  /** The rail lines trains run on, under the stations on the overview maps: sabz-700 at 55%, 1.2px at zoom 5 widening to 4px at zoom 12. */
+  /** The rail lines trains run on, under the stations on the overview maps: sabz-700 at 80%, 1.4px at zoom 5 widening to 4.5px at zoom 12. Roads in the Sabz style are kept faint beside it. */
   railNetwork: Record<string, unknown>;
   /** The count on a trainImages().cluster pill: sabz-900. */
   trainClusterText: Record<string, unknown>;
@@ -518,7 +520,7 @@ export interface ReplayData {
   state: 'loading' | 'ready' | 'empty' | 'failed';
   /** The period shown. */
   days: 7 | 30 | 90;
-  /** The SegmentedControl's options ("7 days", ...), each a link to #/train/N/replay?days=n. */
+  /** The SegmentedControl's options ("7 days", ...), each a link to #/train/N/replay?days=n (keeping &run=, so Back returns to that run). */
   periods: { value: string, label: string, href: string }[];
   /** Needed when state is 'ready'. */
   bar?: ReplayBarProps;
@@ -530,6 +532,8 @@ export interface ReplayData {
 
 /** Search › From → To: the Panel at full height with a back button and the mode switch, the From and To fields with swap, a Today | Tomorrow switch, then the direct trains still to leave From (views/trip.js, /api/trip). Either station may be null (the field shows its placeholder; the day switch and the lists are left out and a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note. (screens/RouteScreen.js) */
 export interface RouteScreenData {
+  /** The feed state, for the web sidebar's AppBar. */
+  live?: 'on' | 'reconnecting' | 'off';
   from: ScreenStation | null;
   to: ScreenStation | null;
   /** Today in Pakistan time, 'YYYY-MM-DD'; the day switch shows "Today · Sun 18 Oct" and "Tomorrow · Mon 19 Oct". */
@@ -565,6 +569,8 @@ export interface RouteTrip {
 
 /** Search, opened from Home: the Panel at full height with a back button, the search field, the Train or station | From → To switch, the matching trains, recent searches and a hint. (screens/SearchScreen.js) */
 export interface SearchScreenData {
+  /** The feed state, for the web sidebar's AppBar. */
+  live?: 'on' | 'reconnecting' | 'off';
   /** The text in the search box, such as "Shalimar". Matches are highlighted in the results. */
   query: string;
   /** The matching trains, in the order the search ranked them (never by lateness). */
@@ -618,7 +624,7 @@ export interface SearchTrain {
 
 export type SearchRecent = { kind: 'trip', from: ScreenStation, to: ScreenStation } | { kind: 'station', station: ScreenStation };
 
-/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations and the running trains. Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
+/** The Station page, opened from a station on the map or in search: the map zoomed to the station, and the Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board). Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows stations and the running trains. Web: the AppBar with Back and Home links above the same board in the sidebar, the map beside it with zoom buttons. (screens/StationScreen.js) */
 export interface StationScreenData {
   /** The feed state, for the web sidebar's AppBar. */
   live: 'on' | 'reconnecting' | 'off';
@@ -704,8 +710,8 @@ export interface TrainScreenData {
   gps?: boolean;
   /** Minutes after midnight on the run's first day. Needed with a run. */
   now?: number;
-  /** One per stop, as eta.js estimates() gives them, in minutes: passed stops show their timetable time (at, when known, is when the train passed); the rest have an expected time (est may be missing). Needed with a run. */
-  ests?: { passed: boolean, est?: number, at?: number }[];
+  /** One per stop, as eta.js estimates() gives them, in minutes: a passed stop shows when the train was there (at; approx when that is only a guess from the timetable and the delay), or its timetable time without at; the rest have an expected time (est may be missing). Needed with a run. */
+  ests?: { passed: boolean, est?: number, at?: number, approx?: boolean }[];
   /** eta.js progress(): the last stop passed (-1 before departure), the next stop (-1 once arrived or unknown), km run so far and km to the next stop. Needed with a run. */
   progress?: { passedIdx: number, nextIdx: number, kmDone: number, kmToNext: number };
   /** The rider's stop id. */

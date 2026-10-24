@@ -1,7 +1,7 @@
 // RouteScreen: From → To, the direct trains you can still board.
 import { t, dur } from '../i18n.js';
 import { SegmentedControl, StationFields, SectionHeader, DepartureRow } from '../components/index.js';
-import { frame, body, section, list, row, fill, note, mapButton, backButton } from './_layout.js';
+import { frame, body, section, list, row, fill, note, mapButton, backButton, homeButton, navBar } from './_layout.js';
 import { place, trainTitle, time, approx, dateLabel, delayStatus } from './_format.js';
 import { countryMap } from './_map-standin.js';
 
@@ -12,6 +12,7 @@ import { countryMap } from './_map-standin.js';
  * Either station may be null (the field shows its placeholder; the day switch and the lists are left out and
  * a hint asks for both). Tomorrow shows every direct train as leaving, from the timetable, with a note.
  * @typedef {object} RouteScreenData
+ * @property {'on' | 'reconnecting' | 'off'} [live] - The feed state, for the web sidebar's AppBar.
  * @property {import('./_format.js').ScreenStation | null} from
  * @property {import('./_format.js').ScreenStation | null} to
  * @property {string} date - Today in Pakistan time, 'YYYY-MM-DD'; the day switch shows "Today · Sun 18 Oct" and "Tomorrow · Mon 19 Oct".
@@ -79,7 +80,7 @@ export function RouteScreen(data, options = {}) {
   }) : '';
 
   const panel = body(
-    web ? mode : row(backButton('#/'), fill(mode)),
+    web ? mode : row(backButton('#/'), homeButton(), fill(mode)),
     StationFields({ from: from ? place(from) : null, to: to ? place(to) : null, fromLabel: t('from'), toLabel: t('to') }),
     days,
     ...content,
@@ -90,7 +91,7 @@ export function RouteScreen(data, options = {}) {
     name: 'route', options, label: t('fromTo'),
     map: countryMap({ layout: 'web' }),
     end: mapButton('zoomIn') + mapButton('zoomOut'),
-    body: panel,
+    body: navBar(data.live) + panel,
   });
 }
 

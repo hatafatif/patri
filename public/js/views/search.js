@@ -66,7 +66,7 @@ function trainRow(info) {
 
 function data() {
   const q = query.trim().toLowerCase(), ws = words(query);
-  const base = { query, mode: pick ? 'pick' : 'all', recent: [], hint: !q && !pick };
+  const base = { live: state.live, query, mode: pick ? 'pick' : 'all', recent: [], hint: !q && !pick };
   if (pick) {
     base.pickLabel = t(pick);
     base.backHref = '#/trip';

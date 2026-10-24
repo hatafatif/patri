@@ -1,7 +1,7 @@
 // StationScreen: one station's board, with the map zoomed to it.
-import { t, getLang, dur } from '../i18n.js';
-import { AppBar, PageHeader, SectionHeader, SegmentedControl, StatusChip, DepartureRow, Photo, statusTone } from '../components/index.js';
-import { frame, body, section, list, row, fill, note, notice, mapButton, backButton } from './_layout.js';
+import { t, dur } from '../i18n.js';
+import { PageHeader, SectionHeader, SegmentedControl, StatusChip, DepartureRow, Photo, statusTone } from '../components/index.js';
+import { frame, body, section, list, row, fill, note, notice, mapButton, backButton, navBar } from './_layout.js';
 import { stationMap } from './_map-standin.js';
 import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus } from './_format.js';
 
@@ -10,7 +10,7 @@ import { place, placeEn, placeUr, cityOf, trainTitle, time, approx, delayStatus 
  * Panel with the PageHeader (save, share) and the next trains through it (views/station.js, /api/board).
  * Rows keep the board's order (expected time); they are never sorted or filtered by lateness. The map shows
  * stations and the running trains.
- * Web: the AppBar with a back link above the same board in the sidebar, the map beside it with zoom buttons.
+ * Web: the AppBar with Back and Home links above the same board in the sidebar, the map beside it with zoom buttons.
  * @typedef {object} StationScreenData
  * @property {'on' | 'reconnecting' | 'off'} live - The feed state, for the web sidebar's AppBar.
  * @property {import('./_format.js').ScreenStation} station - With city and cityUr for the subtitle.
@@ -104,9 +104,9 @@ export function StationScreen(data, options = {}) {
     label: name,
     snap: 'half',
     map: stationMap({ layout: web ? 'web' : 'phone', selected, ...(hover ? { hover } : {}) }),
-    back: { href: '#/', label: t('home') },
+    back: { href: '#/', label: t('back') },
     end: web ? mapButton('zoomIn') + mapButton('zoomOut') + mapButton('layers') : '',
-    body: web ? AppBar({ live: data.live, lang: getLang(), back: { href: '#/', label: t('home') } }) + panel : panel,
+    body: web ? navBar(data.live) + panel : panel,
   });
 }
 
