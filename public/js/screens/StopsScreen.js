@@ -12,8 +12,8 @@ import { derive, trainMapFor } from './TrainScreen.js';
  *
  * With `run` null it lists the stops with their scheduled times and no train row. With `pick: true` it is
  * the choose-a-stop-for-alerts page: the title is "Choose your stop for alerts", a "Whole journey, no stop"
- * button comes first, and every stop ahead is a link (the whole row is the tap target); the view turns
- * a tap into the alert. Passed stops are shown but cannot be chosen.
+ * link comes first, and every stop ahead is a link (the whole row is the tap target) to the Alerts page
+ * for that stop, where the rider chooses the alerts. Passed stops are shown but cannot be chosen.
  */
 
 /** One row per stop plus the train row, in route order. */
@@ -21,7 +21,7 @@ function rowsOf(data, d) {
   const { stops, run, train } = data;
   const { passedIdx, nextIdx, lastIdx, haltOf } = d;
   const pick = !!data.pick;
-  const hrefOf = s => `#/train/${train.number}?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
+  const hrefOf = s => `#/train/${train.number}/alerts?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
   const halt = s => { const h = haltOf(s); return h ? t('halt', { d: dur(h) }) : ''; };
   const join = (...parts) => parts.filter(Boolean).join(' · ');
   const out = [];
@@ -73,7 +73,7 @@ export function StopsScreen(data, options = {}) {
     ...(d.first ? [
       row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false }))),
       pick ? note(t('pickStopHint')) : '',
-      pick ? Button({ label: t('alertsSkipStop'), variant: 'secondary', full: true, className: 'p-alerts-whole' }) : '',
+      pick ? Button({ label: t('alertsSkipStop'), href: `#/train/${train.number}/alerts${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ''}`, variant: 'secondary', full: true, className: 'p-alerts-whole' }) : '',
       !run ? note(t('timetableTimes')) : '',
       StopTimeline({ mode: 'full', rows: rowsOf(data, d), legend: !!run }),
     ] : [note(t('loading'))]),

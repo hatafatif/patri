@@ -24,11 +24,35 @@ function decorate(timetable, id, pos, train = timetable.trainForRun(id)) {
 
 const B64URL = /^[A-Za-z0-9_-]+$/;
 
-// A watch request body, checked. Returns { clean } or { error }.
+// Alert rules: what one phone wants to hear about one run. Stops are station ids on the train's route.
+//   { kind: 'before', stop, min }   min (15, 30 or 60) minutes before the train reaches stop (never the first stop)
+//   { kind: 'reach', stop }         when it reaches stop (the last stop too)
+//   { kind: 'leave', stop }         when it leaves stop (the first stop: it has started; never the last stop)
+//   { kind: 'delay', stop? }        when its delay has moved 15+ min either way, until it reaches stop (default: the last stop)
+const RULE_KINDS = ['before', 'reach', 'leave', 'delay'];
+const BEFORE_MIN = [15, 30, 60];
+const MAX_RULES = 8;
+
+/** The key a rule is sent under, once, in the `sent` table: kind:stop:min, with empty parts left empty. */
+const ruleKey = r => `${r.kind}:${r.stop ?? ''}:${r.min ?? ''}`;
+
+/**
+ * The rules a watch made before rules existed stands for: with a stop, it has left its first station, 15 min before the
+ * stop, reaching the stop and the delay until then; with none, it has left, the delay, and reaching the last station.
+ */
+function legacyRules(stops, stop) {
+  const first = stops[0]?.id, last = stops.at(-1)?.id;
+  return stop
+    ? [{ kind: 'leave', stop: first }, { kind: 'before', stop, min: 15 }, { kind: 'reach', stop }, { kind: 'delay', stop }]
+    : [{ kind: 'leave', stop: first }, { kind: 'delay' }, { kind: 'reach', stop: last }];
+}
+
+// A watch request body, checked, rules included (a body without rules gets the legacy ones). Returns { clean } or { error }.
 function validateWatch(timetable, body) {
   const bad = error => ({ error });
   if (!body || typeof body !== 'object') return bad('Bad request body');
   const { subscription, train, run, stop, lang = 'en' } = body;
+  let { rules } = body;
   const endpoint = subscription?.endpoint;
   if (typeof endpoint !== 'string' || endpoint.length > 1000) return bad('Bad endpoint');
   try {
@@ -44,7 +68,27 @@ function validateWatch(timetable, body) {
   if (typeof run !== 'string' || !run || run.length > 40 || timetable.trainForRun(run) !== train) return bad('Bad run');
   if (stop != null && (typeof stop !== 'string' || !timetable.routes.get(train).some(s => s.id === stop))) return bad('Stop is not on this train’s route');
   if (lang !== 'en' && lang !== 'ur') return bad('Bad lang');
-  return { clean: { endpoint, p256dh, auth, train, run, stop: stop ?? null, lang } };
+  const route = timetable.routes.get(train);
+  const onRoute = s => typeof s === 'string' && route.some(x => x.id === s);
+  if (rules == null) rules = legacyRules(route, stop);
+  else {
+    if (!Array.isArray(rules) || !rules.length || rules.length > MAX_RULES) return bad('Bad rules');
+    const keys = new Set(), clean = [];
+    for (const r of rules) {
+      if (!r || typeof r !== 'object' || Array.isArray(r) || !RULE_KINDS.includes(r.kind)) return bad('Bad rules');
+      const { kind } = r;
+      if (kind === 'delay' ? r.stop != null && !onRoute(r.stop) : !onRoute(r.stop)) return bad('Bad rules');
+      if (kind === 'before' ? !BEFORE_MIN.includes(r.min) : r.min != null) return bad('Bad rules');
+      if (kind === 'before' && r.stop === route[0].id) return bad('Bad rules');
+      if (kind === 'leave' && r.stop === route.at(-1).id) return bad('Bad rules');
+      const c = kind === 'before' ? { kind, stop: r.stop, min: r.min } : kind === 'delay' && r.stop == null ? { kind } : { kind, stop: r.stop };
+      if (keys.has(ruleKey(c))) return bad('Bad rules');
+      keys.add(ruleKey(c));
+      clean.push(c);
+    }
+    rules = clean;
+  }
+  return { clean: { endpoint, p256dh, auth, train, run, stop: stop ?? null, lang, rules } };
 }
 
 // Reads a JSON request body of at most MAX_BODY bytes. Rejects with an error carrying .status.
@@ -137,4 +181,4 @@ function sendJson(res, [status, body, cache = 'no-store']) {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': cache }).end(JSON.stringify(body));
 }
 
-module.exports = { createRoutes, decorate, sendJson, readJson };
+module.exports = { createRoutes, decorate, sendJson, readJson, ruleKey, legacyRules, RULE_KINDS, BEFORE_MIN, MAX_RULES };

@@ -186,6 +186,8 @@ const trainSample = {
   },
   details: { locomotive: '9052' },
   returnTrain: T[27],
+  // The Alerts card is on: for Bahawalpur, with three alerts chosen.
+  alerts: { state: 'on', stopName: S.bahawalpur.name, chosen: [{ kind: 'before', min: 30 }, { kind: 'reach' }, { kind: 'delay' }], href: `#/train/28/alerts?stop=${S.bahawalpur.id}` },
 };
 
 // ---------- Station page: Multan Cantt (Station.dc.html, Desktop-Station.dc.html; /api/board?station=116) ----------
@@ -232,5 +234,27 @@ const replaySample = {
   },
 };
 
+// ---------- Alerts page: the train sample plus the choices for Bahawalpur (ahead of the train; est 2:55 PM, leaves 2:57 PM) ----------
+const alertsSample = {
+  ...trainSample,
+  alertsPage: {
+    state: 'off',
+    stop: S.bahawalpur,
+    first: S.lahore,
+    last: S.karachi,
+    pickHref: '#/train/28/stops?pick=1',
+    backHref: '#/train/28',
+    choices: [
+      { kind: 'before', on: true, at: 895 },
+      { kind: 'reach', on: true },
+      { kind: 'leave', on: false, at: 897 },
+      { kind: 'delay', on: true },
+      { kind: 'end', on: false, at: 1580 + LATE },
+    ],
+    minutes: 30,
+    late: LATE,
+  },
+};
+
 /** The samples, one per screen. StopsScreen takes samples.train. */
-export const samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, station });
+export const samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, alerts: alertsSample, station });

@@ -56,6 +56,8 @@ setInterval(loadTimetable, 6 * 3600e3).unref();
 const socket = connectLive();
 const latest = new Map(); // run id -> decorated position
 const known = new Map(); // run id -> train number, from track-train replies
+// Once a minute: reload the watched runs and check "before" alerts for runs whose position has stopped arriving.
+if (pusher.enabled) setInterval(() => alerts.tick(latest), 60e3).unref();
 
 // One log line an hour, so journalctl shows the recorder is alive.
 let recordedThisHour = 0;
@@ -149,10 +151,12 @@ const route = createRoutes(timetable, {
     }
     store.upsertWatch(w);
     alerts.begin(w.endpoint, w.train, latest.get(w.run));
+    alerts.refresh();
     return [200, { ok: true }];
   },
   unwatch(endpoint, train) {
     store.removeWatch(endpoint, train);
+    alerts.refresh();
     return [200, { ok: true }];
   },
 });

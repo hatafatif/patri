@@ -16,7 +16,7 @@ if (enabled) {
 
 /** The dashboard's route for a parsed page (app.js parse()). */
 function routeOf(view, p) {
-  if (view === 'train') return `/train/[number]${p.stops ? '/stops' : p.replay ? '/replay' : ''}`;
+  if (view === 'train') return `/train/[number]${p.stops ? '/stops' : p.replay ? '/replay' : p.alerts ? '/alerts' : ''}`;
   if (view === 'station') return '/station/[id]';
   if (view === 'trip') return p.from || p.to ? '/trip/[from]/[to]' : '/trip';
   if (view === 'search') return '/search';

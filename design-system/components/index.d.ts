@@ -438,6 +438,30 @@ export interface StopTimelineHandlers {
   onChangeStop?: () => void;
 }
 
+/** One on/off choice in a list: a label with an optional quiet line under it, and a switch at the inline end. The whole row is the tap target. (ToggleRow.js) */
+export interface ToggleRowProps {
+  /** What onToggle reports; unique on the page. */
+  name: string;
+  /** Already localised. */
+  label: string;
+  /** A quiet line under the label. Already localised. */
+  sub?: string;
+  /** Default false. */
+  checked?: boolean;
+  /** Default false. */
+  disabled?: boolean;
+  /** Trusted HTML (such as a SegmentedControl) shown under the row only while it is checked. */
+  extra?: string;
+  /** Extra classes, so a composing component can hook its own styles. */
+  className?: string;
+}
+
+/** Handlers for bindToggleRow. (ToggleRow.js) */
+export interface ToggleRowHandlers {
+  /** A switch was flipped. */
+  onToggle?: (name: string, checked: boolean) => void;
+}
+
 /** The train number badge: a sabz-900 square with the number in zard-500 and UP or DN underneath. (TrainBadge.js) */
 export interface TrainBadgeProps {
   /** The train number, such as 28 or 115. */
@@ -480,6 +504,35 @@ export interface TrainRowProps {
   match?: string;
   /** Adds a FollowButton beside the link. Wire it with bindFollowButton(). */
   follow?: { followed: boolean };
+}
+
+/** Train page › Alerts (#/train/<n>/alerts?stop=<id>&run=<id>). The Panel at full height: - PageHeader ("Alerts", "28 DN Shalimar Express · Lahore Jn → Karachi Cantt") and the delay StatusChip, as on All stops; - notice(alertsPage.notice); - a LinkRow "Your station" with the station (or "Whole journey, no stop"), linking to the station picker; - with a station: SectionHeader "At {station}" and a ToggleRow per choice of kind before, reach and leave. While before is on, its extra is the minutes SegmentedControl (15 min · 30 min · 1 h; local buttons, class p-alerts-minutes); - SectionHeader "Whole journey" and a ToggleRow per choice of kind start, delay and end; - Button primary, full: "Turn on alerts" (state off) or "Save changes" (state on), class p-alerts-save; with state on, a link Button "Turn off alerts", class p-alerts-off; then note "Alerts end with this journey." blocked, unsupported and nolive show the header and their note (as on the Train page's Alerts card) and nothing else. Each ToggleRow's name is the choice's kind. Takes the same data as TrainScreen, plus `alertsPage`. (screens/AlertsScreen.js) */
+export interface AlertChoice {
+  /** before, reach and leave are about the rider's station; start (leaving the first station), delay and end (reaching the last station) are about the whole journey. */
+  kind: 'before' | 'reach' | 'leave' | 'start' | 'delay' | 'end';
+  on: boolean;
+  /** Minutes on the TrainScreenData clock (data.now), shown with its day: under before, the expected time there ("Expected ~4:05 PM"); under leave, when it is due to leave ("Due to leave ~4:15 PM"); under end, the expected time at the last station. Left out when unknown, and unused by the other kinds. */
+  at?: number;
+  /** off: alerts aren't on for this train yet. on: they are, and the page edits them. The others say why alerts can't be set. */
+  state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive';
+  /** The rider's station, or null for the whole journey only. */
+  stop: ScreenStation | null;
+  /** The train's first station (named by start). */
+  first: ScreenStation;
+  /** Its last station (named by end). */
+  last: ScreenStation;
+  /** The station picker, for the "Your station" row. */
+  pickHref: string;
+  /** Where Back goes without history: the Train page for this run. */
+  backHref: string;
+  /** The choices on offer, in this order: before, reach, leave, start, delay, end. The view leaves out what can't happen (leave at the last station, end when the rider's station is the last one, start once the train has left). */
+  choices: AlertChoice[];
+  /** How long before, for before. */
+  minutes: 15 | 30 | 60;
+  /** The delay now in minutes, for the delay row's sub line ("Now 25 min late"). */
+  late: number | null;
+  /** Short feedback, already localised, such as "Choose at least one alert." */
+  notice?: string;
 }
 
 /** Home: the station map (stations and the running trains) under the AppBar, and the Panel with the search field and its From → To link, My trains and Running now. Phone: half snap by default. Web: the Panel is the sidebar with the AppBar as its header; the map gets zoom buttons. (screens/HomeScreen.js) */
@@ -734,8 +787,8 @@ export interface TrainScreenData {
   hiddenRuns?: { count: number, href: string };
   /** Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip. */
   lastSeen?: string;
-  /** The Alerts card: off (a Notify me button to the stop picker), on (for stopName, or the whole journey; Change stop and Turn off), or a note saying why not. Without it there is no card. */
-  alerts?: { state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string };
+  /** The Alerts card. off: a note and a Notify me button to the stop picker. on: "Alerts on · For {stopName}" (or the whole journey), then the chosen alerts in a short line ("15 min before · When it arrives · Delay changes"; min is for before), then Change (to href, the Alerts page) and Turn off. blocked, unsupported, nolive: a note saying why not. Without it there is no card. */
+  alerts?: { state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string, chosen?: { kind: 'before' | 'reach' | 'leave' | 'start' | 'delay' | 'end', min?: number }[], href?: string };
   /** The MapToggle's state. Default true. */
   following?: boolean;
   /** Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives. */
@@ -818,6 +871,7 @@ export interface ScreenOptions {
 
 /** window.Patri.screens: page templates built from the components (public/js/screens/). */
 export interface PatriScreens {
+  AlertsScreen(data: unknown, options?: ScreenOptions): string;
   HomeScreen(data: HomeScreenData, options?: ScreenOptions): string;
   ReplayScreen(data: unknown, options?: ScreenOptions): string;
   RouteScreen(data: RouteScreenData, options?: ScreenOptions): string;
@@ -834,6 +888,7 @@ export interface PatriSamples {
   search: SearchScreenData;
   route: RouteScreenData;
   train: TrainScreenData;
+  alerts: unknown;
   replay: unknown;
   station: StationScreenData;
 }
@@ -864,6 +919,7 @@ export interface PatriApi {
   StatusChip(props: StatusChipProps): string;
   StatusStrip(props: StatusStripProps): string;
   StopTimeline(props: StopTimelineProps): string;
+  ToggleRow(props: ToggleRowProps): string;
   TrainBadge(props: TrainBadgeProps): string;
   TrainCard(props: TrainCardProps): string;
   TrainRow(props: TrainRowProps): string;
@@ -878,6 +934,7 @@ export interface PatriApi {
   bindSpeedChart(root: Element, points: [number, number][]): () => void;
   bindStationFields(root: Element, handlers?: StationFieldsHandlers): () => void;
   bindStopTimeline(root: Element, handlers?: StopTimelineHandlers): () => void;
+  bindToggleRow(root: Element, handlers?: ToggleRowHandlers): () => void;
   mapLabel(props: MapLabelProps): string;
   mapPaint(): MapPaintResult;
   statusTone(lateMin: number | null | undefined, opts?: { gps?: boolean }): 'ontime' | 'late' | 'early' | 'nogps';

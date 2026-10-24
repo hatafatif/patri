@@ -8,6 +8,7 @@ export { RouteScreen } from './RouteScreen.js';
 export { TrainScreen } from './TrainScreen.js';
 export { StopsScreen } from './StopsScreen.js';
 export { ReplayScreen } from './ReplayScreen.js';
+export { AlertsScreen } from './AlertsScreen.js';
 export { StationScreen } from './StationScreen.js';
 // Wires every component inside a rendered screen.
 export { bindScreen } from './_layout.js';

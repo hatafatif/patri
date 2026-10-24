@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"},{"name":"ReplayBar"}]} */
+/* @ds-bundle: {"format":4,"namespace":"Patri","components":[{"name":"AppBar"},{"name":"LanguageToggle"},{"name":"LiveIndicator"},{"name":"Panel"},{"name":"SearchField"},{"name":"SegmentedControl"},{"name":"StationFields"},{"name":"IconButton"},{"name":"FollowButton"},{"name":"MapToggle"},{"name":"TrainBadge"},{"name":"StatusChip"},{"name":"TrainCard"},{"name":"TrainRow"},{"name":"DepartureRow"},{"name":"StopTimeline"},{"name":"JourneyProgress"},{"name":"SectionHeader"},{"name":"DetailGrid"},{"name":"LinkRow"},{"name":"SpeedChart"},{"name":"MapMarkers"},{"name":"Button"},{"name":"Card"},{"name":"PageHeader"},{"name":"Photo"},{"name":"ReplayBar"},{"name":"ToggleRow"}]} */
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -34,6 +34,7 @@
     StatusChip: () => StatusChip,
     StatusStrip: () => StatusStrip,
     StopTimeline: () => StopTimeline,
+    ToggleRow: () => ToggleRow,
     TrainBadge: () => TrainBadge,
     TrainCard: () => TrainCard,
     TrainRow: () => TrainRow,
@@ -48,6 +49,7 @@
     bindSpeedChart: () => bindSpeedChart,
     bindStationFields: () => bindStationFields,
     bindStopTimeline: () => bindStopTimeline,
+    bindToggleRow: () => bindToggleRow,
     mapLabel: () => mapLabel,
     mapPaint: () => mapPaint,
     statusTone: () => statusTone,
@@ -316,15 +318,39 @@
       alertsOn: "Alerts on",
       alertsFor: "For {station}",
       alertsWholeTrip: "For the whole journey",
-      alertsWhat: "You\u2019ll hear when it leaves, 15 min before your stop, if the delay changes a lot, and when it arrives.",
+      alertsWhat: "Choose your station, then when to hear: before it gets there, when it arrives or leaves, and if the delay changes.",
       alertsChooseStop: "Choose your stop for alerts",
       alertsSkipStop: "Whole journey, no stop",
       alertsOff: "Turn off",
-      alertsChange: "Change stop",
+      alertsChange: "Change",
       alertsBlocked: "Notifications are blocked for Patri in your browser settings.",
       alertsUnsupported: "This browser can\u2019t show notifications. On iPhone, add Patri to your Home Screen first.",
       alertsNoLive: "Alerts need live location, and this train has none right now.",
       alertsFailed: "Couldn\u2019t turn on alerts. Try again.",
+      // The Alerts page (#/train/<n>/alerts): which alerts a rider wants for one run, and the card's summary of them
+      alertsYourStation: "Your station",
+      alertsAt: "At {station}",
+      alertsWholeJourney: "Whole journey",
+      alertBefore: "Before it gets there",
+      alertReach: "When it arrives",
+      alertLeave: "When it leaves",
+      alertStart: "When it starts from {station}",
+      alertEnd: "When it reaches {station}",
+      alertDelay: "If it runs 15 min later or earlier",
+      alertExpected: "Expected {time}",
+      alertDueLeave: "Due to leave {time}",
+      alertNowLate: "Now {d} late",
+      alertNowEarly: "Now {d} early",
+      alertNowOnTime: "Now on time",
+      alertMinutes: "How long before",
+      alertsTurnOn: "Turn on alerts",
+      alertsSave: "Save changes",
+      alertsTurnOff: "Turn off alerts",
+      alertsPickOne: "Choose at least one alert.",
+      alertsEndNote: "Alerts end with this journey.",
+      alertShortBefore: "{d} before",
+      alertShortStart: "When it starts",
+      alertShortDelay: "Delay changes",
       lastSeen: "Last seen near {station} \xB7 {ago}",
       lastSeenShort: "Last seen {ago}",
       // Journey replay (recorded days played back on the map)
@@ -600,15 +626,39 @@
       alertsOn: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u06C1\u06CC\u06BA",
       alertsFor: "{station} \u06A9\u06D2 \u0644\u06CC\u06D2",
       alertsWholeTrip: "\u067E\u0648\u0631\u06D2 \u0633\u0641\u0631 \u06A9\u06D2 \u0644\u06CC\u06D2",
-      alertsWhat: "\u0679\u0631\u06CC\u0646 \u06A9\u06CC \u0631\u0648\u0627\u0646\u06AF\u06CC\u060C \u0622\u067E \u06A9\u06D2 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0633\u06D2 15 \u0645\u0646\u0679 \u067E\u06C1\u0644\u06D2\u060C \u062A\u0627\u062E\u06CC\u0631 \u0645\u06CC\u06BA \u0628\u0691\u06CC \u062A\u0628\u062F\u06CC\u0644\u06CC \u0627\u0648\u0631 \u067E\u06C1\u0646\u0686\u0646\u06D2 \u067E\u0631 \u0622\u067E \u06A9\u0648 \u0627\u0637\u0644\u0627\u0639 \u0645\u0644\u06D2 \u06AF\u06CC\u06D4",
+      alertsWhat: "\u0627\u067E\u0646\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA\u060C \u067E\u06BE\u0631 \u0628\u062A\u0627\u0626\u06CC\u06BA \u06A9\u0628 \u0627\u0637\u0644\u0627\u0639 \u0686\u0627\u06C1\u06CC\u06D2: \u067E\u06C1\u0646\u0686\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2\u060C \u067E\u06C1\u0646\u0686\u0646\u06D2 \u06CC\u0627 \u0631\u0648\u0627\u0646\u06AF\u06CC \u067E\u0631\u060C \u0627\u0648\u0631 \u062A\u0627\u062E\u06CC\u0631 \u0628\u062F\u0644\u0646\u06D2 \u067E\u0631\u06D4",
       alertsChooseStop: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0627\u067E\u0646\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646 \u0686\u0646\u06CC\u06BA",
       alertsSkipStop: "\u067E\u0648\u0631\u0627 \u0633\u0641\u0631\u060C \u06A9\u0648\u0626\u06CC \u0627\u0633\u0679\u06CC\u0634\u0646 \u0646\u06C1\u06CC\u06BA",
       alertsOff: "\u0628\u0646\u062F \u06A9\u0631\u06CC\u06BA",
-      alertsChange: "\u0627\u0633\u0679\u06CC\u0634\u0646 \u0628\u062F\u0644\u06CC\u06BA",
+      alertsChange: "\u0628\u062F\u0644\u06CC\u06BA",
       alertsBlocked: "\u0622\u067E \u06A9\u06D2 \u0628\u0631\u0627\u0624\u0632\u0631 \u06A9\u06CC \u0633\u06CC\u0679\u0646\u06AF\u0632 \u0645\u06CC\u06BA \u067E\u0679\u0691\u06CC \u06A9\u06CC \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0628\u0646\u062F \u06C1\u06CC\u06BA\u06D4",
       alertsUnsupported: "\u06CC\u06C1 \u0628\u0631\u0627\u0624\u0632\u0631 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0646\u06C1\u06CC\u06BA \u062F\u06A9\u06BE\u0627 \u0633\u06A9\u062A\u0627\u06D4 \u0622\u0626\u06CC \u0641\u0648\u0646 \u067E\u0631 \u067E\u06C1\u0644\u06D2 \u067E\u0679\u0691\u06CC \u06A9\u0648 \u06C1\u0648\u0645 \u0627\u0633\u06A9\u0631\u06CC\u0646 \u067E\u0631 \u0634\u0627\u0645\u0644 \u06A9\u0631\u06CC\u06BA\u06D4",
       alertsNoLive: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u06A9\u06D2 \u0644\u06CC\u06D2 \u0644\u0627\u0626\u06CC\u0648 \u0645\u0642\u0627\u0645 \u0636\u0631\u0648\u0631\u06CC \u06C1\u06D2\u060C \u062C\u0648 \u0627\u0633 \u0648\u0642\u062A \u0627\u0633 \u0679\u0631\u06CC\u0646 \u06A9\u0627 \u062F\u0633\u062A\u06CC\u0627\u0628 \u0646\u06C1\u06CC\u06BA\u06D4",
       alertsFailed: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u0646\u06C1\u06CC\u06BA \u06C1\u0648 \u0633\u06A9\u06CC\u06BA\u06D4 \u062F\u0648\u0628\u0627\u0631\u06C1 \u06A9\u0648\u0634\u0634 \u06A9\u0631\u06CC\u06BA\u06D4",
+      // The Alerts page (#/train/<n>/alerts): which alerts a rider wants for one run, and the card's summary of them
+      alertsYourStation: "\u0622\u067E \u06A9\u0627 \u0627\u0633\u0679\u06CC\u0634\u0646",
+      alertsAt: "{station} \u067E\u0631",
+      alertsWholeJourney: "\u067E\u0648\u0631\u0627 \u0633\u0641\u0631",
+      alertBefore: "\u067E\u06C1\u0646\u0686\u0646\u06D2 \u0633\u06D2 \u067E\u06C1\u0644\u06D2",
+      alertReach: "\u062C\u0628 \u0679\u0631\u06CC\u0646 \u067E\u06C1\u0646\u0686\u06D2",
+      alertLeave: "\u062C\u0628 \u0679\u0631\u06CC\u0646 \u0631\u0648\u0627\u0646\u06C1 \u06C1\u0648",
+      alertStart: "\u062C\u0628 \u0679\u0631\u06CC\u0646 {station} \u0633\u06D2 \u0631\u0648\u0627\u0646\u06C1 \u06C1\u0648",
+      alertEnd: "\u062C\u0628 \u0679\u0631\u06CC\u0646 {station} \u067E\u06C1\u0646\u0686\u06D2",
+      alertDelay: "\u0627\u06AF\u0631 \u062A\u0627\u062E\u06CC\u0631 15 \u0645\u0646\u0679 \u0628\u0691\u06BE\u06D2 \u06CC\u0627 \u06A9\u0645 \u06C1\u0648",
+      alertExpected: "\u0645\u062A\u0648\u0642\u0639 {time}",
+      alertDueLeave: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u0645\u062A\u0648\u0642\u0639 {time}",
+      alertNowLate: "\u0627\u0633 \u0648\u0642\u062A {d} \u062A\u0627\u062E\u06CC\u0631",
+      alertNowEarly: "\u0627\u0633 \u0648\u0642\u062A {d} \u062C\u0644\u062F\u06CC",
+      alertNowOnTime: "\u0627\u0633 \u0648\u0642\u062A \u0628\u0631\u0648\u0642\u062A",
+      alertMinutes: "\u06A9\u062A\u0646\u06CC \u062F\u06CC\u0631 \u067E\u06C1\u0644\u06D2",
+      alertsTurnOn: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0622\u0646 \u06A9\u0631\u06CC\u06BA",
+      alertsSave: "\u062A\u0628\u062F\u06CC\u0644\u06CC\u0627\u06BA \u0645\u062D\u0641\u0648\u0638 \u06A9\u0631\u06CC\u06BA",
+      alertsTurnOff: "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0628\u0646\u062F \u06A9\u0631\u06CC\u06BA",
+      alertsPickOne: "\u06A9\u0645 \u0627\u0632 \u06A9\u0645 \u0627\u06CC\u06A9 \u0627\u0637\u0644\u0627\u0639 \u0686\u0646\u06CC\u06BA\u06D4",
+      alertsEndNote: "\u06CC\u06C1 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0627\u0633 \u0633\u0641\u0631 \u06A9\u06D2 \u0633\u0627\u062A\u06BE \u062E\u062A\u0645 \u06C1\u0648 \u062C\u0627\u0626\u06CC\u06BA \u06AF\u06CC\u06D4",
+      alertShortBefore: "{d} \u067E\u06C1\u0644\u06D2",
+      alertShortStart: "\u0631\u0648\u0627\u0646\u06AF\u06CC \u067E\u0631",
+      alertShortDelay: "\u062A\u0627\u062E\u06CC\u0631 \u0645\u06CC\u06BA \u062A\u0628\u062F\u06CC\u0644\u06CC",
       lastSeen: "{station} \u06A9\u06D2 \u0642\u0631\u06CC\u0628 \u0622\u062E\u0631\u06CC \u0628\u0627\u0631 \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC \xB7 {ago}",
       lastSeenShort: "\u0622\u062E\u0631\u06CC \u0628\u0627\u0631 {ago} \u062F\u06CC\u06A9\u06BE\u06CC \u06AF\u0626\u06CC",
       // Journey replay (recorded days played back on the map)
@@ -1453,9 +1503,26 @@
     }
   }
 
+  // public/js/components/ToggleRow.js
+  function ToggleRow({ name = "", label = "", sub = "", checked = false, disabled = false, extra = "", className } = {}) {
+    const subId = `p-togglerow-${esc(name)}-sub`;
+    return `<div class="${cx("p-togglerow", checked && "p-togglerow--on", className)}"><label class="p-togglerow__row"><span class="p-togglerow__text"><span class="p-togglerow__label">${esc(label)}</span>${sub ? `<span class="p-togglerow__sub" id="${subId}">${esc(sub)}</span>` : ""}</span><input class="p-togglerow__input" type="checkbox" role="switch" name="${esc(name)}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}${sub ? ` aria-describedby="${subId}"` : ""}><span class="p-togglerow__switch" aria-hidden="true"><span class="p-togglerow__knob"></span></span></label>` + (checked && extra ? `<div class="p-togglerow__extra">${extra}</div>` : "") + `</div>`;
+  }
+  function bindToggleRow(root, { onToggle } = {}) {
+    const onChange = (e) => {
+      const input = e.target.closest?.(".p-togglerow__input");
+      if (!input || !root.contains(input)) return;
+      input.closest(".p-togglerow").classList.toggle("p-togglerow--on", input.checked);
+      onToggle?.(input.name, input.checked);
+    };
+    root.addEventListener("change", onChange);
+    return () => root.removeEventListener("change", onChange);
+  }
+
   // public/js/screens/index.js
   var screens_exports = {};
   __export(screens_exports, {
+    AlertsScreen: () => AlertsScreen,
     HomeScreen: () => HomeScreen,
     ReplayScreen: () => ReplayScreen,
     RouteScreen: () => RouteScreen,
@@ -1514,6 +1581,7 @@
       bindStopTimeline(root, { onChangeStop: o.onChangeStop }),
       bindPageHeader(root, { onFollow: o.onFollow, onShare: o.onShare }),
       bindReplayBar(root, { onToggle: o.onReplayToggle, onScrub: o.onReplayScrub }),
+      bindToggleRow(root, { onToggle: o.onToggle }),
       bindLanguageToggle(root, { onChange: (lang2) => o.onLang?.(lang2) })
     ];
     for (const btn of root.querySelectorAll(".p-followbutton")) {
@@ -2080,7 +2148,7 @@
       )
     });
   }
-  function alertsCard(data) {
+  function alertsCard(data, d2) {
     const a = data.alerts;
     if (!a) return "";
     const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
@@ -2088,9 +2156,18 @@
     if (a.state === "off") {
       content = stack(note(t("alertsWhat")), Button({ label: t("notifyMe"), icon: "bell", href: pick, variant: "secondary", full: true }));
     } else if (a.state === "on") {
+      const short = (c) => ({
+        before: () => t("alertShortBefore", { d: dur(c.min ?? 15) }),
+        reach: () => t("alertReach"),
+        leave: () => t("alertLeave"),
+        start: () => t("alertShortStart"),
+        delay: () => t("alertShortDelay"),
+        end: () => t("alertEnd", { station: place2(d2.last) })
+      })[c.kind]?.() ?? "";
       content = stack(
         note(`${t("alertsOn")} \xB7 ${a.stopName ? t("alertsFor", { station: a.stopName }) : t("alertsWholeTrip")}`),
-        row(Button({ label: t("alertsChange"), href: pick, variant: "link" }), Button({ label: t("alertsOff"), variant: "link", className: "p-alerts-off" }))
+        a.chosen?.length ? note(a.chosen.map(short).filter(Boolean).join(" \xB7 ")) : "",
+        row(Button({ label: t("alertsChange"), href: a.href || pick, variant: "link" }), Button({ label: t("alertsOff"), variant: "link", className: "p-alerts-off" }))
       );
     } else {
       const key = { blocked: "alertsBlocked", unsupported: "alertsUnsupported", nolive: "alertsNoLive" }[a.state];
@@ -2223,7 +2300,7 @@
     const wholeRoute = mapButton("wholeRoute");
     const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
     const status = data.notice != null ? notice(data.notice) : "";
-    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), alertsCard(data), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
+    const content = d2.first ? [header(data, d2), status, runChoice(data), statusCard(data, d2), alertsCard(data, d2), journeyCard(data, d2)] : [header(data, d2), status, note(t("loading"))];
     if (!web) {
       return frame({
         name: "train",
@@ -2252,7 +2329,7 @@
     const { stops, run, train: train2 } = data;
     const { passedIdx, nextIdx, lastIdx, haltOf: haltOf2 } = d2;
     const pick = !!data.pick;
-    const hrefOf = (s) => `#/train/${train2.number}?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
+    const hrefOf = (s) => `#/train/${train2.number}/alerts?stop=${encodeURIComponent(s.id)}${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ""}`;
     const halt = (s) => {
       const h = haltOf2(s);
       return h ? t("halt", { d: dur(h) }) : "";
@@ -2300,7 +2377,7 @@
       ...d2.first ? [
         row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false }))),
         pick ? note(t("pickStopHint")) : "",
-        pick ? Button({ label: t("alertsSkipStop"), variant: "secondary", full: true, className: "p-alerts-whole" }) : "",
+        pick ? Button({ label: t("alertsSkipStop"), href: `#/train/${train2.number}/alerts${data.runId ? `?run=${encodeURIComponent(data.runId)}` : ""}`, variant: "secondary", full: true, className: "p-alerts-whole" }) : "",
         !run ? note(t("timetableTimes")) : "",
         StopTimeline({ mode: "full", rows: rowsOf(data, d2), legend: !!run })
       ] : [note(t("loading"))]
@@ -2352,6 +2429,73 @@
       map,
       body: navBar(data.live, backHref) + content
     });
+  }
+
+  // public/js/screens/AlertsScreen.js
+  function AlertsScreen(data, options = {}) {
+    const web = options.layout === "web";
+    const d2 = derive(data);
+    const { train: train2, run } = data;
+    const a = data.alertsPage;
+    const title = t("alertsHeader");
+    const header2 = PageHeader({
+      title,
+      subtitle: d2.first ? `${trainNo(train2)} ${trainTitle(train2)} \xB7 ${route(d2.first, d2.last)}` : `${trainNo(train2)} ${trainTitle(train2)}`
+    });
+    const status = row(StatusChip(delayStatus(run ? run.late : null, { gps: run ? run.gps : data.gps !== false })));
+    const expected = (c) => c.at != null ? t("alertExpected", { time: dayApprox(c.at, d2.ref) }) : void 0;
+    const lateSub = a.late == null ? void 0 : a.late >= 1 ? t("alertNowLate", { d: dur(a.late) }) : a.late <= -1 ? t("alertNowEarly", { d: dur(-a.late) }) : t("alertNowOnTime");
+    const minutes = SegmentedControl({
+      label: t("alertMinutes"),
+      value: String(a.minutes),
+      options: [15, 30, 60].map((n) => ({ value: String(n), label: dur(n) })),
+      className: "p-alerts-minutes"
+    });
+    const toggle = (c) => {
+      const base = { name: c.kind, checked: c.on };
+      switch (c.kind) {
+        case "before":
+          return ToggleRow({ ...base, label: t("alertBefore"), sub: expected(c), extra: minutes });
+        case "reach":
+          return ToggleRow({ ...base, label: t("alertReach") });
+        case "leave":
+          return ToggleRow({ ...base, label: t("alertLeave"), sub: c.at != null ? t("alertDueLeave", { time: dayApprox(c.at, d2.ref) }) : void 0 });
+        case "start":
+          return ToggleRow({ ...base, label: t("alertStart", { station: place2(a.first) }) });
+        case "delay":
+          return ToggleRow({ ...base, label: t("alertDelay"), sub: lateSub });
+        case "end":
+          return ToggleRow({ ...base, label: t("alertEnd", { station: place2(a.last) }), sub: expected(c) });
+        default:
+          return "";
+      }
+    };
+    const rowsOf2 = (kinds) => a.choices.filter((c) => kinds.includes(c.kind)).map(toggle);
+    const atStop = a.stop ? rowsOf2(["before", "reach", "leave"]) : [];
+    const whole = rowsOf2(["start", "delay", "end"]);
+    let parts;
+    if (a.state === "off" || a.state === "on") {
+      parts = [
+        a.notice != null ? notice(a.notice) : "",
+        LinkRow({ href: a.pickHref, eyebrow: t("alertsYourStation"), label: a.stop ? place2(a.stop) : t("alertsSkipStop") }),
+        atStop.length ? section(SectionHeader({ label: t("alertsAt", { station: place2(a.stop) }) }), list(...atStop)) : "",
+        whole.length ? section(SectionHeader({ label: t("alertsWholeJourney") }), list(...whole)) : "",
+        stack(
+          Button({ label: t(a.state === "on" ? "alertsSave" : "alertsTurnOn"), variant: "primary", full: true, className: "p-alerts-save" }),
+          a.state === "on" ? Button({ label: t("alertsTurnOff"), variant: "link", className: "p-alerts-off" }) : "",
+          note(t("alertsEndNote"))
+        )
+      ];
+    } else {
+      const key = { blocked: "alertsBlocked", unsupported: "alertsUnsupported", nolive: "alertsNoLive" }[a.state];
+      parts = [key ? note(t(key)) : ""];
+    }
+    const content = body(header2, status, ...parts);
+    const map = options.standin === false ? "" : trainMapFor(data, web ? "web" : "phone");
+    if (!web) {
+      return frame({ name: "alerts", options, snap: "full", label: title, map, body: content, back: { href: a.backHref, label: t("back") } });
+    }
+    return frame({ name: "alerts", options, snap: "full", label: title, map, body: navBar(data.live, a.backHref) + content });
   }
 
   // public/js/screens/StationScreen.js
@@ -2601,7 +2745,9 @@
       now: DAY0 + 780 * 6e4
     },
     details: { locomotive: "9052" },
-    returnTrain: T[27]
+    returnTrain: T[27],
+    // The Alerts card is on: for Bahawalpur, with three alerts chosen.
+    alerts: { state: "on", stopName: S.bahawalpur.name, chosen: [{ kind: "before", min: 30 }, { kind: "reach" }, { kind: "delay" }], href: `#/train/28/alerts?stop=${S.bahawalpur.id}` }
   };
   var board = (t2, kind, origin, dest, sched, est, late, gps, extra = {}) => ({ train: t2, kind, origin, dest, sched, est, late, gps, runId: null, kmAway: null, atPlatform: false, ...extra });
   var station = {
@@ -2644,7 +2790,27 @@
       returnName: "27 UP Shalimar Express"
     }
   };
-  var samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, station });
+  var alertsSample = {
+    ...trainSample,
+    alertsPage: {
+      state: "off",
+      stop: S.bahawalpur,
+      first: S.lahore,
+      last: S.karachi,
+      pickHref: "#/train/28/stops?pick=1",
+      backHref: "#/train/28",
+      choices: [
+        { kind: "before", on: true, at: 895 },
+        { kind: "reach", on: true },
+        { kind: "leave", on: false, at: 897 },
+        { kind: "delay", on: true },
+        { kind: "end", on: false, at: 1580 + LATE }
+      ],
+      minutes: 30,
+      late: LATE
+    }
+  };
+  var samples = freeze({ home, search, route: routeSample, train: trainSample, replay: replaySample, alerts: alertsSample, station });
 
   // ds-entry.js
   var wrap = (mod) => {

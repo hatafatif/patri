@@ -5,7 +5,7 @@ import {
   SegmentedControl, bindSegmentedControl, StationFields, bindStationFields, IconButton, FollowButton, bindFollowButton,
   MapToggle, bindMapToggle, TrainBadge, StatusChip, StatusStrip, TrainCard, TrainRow, DepartureRow, StopTimeline,
   bindStopTimeline, JourneyProgress, SectionHeader, DetailGrid, LinkRow, SpeedChart, bindSpeedChart, MapMarkers,
-  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, Photo, bindPageHeader, ReplayBar, bindReplayBar, syncReplayBar, statusTone,
+  trainMarker, mapLabel, mapPaint, Button, Card, PageHeader, Photo, bindPageHeader, ReplayBar, bindReplayBar, syncReplayBar, ToggleRow, bindToggleRow, statusTone,
 } from './components/index.js';
 import { t, setLang, getLang, applyLang, clockMin, dur, delayText, pktMidnight, esc } from './i18n.js';
 
@@ -276,6 +276,18 @@ function specimens(col) {
       Card({ tone: 'plain', body: replayBar({ playing: false, gaps: [1, 2, 4, 6], at: REPLAY.from + 3.2 * DAY, speed: t('replayIdle') }) }),
       Card({ tone: 'plain', body: replayBar({ playing: false, disabled: true }) }),
     )),
+    spec('ToggleRow', 'on with extra · on · off · disabled', Card({ tone: 'plain', body: [
+      ToggleRow({
+        name: 'before', label: t('alertBefore'), sub: t('alertExpected', { time: clockMin(16 * 60 + 5) }), checked: true,
+        extra: SegmentedControl({
+          options: [15, 30, 60].map(n => ({ value: String(n), label: n === 60 ? t('h', { h: 1, hours: 'گھنٹہ' }) : t('m', { m: n }) })),
+          value: '30', label: t('alertMinutes'),
+        }),
+      }),
+      ToggleRow({ name: 'reach', label: t('alertReach'), checked: true }),
+      ToggleRow({ name: 'leave', label: t('alertLeave'), sub: t('alertDueLeave', { time: clockMin(16 * 60 + 15) }) }),
+      ToggleRow({ name: 'locked', label: t('alertLeave'), sub: t('alertDueLeave', { time: clockMin(16 * 60 + 15) }), disabled: true }),
+    ].join('') })),
     spec('Button', 'primary · secondary · link', wrap(
       Button({ label: t('seeAllStops'), variant: 'primary' }),
       Button({ label: t('chooseStop'), variant: 'secondary' }),
@@ -407,6 +419,7 @@ function render() {
       bindFollowButton(col),
       bindPageHeader(col),
       bindMapToggle(col),
+      bindToggleRow(col),
       bindStopTimeline(col),
       bindSpeedChart(col, SPEED_POINTS),
     );

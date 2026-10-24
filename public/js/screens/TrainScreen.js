@@ -38,7 +38,10 @@ import { trainMap } from './_map-standin.js';
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
  * @property {{ count: number, href: string }} [hiddenRuns] - Suspect runs that are not shown: a note and a "Show anyway" link to href.
  * @property {string} [lastSeen] - Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip.
- * @property {{ state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string }} [alerts] - The Alerts card: off (a Notify me button to the stop picker), on (for stopName, or the whole journey; Change stop and Turn off), or a note saying why not. Without it there is no card.
+ * @property {{ state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string, chosen?: { kind: 'before' | 'reach' | 'leave' | 'start' | 'delay' | 'end', min?: number }[], href?: string }} [alerts] - The Alerts card.
+ *   off: a note and a Notify me button to the stop picker. on: "Alerts on · For {stopName}" (or the whole journey), then the chosen
+ *   alerts in a short line ("15 min before · When it arrives · Delay changes"; min is for before), then Change (to href, the
+ *   Alerts page) and Turn off. blocked, unsupported, nolive: a note saying why not. Without it there is no card.
  * @property {boolean} [following=true] - The MapToggle's state.
  * @property {string} [notice] - Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives.
  */
@@ -209,7 +212,7 @@ function statusCard(data, d) {
 }
 
 /** Alerts: push notifications for this run. The view works out the state (data.alerts); nothing without it. */
-function alertsCard(data) {
+function alertsCard(data, d) {
   const a = data.alerts;
   if (!a) return '';
   const pick = `#/train/${data.train.number}/stops?pick=1${data.runId ? `&run=${encodeURIComponent(data.runId)}` : ''}`;
@@ -217,9 +220,18 @@ function alertsCard(data) {
   if (a.state === 'off') {
     content = stack(note(t('alertsWhat')), Button({ label: t('notifyMe'), icon: 'bell', href: pick, variant: 'secondary', full: true }));
   } else if (a.state === 'on') {
+    const short = c => ({
+      before: () => t('alertShortBefore', { d: dur(c.min ?? 15) }),
+      reach: () => t('alertReach'),
+      leave: () => t('alertLeave'),
+      start: () => t('alertShortStart'),
+      delay: () => t('alertShortDelay'),
+      end: () => t('alertEnd', { station: place(d.last) }),
+    }[c.kind]?.() ?? '');
     content = stack(
       note(`${t('alertsOn')} · ${a.stopName ? t('alertsFor', { station: a.stopName }) : t('alertsWholeTrip')}`),
-      row(Button({ label: t('alertsChange'), href: pick, variant: 'link' }), Button({ label: t('alertsOff'), variant: 'link', className: 'p-alerts-off' })),
+      a.chosen?.length ? note(a.chosen.map(short).filter(Boolean).join(' · ')) : '',
+      row(Button({ label: t('alertsChange'), href: a.href || pick, variant: 'link' }), Button({ label: t('alertsOff'), variant: 'link', className: 'p-alerts-off' })),
     );
   } else {
     const key = { blocked: 'alertsBlocked', unsupported: 'alertsUnsupported', nolive: 'alertsNoLive' }[a.state];
@@ -373,7 +385,7 @@ export function TrainScreen(data, options = {}) {
   const status = data.notice != null ? notice(data.notice) : '';
   // Without the route there is nothing to show but the header and a loading note.
   const content = d.first
-    ? [header(data, d), status, runChoice(data), statusCard(data, d), alertsCard(data), journeyCard(data, d)]
+    ? [header(data, d), status, runChoice(data), statusCard(data, d), alertsCard(data, d), journeyCard(data, d)]
     : [header(data, d), status, note(t('loading'))];
 
   if (!web) {
