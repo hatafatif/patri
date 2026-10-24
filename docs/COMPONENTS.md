@@ -79,6 +79,7 @@ The registry of every frontend component. **Build UI only from these.** If none 
 | 25 | PageHeader | shell | Train page, Station page, All stops |
 | 26 | Photo | data | Train page: About this train; Station page |
 | 27 | ReplayBar | input | Train page › Journey replay |
+| 28 | ToggleRow | input | Train page › Alerts |
 
 ## Specs
 
@@ -320,6 +321,18 @@ Example data throughout is real: 28 DN Shalimar Express, Lahore Jn → Karachi C
 **Markup:** a `<div>` with `data-from` and `data-to`, a `<button>` (aria-label "Play" or "Pause"), the ticks (`aria-hidden`) and an `<input type="range">` with the label as its aria-label and the time as its aria-valuetext. Time and speed are in `<bdi>`.
 **Right-to-left:** the range and the ticks run from the right and mirror together (logical `inset-inline-start`). The play and pause icons are media icons and don't mirror.
 
+### 28. ToggleRow
+**What it is:** one on/off choice in a list, such as one alert on the Alerts page. Approved on 2026-10-24.
+**Props:** `name` (what `onToggle` reports, unique on the page), `label` (already localised), `sub?` (a quiet line under the label, already localised), `checked`, `disabled?`, `extra?` (HTML shown under the row only while it is checked, such as a SegmentedControl), `className?`.
+**Look:**
+- A row at least 56px tall: the label in body-strong with the sub under it in caption style, `ink-muted`; the switch at the inline end. In Urdu they become `urdu-strong` and `urdu-caption`.
+- The switch: a 44×26 pill with a 20px round knob, flat. Off: `line` track, `surface` knob. On: `sabz-700` track, `surface` knob at the inline end. Disabled: `line-soft` track, and the label and sub in `ink-muted`.
+- Rows one under another are divided by a 1px `line-soft` rule, like TrainRow. `extra` sits under the row's text with `space-3` above it, and the rule goes under the extra.
+- The knob slides in 150ms; there is no motion under `prefers-reduced-motion`.
+**Markup:** `<div class="p-togglerow">`, with `p-togglerow--on` when checked, holding a `<label class="p-togglerow__row">` that wraps the text, a native `<input type="checkbox" role="switch" class="p-togglerow__input" name>` (visually hidden but focusable) and the drawn switch `<span class="p-togglerow__switch" aria-hidden="true">`. The whole row is the tap target. Keyboard focus shows the 3px `focus` ring around the switch. The sub is tied to the input with `aria-describedby`.
+**Behaviour:** `bindToggleRow(root, { onToggle(name, checked) })` listens for `change` on the inputs inside root, moves `p-togglerow--on`, and returns `unbind()`. `bindScreen` passes `onToggle` through. Views re-render to show or hide `extra`.
+**Right-to-left:** the switch sits at the inline end and the knob moves toward the inline end when on (logical properties), so it mirrors.
+
 ## Screens
 
 The app's pages, built from the components above. **Views render their pages through these templates; they don't assemble components themselves.**
@@ -348,8 +361,9 @@ The app's pages, built from the components above. **Views render their pages thr
 | HomeScreen | Home: station map, search, My trains, Running now | phone (panel half and down), web |
 | SearchScreen | Search: one box for a train, station or city | phone |
 | RouteScreen | Search › Plan a trip: trains you can still board | phone |
-| TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with Change stop and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
-| StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey button, then the upcoming stops as links) | phone |
+| TrainScreen | Train page: map following the train, Current status, Alerts (push alerts: Notify me, on with the chosen alerts in a line, Change and Turn off, or a note saying why not; only when `data.alerts` is given), Journey, speed, About (with a Photo of the train above the facts when there is one), Return | phone, web |
+| StopsScreen | Train page › All stops (same data as TrainScreen); with `pick: true` it is the choose-a-stop-for-alerts page (a Whole journey link, then the upcoming stops as links, all to the Alerts page) | phone |
+| AlertsScreen | Train page › Alerts (`#/train/<n>/alerts?stop=<id>`): your station (a LinkRow to the stop picker), then ToggleRows for the alerts at that station (before it gets there, with 15 · 30 · 60 min; when it arrives; when it leaves) and for the whole journey (when it starts, if the delay changes by 15 min, when it reaches the last stop); Turn on alerts, or Save changes and Turn off alerts | phone, web |
 | ReplayScreen | Train page › Journey replay (`#/train/<n>/replay`): a time-lapse of the train's recorded journeys and its return train's on the map, with a period switch (7, 30 or 90 days), the ReplayBar and a hint; loading, empty and failed notes | phone |
 | StationScreen | Station page: the board of next trains, or with the "Next trains / Timetable" switch (SegmentedControl, `?view=timetable`) the whole day's timetable (a Photo of the city above it when there is one) | phone, web |
 

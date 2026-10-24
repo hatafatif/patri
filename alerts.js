@@ -34,22 +34,30 @@ function clock(ms) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
+// One function per rule kind (leave, before, reach, delay), plus the endings a message can carry.
+// `late` is in minutes; times are already clock text such as "4:05 PM".
 const TEXT = {
   en: {
-    departed: (st, late) => `Left ${st}${late >= LATE_MIN ? ` · ${duration(late, 'en')} late` : ''}`,
-    approach: (st, min, time) => `${st} in about ${min} min (~${time})`,
+    leave: (st, late) => `Left ${st}${late >= LATE_MIN ? ` · ${duration(late, 'en')} late` : ''}`,
+    before: (st, min, time) => `${st} in about ${min} min (~${time})`,
+    reach: (st, late) => `Reached ${st}${late >= LATE_MIN ? ` · ${duration(late, 'en')} late` : ''}`,
     delay: (late, prev) => late < LATE_MIN
       ? `Now on time (was ${duration(prev, 'en')} late)`
       : `Now ${duration(late, 'en')} late (was ${prev < LATE_MIN ? 'on time' : duration(prev, 'en')})`,
-    arrived: st => `Reached ${st}`,
+    expectedAt: (st, time) => ` · Expected at ${st} ~${time}`,
+    stoppedBetween: (a, b) => ` · Stopped between ${a} and ${b}`,
+    stale: ' · No live location, so this may be off',
   },
   ur: {
-    departed: (st, late) => `${st} سے روانہ ہو گئی${late >= LATE_MIN ? ` · ${duration(late, 'ur')} تاخیر` : ''}`,
-    approach: (st, min, time) => `${st} تقریباً ${min} منٹ میں (~${time})`,
+    leave: (st, late) => `${st} سے روانہ ہو گئی${late >= LATE_MIN ? ` · ${duration(late, 'ur')} تاخیر` : ''}`,
+    before: (st, min, time) => `${st} تقریباً ${min} منٹ میں (~${time})`,
+    reach: (st, late) => `${st} پہنچ گئی${late >= LATE_MIN ? ` · ${duration(late, 'ur')} تاخیر` : ''}`,
     delay: (late, prev) => late < LATE_MIN
       ? `اب وقت پر (پہلے ${duration(prev, 'ur')} تاخیر)`
       : `اب ${duration(late, 'ur')} تاخیر (پہلے ${prev < LATE_MIN ? 'وقت پر' : duration(prev, 'ur')})`,
-    arrived: st => `${st} پہنچ گئی`,
+    expectedAt: (st, time) => ` · ${st} پر متوقع ~${time}`,
+    stoppedBetween: (a, b) => ` · ${a} اور ${b} کے درمیان رکی ہوئی ہے`,
+    stale: ' · لائیو مقام دستیاب نہیں، وقت میں فرق ہو سکتا ہے',
   },
 };
 
@@ -127,13 +135,13 @@ class Alerts {
       : reached(stops.length - 1) || /done|arrived|complete/i.test(String(run.status ?? ''));
     if (done) {
       const st = stops[stopIdx >= 0 ? stopIdx : stops.length - 1];
-      fire('arrived', tx.arrived(this.name(st, lang)), 'high');
+      fire('arrived', tx.reach(this.name(st, lang), late), 'high');
       this.store.markDone(w.endpoint, w.train);
       return;
     }
 
     // Left: past the next station, or moving and clear of the first one (a waiting train is already "past" it).
-    if (prevIdx >= 1 || (run.speed > 0 && kmFrom(run, stops[0]) > AWAY_KM)) fire('departed', tx.departed(this.name(stops[0], lang), late), 'normal');
+    if (prevIdx >= 1 || (run.speed > 0 && kmFrom(run, stops[0]) > AWAY_KM)) fire('departed', tx.leave(this.name(stops[0], lang), late), 'normal');
 
     if (stopIdx >= 0) {
       const stop = stops[stopIdx];
@@ -142,7 +150,7 @@ class Alerts {
         const eta = run.date + (sched + late) * 60000;
         const mins = (eta - now) / 60000;
         if (mins <= APPROACH_MIN) {
-          fire('approach', tx.approach(this.name(stop, lang), Math.max(1, Math.round(mins)), clock(eta)), 'high');
+          fire('approach', tx.before(this.name(stop, lang), Math.max(1, Math.round(mins)), clock(eta)), 'high');
         }
       }
     }

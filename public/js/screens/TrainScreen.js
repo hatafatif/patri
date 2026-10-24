@@ -38,7 +38,10 @@ import { trainMap } from './_map-standin.js';
  * @property {string} [runId] - The id of the run shown, for the SegmentedControl and for links that keep the run.
  * @property {{ count: number, href: string }} [hiddenRuns] - Suspect runs that are not shown: a note and a "Show anyway" link to href.
  * @property {string} [lastSeen] - Timetable mode only: where and when the train was last recorded, already localised ("Last seen near Multan Cantt · 3 h ago"). Shown under the "Location unavailable" chip.
- * @property {{ state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string }} [alerts] - The Alerts card: off (a Notify me button to the stop picker), on (for stopName, or the whole journey; Change stop and Turn off), or a note saying why not. Without it there is no card.
+ * @property {{ state: 'off' | 'on' | 'blocked' | 'unsupported' | 'nolive', stopName?: string, chosen?: { kind: 'before' | 'reach' | 'leave' | 'start' | 'delay' | 'end', min?: number }[], href?: string }} [alerts] - The Alerts card.
+ *   off: a note and a Notify me button to the stop picker. on: "Alerts on · For {stopName}" (or the whole journey), then the chosen
+ *   alerts in a short line ("15 min before · When it arrives · Delay changes"; min is for before), then Change (to href, the
+ *   Alerts page) and Turn off. blocked, unsupported, nolive: a note saying why not. Without it there is no card.
  * @property {boolean} [following=true] - The MapToggle's state.
  * @property {string} [notice] - Short feedback under the PageHeader ("Link copied"). Pass '' when there is none, so the live region exists before the text arrives.
  */

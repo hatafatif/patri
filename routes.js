@@ -24,6 +24,29 @@ function decorate(timetable, id, pos, train = timetable.trainForRun(id)) {
 
 const B64URL = /^[A-Za-z0-9_-]+$/;
 
+// Alert rules: what one phone wants to hear about one run. Stops are station ids on the train's route.
+//   { kind: 'before', stop, min }   min (15, 30 or 60) minutes before the train reaches stop (never the first stop)
+//   { kind: 'reach', stop }         when it reaches stop (the last stop too)
+//   { kind: 'leave', stop }         when it leaves stop (the first stop: it has started; never the last stop)
+//   { kind: 'delay', stop? }        when its delay has moved 15+ min either way, until it reaches stop (default: the last stop)
+const RULE_KINDS = ['before', 'reach', 'leave', 'delay'];
+const BEFORE_MIN = [15, 30, 60];
+const MAX_RULES = 8;
+
+/** The key a rule is sent under, once, in the `sent` table: kind:stop:min, with empty parts left empty. */
+const ruleKey = r => `${r.kind}:${r.stop ?? ''}:${r.min ?? ''}`;
+
+/**
+ * The rules a watch made before rules existed stands for: with a stop, it has left its first station, 15 min before the
+ * stop, reaching the stop and the delay until then; with none, it has left, the delay, and reaching the last station.
+ */
+function legacyRules(stops, stop) {
+  const first = stops[0]?.id, last = stops.at(-1)?.id;
+  return stop
+    ? [{ kind: 'leave', stop: first }, { kind: 'before', stop, min: 15 }, { kind: 'reach', stop }, { kind: 'delay', stop }]
+    : [{ kind: 'leave', stop: first }, { kind: 'delay' }, { kind: 'reach', stop: last }];
+}
+
 // A watch request body, checked. Returns { clean } or { error }.
 function validateWatch(timetable, body) {
   const bad = error => ({ error });
@@ -137,4 +160,4 @@ function sendJson(res, [status, body, cache = 'no-store']) {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': cache }).end(JSON.stringify(body));
 }
 
-module.exports = { createRoutes, decorate, sendJson, readJson };
+module.exports = { createRoutes, decorate, sendJson, readJson, ruleKey, legacyRules, RULE_KINDS, BEFORE_MIN, MAX_RULES };
