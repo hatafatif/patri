@@ -3,10 +3,10 @@
 // piece comes from a registered component.
 import {
   Panel, bindPanel, bindSearchField, bindSegmentedControl, bindStationFields, bindFollowButton,
-  bindMapToggle, bindStopTimeline, bindSpeedChart, bindLanguageToggle, bindPageHeader, bindReplayBar, IconButton, StatusChip,
+  bindMapToggle, bindStopTimeline, bindSpeedChart, bindLanguageToggle, bindPageHeader, bindReplayBar, AppBar, IconButton, StatusChip,
 } from '../components/index.js';
 import { esc } from '../components/_shared.js';
-import { t } from '../i18n.js';
+import { t, getLang } from '../i18n.js';
 
 /**
  * Options every screen template takes as its second argument.
@@ -27,7 +27,8 @@ import { t } from '../i18n.js';
  * @param {'down' | 'half' | 'full'} [f.snap] - The screen's default snap; options.snap wins.
  * @param {string} [f.top] - Phone only: a band across the top (the Home AppBar); the map starts below it.
  * @param {string} [f.map] - The backdrop content: the map stand-in, or nothing.
- * @param {{ href: string, label: string }} [f.back] - Phone only: a labelled float pill ("← Home") at the map's top start, always above the panel.
+ * @param {{ href: string, label: string }} [f.back] - Phone only: a labelled float pill ("← Back") at the map's top start, always above the panel,
+ *   followed by Home and Search float buttons. href is where Back goes when there is no history.
  * @param {string} [f.start] - Controls floating at the map's top start (the back button).
  * @param {string} [f.end] - Controls floating at the map's top end (zoom, layers, Following).
  * @param {string} [f.dock] - Web only: content docked along the bottom of the map.
@@ -39,7 +40,7 @@ export function frame({ name, options = {}, label = '', body = '', snap = 'half'
   const pill = !web && back;
   const backPill = pill ? IconButton({ icon: 'back', label: back.label, href: back.href, variant: 'float', text: true, className: 'p-screen__back' }) : '';
   const searchBtn = pill ? IconButton({ icon: 'search', label: t('search'), href: '#/search', variant: 'float', className: 'p-screen__search' }) : '';
-  const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${searchBtn}</div>` : '') + start;
+  const startHtml = (pill ? `<div class="p-screen__controls-row">${backPill}${homeButton('float')}${searchBtn}</div>` : '') + start;
   const cls = ['p-screen', `p-screen--${web ? 'web' : 'phone'}`, `p-screen--${name}`, expanded && 'p-screen--expanded', !web && top && 'p-screen--top', pill && 'p-screen--back']
     .filter(Boolean).join(' ');
   return `<div class="${cls}" data-screen="${esc(name)}">`
@@ -91,6 +92,13 @@ export function mapButton(action) {
  * @param {'plain' | 'float'} [variant='plain'] - float over the map, plain in the panel.
  */
 export const backButton = (href, variant = 'plain') => IconButton({ icon: 'back', label: t('back'), href, variant, className: 'p-screen__back' });
+/**
+ * The Home IconButton (a link). Unlike Back it always goes to Home.
+ * @param {'plain' | 'float'} [variant='plain'] - float over the map, plain in the panel.
+ */
+export const homeButton = (variant = 'plain') => IconButton({ icon: 'home', label: t('home'), href: '#/', variant, className: 'p-screen__home' });
+/** The web sidebar's top bar on every page but Home: Back (history, else backHref) and Home. */
+export const navBar = (live, backHref = '#/') => AppBar({ live, lang: getLang(), back: { href: backHref, label: t('back') }, home: { href: '#/', label: t('home') } });
 /**
  * A polite live region for short feedback, such as "Link copied": a neutral StatusChip when there is text.
  * Always render it (empty when there is nothing to say), so screen readers hear the text when it appears.

@@ -88,6 +88,7 @@ const home = {
 
 // ---------- Search (Search.dc.html) ----------
 const search = {
+  live: 'on',
   query: 'Shalimar',
   trains: [
     { train: T[28], from: S.lahore, to: S.karachi, late: 30, gps: true, followed: true, runId: '281810' },
@@ -104,6 +105,7 @@ const search = {
 // /api/trip, late the delay the wireframe shows. The wireframe lists three of the four trains on the way;
 // the fourth, Khyber Mail 2 DN (left 7:50 AM), comes from /api/trip with the delay the Station wireframe shows.
 const routeSample = {
+  live: 'on',
   from: S.lahore,
   to: S.karachi,
   date: '2026-10-18',

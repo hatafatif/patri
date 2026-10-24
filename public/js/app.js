@@ -241,9 +241,9 @@ export function replaceHash(hash) {
   history.replaceState(history.state, '', hash);
   if (trail.length) trail[trail.length - 1] = hash;
 }
-// Back buttons in the screens are links to a fallback; with history they go back instead.
+// Back buttons in the screens are links to a fallback; with history they go back instead. Home links always go Home.
 document.addEventListener('click', e => {
-  const a = e.target.closest?.('a.p-screen__back, a.p-pageheader__back');
+  const a = e.target.closest?.('a.p-screen__back, a.p-pageheader__back, a.p-appbar__back');
   if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   if (canGoBack()) { e.preventDefault(); history.back(); }
 });

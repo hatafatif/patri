@@ -1,10 +1,10 @@
 # AppBar
 
-The top bar: the bilingual Patri logo or a back link at the start, and the live indicator and language switch at the end.
+The top bar: the bilingual Patri logo, or Back and Home links, at the start, and the live indicator and language switch at the end.
 
 ## When to use
 - At the top of Home on a phone.
-- As the header of the web sidebar, inside a Panel. On the Train and Station pages it carries a back link instead of the logo.
+- As the header of the web sidebar, inside a Panel. On every page but Home it carries Back and Home links instead of the logo.
 
 ## When not to use
 - As a page title or a toolbar for other actions. It holds only the logo or back link, LiveIndicator and LanguageToggle.
@@ -14,13 +14,14 @@ The top bar: the bilingual Patri logo or a back link at the start, and the live 
 |---|---|---|---|
 | `live` | `'on' \| 'reconnecting' \| 'off'` | `'off'` | The LiveIndicator state. |
 | `lang` | `'en' \| 'ur'` | `'en'` | The active language, passed to LanguageToggle. |
-| `back` | `{ href: string, label: string }` | none | When present, a back link replaces the logo. The label is already localised. |
+| `back` | `{ href: string, label: string }` | none | When present, a back link replaces the logo. The app goes back in history when it can, else follows `href`. The label is already localised. |
+| `home` | `{ href: string, label: string }` | none | With `back`, a Home link (house icon and label) after it. It always goes to `href`, never back in history. |
 
 ## Behaviour
 There is no `bindAppBar`. The AppBar has no behaviour of its own; views call `bindLanguageToggle(appBarRoot, { onChange })` on the element they rendered it into.
 
 ## Urdu and right-to-left
-- The back link's label switches to the Urdu label style, and its arrow flips.
+- The Back and Home labels switch to the Urdu label style, and the back arrow flips. The house icon doesn't mirror.
 - The end group mirrors to the other side. The logo moves to the inline-start side (the right) but is **never mirrored**: it is the bilingual "Rail line" lockup, PATRI ◆ پٹڑی on one track, and reads the same in both languages.
 
 ## The logo
@@ -33,16 +34,16 @@ There is no `bindAppBar`. The AppBar has no behaviour of its own; views call `bi
   - `patri-favicon.svg`.
 
 ## Accessibility
-- The logo and the back link are real links at least 44px tall.
+- The logo and the Back and Home links are real links at least 44px tall.
 - The bar is a `<header>`. LiveIndicator and LanguageToggle keep their own roles and labels.
 - Height is 56px, or 64px when the bar sits inside a Panel in sidebar mode (the Panel's container query sets this).
 
 ## Example
 ```js
 Patri.AppBar({ live: 'on', lang: 'en' });
-Patri.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' } });
+Patri.AppBar({ live: 'on', lang: 'en', back: { href: '#/', label: 'Back' }, home: { href: '#/', label: 'Home' } });
 ```
 The app imports it from `/js/components/index.js`.
 
 ## Sticky in the sidebar
-In the web sidebar the AppBar is the first thing in the Panel body and is `position: sticky` at the top (`.p-panel .p-appbar`), so its back link stays visible while the sidebar scrolls.
+In the web sidebar the AppBar is the first thing in the Panel body and is `position: sticky` at the top (`.p-panel .p-appbar`), so its Back and Home links stay visible while the sidebar scrolls.

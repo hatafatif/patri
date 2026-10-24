@@ -1,7 +1,7 @@
 // StopsScreen: the Train page's All stops list.
-import { t, getLang, dur } from '../i18n.js';
-import { AppBar, PageHeader, StatusChip, StopTimeline, Button } from '../components/index.js';
-import { frame, body, row, note, notice } from './_layout.js';
+import { t, dur } from '../i18n.js';
+import { PageHeader, StatusChip, StopTimeline, Button } from '../components/index.js';
+import { frame, body, row, note, notice, navBar } from './_layout.js';
 import { place, trainTitle, trainNo, route, time, approx, km, delayStatus } from './_format.js';
 import { derive, trainMapFor } from './TrainScreen.js';
 
@@ -86,6 +86,6 @@ export function StopsScreen(data, options = {}) {
   return frame({
     name: 'stops', options, snap: 'full', label: title,
     map,
-    body: AppBar({ live: data.live, lang: getLang(), back: { href: backHref, label: trainTitle(train) } }) + content,
+    body: navBar(data.live, backHref) + content,
   });
 }
