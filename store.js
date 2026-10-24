@@ -38,6 +38,8 @@ class Store {
         PRIMARY KEY (endpoint, train, event)
       );
     `);
+    // Add-only migration: watches made before alert rules existed have no rules column.
+    if (!this.db.prepare('PRAGMA table_info(watches)').all().some(c => c.name === 'rules')) this.db.exec('ALTER TABLE watches ADD COLUMN rules TEXT');
     this.insertPosition = this.db.prepare('INSERT OR IGNORE INTO positions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     this.insertPass = this.db.prepare('INSERT OR IGNORE INTO passes VALUES (?, ?, ?, ?, ?)');
     this.selectPositions = this.db.prepare('SELECT ts, lat, lon, speed FROM positions WHERE run = ? ORDER BY ts');
@@ -52,11 +54,21 @@ class Store {
       FROM positions p JOIN (SELECT train, MAX(ts) AS ts FROM positions WHERE ts >= ? GROUP BY train) m
         ON p.train = m.train AND p.ts = m.ts`);
     this.upsertWatchStmt = this.db.prepare(`
-      INSERT INTO watches (endpoint, train, run, stop, p256dh, auth, lang, created, expires, last_late, done)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      INSERT INTO watches (endpoint, train, run, stop, p256dh, auth, lang, created, expires, last_late, rules, done)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
       ON CONFLICT(endpoint, train) DO UPDATE SET run = excluded.run, stop = excluded.stop, p256dh = excluded.p256dh,
         auth = excluded.auth, lang = excluded.lang, created = excluded.created, expires = excluded.expires,
-        last_late = excluded.last_late, done = 0`);
+        last_late = excluded.last_late, rules = excluded.rules, done = 0`);
+    this.selectWatchRun = this.db.prepare('SELECT run FROM watches WHERE endpoint = ? AND train = ?');
+    this.deleteSent = this.db.prepare('DELETE FROM sent WHERE endpoint = ? AND train = ?');
+    this.selectWatchesForRun = this.db.prepare('SELECT * FROM watches WHERE run = ? AND done = 0 AND expires > ?');
+    this.selectWatchedRuns = this.db.prepare('SELECT DISTINCT run FROM watches WHERE done = 0 AND expires > ?');
+    this.insertSent = this.db.prepare('INSERT OR IGNORE INTO sent VALUES (?, ?, ?, ?)');
+    this.selectSent = this.db.prepare('SELECT 1 FROM sent WHERE endpoint = ? AND train = ? AND event = ?');
+    this.selectSentEvents = this.db.prepare('SELECT event FROM sent WHERE endpoint = ? AND train = ?');
+    this.selectLastDelay = this.db.prepare("SELECT MAX(at) AS at FROM sent WHERE endpoint = ? AND train = ? AND event LIKE 'delay:%'");
+    this.updateLastLate = this.db.prepare('UPDATE watches SET last_late = ? WHERE endpoint = ? AND train = ?');
+    this.updateDone = this.db.prepare('UPDATE watches SET done = 1, expires = MIN(expires, ?) WHERE endpoint = ? AND train = ?');
     this.lastSaved = new Map(); // run -> { ts, speed, prev }
     this.cleanup();
     setInterval(() => this.cleanup(), 6 * 3600e3).unref();
@@ -111,11 +123,14 @@ class Store {
   }
 
   // Alert watches. Times are epoch ms. A watch lasts 3 days, or 12 h after it is marked done.
-  upsertWatch({ endpoint, train, run, stop, p256dh, auth, lang, lastLate }) {
+  // `rules` is the list of alert rules (routes.js), stored as JSON; null for none.
+  upsertWatch({ endpoint, train, run, stop, p256dh, auth, lang, lastLate, rules }) {
     const now = Date.now();
-    this.upsertWatchStmt.run(endpoint, train, run, stop ?? null, p256dh, auth, lang, now, now + 3 * 86400e3, lastLate ?? null);
-    // A fresh watch starts with a clean slate of sent events.
-    this.db.prepare('DELETE FROM sent WHERE endpoint = ? AND train = ?').run(endpoint, train);
+    const old = this.selectWatchRun.get(endpoint, train);
+    this.upsertWatchStmt.run(endpoint, train, run, stop ?? null, p256dh, auth, lang, now, now + 3 * 86400e3, lastLate ?? null, rules ? JSON.stringify(rules) : null);
+    // A new watch, or one moved to another run, starts with a clean slate of sent events; editing the
+    // alerts of the same run keeps the log so nothing already sent is repeated.
+    if (!old || old.run !== run) this.deleteSent.run(endpoint, train);
   }
 
   removeWatch(endpoint, train) {
@@ -129,7 +144,12 @@ class Store {
   }
 
   watchesForRun(run) {
-    return this.db.prepare('SELECT * FROM watches WHERE run = ? AND done = 0 AND expires > ?').all(run, Date.now());
+    return this.selectWatchesForRun.all(run, Date.now());
+  }
+
+  /** Ids of the runs with an active watch. */
+  watchedRuns() {
+    return this.selectWatchedRuns.all(Date.now()).map(r => r.run);
   }
 
   hasWatches(run) {
@@ -148,25 +168,29 @@ class Store {
 
   // Records an event as sent. Returns false if it had been sent already.
   markSent(endpoint, train, event, at = Date.now()) {
-    return this.db.prepare('INSERT OR IGNORE INTO sent VALUES (?, ?, ?, ?)').run(endpoint, train, event, at).changes > 0;
+    return this.insertSent.run(endpoint, train, event, at).changes > 0;
   }
 
   wasSent(endpoint, train, event) {
-    return !!this.db.prepare('SELECT 1 FROM sent WHERE endpoint = ? AND train = ? AND event = ?').get(endpoint, train, event);
+    return !!this.selectSent.get(endpoint, train, event);
+  }
+
+  /** Every event sent for a watch, as a Set. */
+  sentEvents(endpoint, train) {
+    return new Set(this.selectSentEvents.all(endpoint, train).map(r => r.event));
   }
 
   // Latest time (epoch ms) any delay alert went out for this watch, or 0.
   lastDelaySent(endpoint, train) {
-    return this.db.prepare("SELECT MAX(at) AS at FROM sent WHERE endpoint = ? AND train = ? AND event LIKE 'delay:%'").get(endpoint, train).at || 0;
+    return this.selectLastDelay.get(endpoint, train).at || 0;
   }
 
   setLastLate(endpoint, train, late) {
-    this.db.prepare('UPDATE watches SET last_late = ? WHERE endpoint = ? AND train = ?').run(late, endpoint, train);
+    this.updateLastLate.run(late, endpoint, train);
   }
 
   markDone(endpoint, train) {
-    this.db.prepare('UPDATE watches SET done = 1, expires = MIN(expires, ?) WHERE endpoint = ? AND train = ?')
-      .run(Date.now() + 12 * 3600e3, endpoint, train);
+    this.updateDone.run(Date.now() + 12 * 3600e3, endpoint, train);
   }
 
   cleanup() {
