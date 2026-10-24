@@ -104,7 +104,7 @@ function compute() {
     },
     now: toMin(Date.now()),
     ests: ests.map(e => (e.passed
-      ? { passed: true, ...(e.passedMs != null ? { at: toMin(e.passedMs) } : {}) }
+      ? { passed: true, ...(e.passedMs != null ? { at: toMin(e.passedMs), ...(e.approx ? { approx: true } : {}) } : {}) }
       : { passed: false, ...(e.estMs != null ? { est: toMin(e.estMs) } : {}) })),
     progress: { passedIdx, nextIdx, kmDone, kmToNext },
     speed: {
@@ -179,7 +179,7 @@ function replayOf() {
   const r = returnTrainOf(v.info);
   const out = {
     state: rp.state, days: rp.days,
-    periods: PERIODS.map(n => ({ value: String(n), label: t('nDays', { n }), href: `#/train/${v.number}/replay?days=${n}` })),
+    periods: PERIODS.map(n => ({ value: String(n), label: t('nDays', { n }), href: `#/train/${v.number}/replay?days=${n}${v.params.run ? `&run=${encodeURIComponent(v.params.run)}` : ''}` })),
     ...(r ? { returnName: `${trainNo(r)} ${trainTitle(r)}` } : {}),
   };
   if (rp.state === 'ready') {

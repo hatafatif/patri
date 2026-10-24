@@ -147,7 +147,7 @@ export default {
     pick = params.pick || null;
     map.showStations({ key: 'search', stations: state.stations, fit: 'keep' });
     map.onStationClick(id => navigate(`#/station/${id}`));
-    map.onTrainClick(n => navigate(`#/train/${n}`));
+    map.onTrainClick((n, run) => navigate(`#/train/${n}${run ? `?run=${encodeURIComponent(run)}` : ''}`));
     const root = document.getElementById('app');
     root.addEventListener('click', onClick);
     unlisten = () => root.removeEventListener('click', onClick);

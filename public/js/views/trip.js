@@ -96,7 +96,7 @@ export default {
       fit: 'selected',
     });
     map.onStationClick(id => navigate(`#/station/${id}`));
-    map.onTrainClick(n => navigate(`#/train/${n}`));
+    map.onTrainClick((n, run) => navigate(`#/train/${n}${run ? `?run=${encodeURIComponent(run)}` : ''}`));
     render();
     load();
   },

@@ -90,7 +90,7 @@ export default {
     notice = '';
     map.showStations({ key: 'home', stations: state.stations, fit: 'country' });
     map.onStationClick(id => navigate(`#/station/${id}`));
-    map.onTrainClick(n => navigate(`#/train/${n}`));
+    map.onTrainClick((n, run) => navigate(`#/train/${n}${run ? `?run=${encodeURIComponent(run)}` : ''}`));
     // Focusing the search field opens Search, where the typing happens.
     const root = document.getElementById('app');
     const onFocus = e => { if (e.target.closest?.('.p-searchfield__input')) navigate('#/search'); };
