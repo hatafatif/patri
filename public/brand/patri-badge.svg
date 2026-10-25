@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="bt">
+<title id="bt">Patri</title>
+<!-- Notification badge: Android draws only its shape, in one colour, in the status bar. Rendered to /badge-96.png. -->
+<path fill="#fff" fill-rule="evenodd" d="M70 16 H130 Q166 16 166 52 V156 Q166 170 152 170 H48 Q34 170 34 156 V52 Q34 16 70 16 Z M64 38 H136 A10 10 0 0 1 146 48 V84 A10 10 0 0 1 136 94 H64 A10 10 0 0 1 54 84 V48 A10 10 0 0 1 64 38 Z M57 132 A13 13 0 1 0 83 132 A13 13 0 1 0 57 132 Z M117 132 A13 13 0 1 0 143 132 A13 13 0 1 0 117 132 Z"/>
+<rect fill="#fff" x="18" y="180" width="164" height="12"/>
+</svg>
